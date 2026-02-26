@@ -1,0 +1,2216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findas Polls - Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================
+           GLOBAL STYLES & RESET
+        ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --background: 210 20% 98%;
+            --foreground: 222 15% 15%;
+            --primary: 221 83% 53%;
+            --secondary: 160 60% 40%;
+            --accent: 28 90% 55%;
+
+            --primary-rgb: 79, 70, 229;
+            --secondary-rgb: 16, 185, 129;
+            --accent-rgb: 255, 149, 0;
+
+            /* Legacy support */
+            --bg-primary: hsl(var(--background));
+            --bg-secondary: hsl(210 20% 96%);
+            --bg-card: hsla(var(--background) / 0.65);
+            --bg-hover: hsl(210 20% 95%);
+            --accent-blue: hsl(var(--primary));
+            --accent-blue-dark: hsl(221 83% 45%);
+            --accent-green: hsl(var(--secondary));
+            --accent-red: #ef4444;
+            --accent-orange: hsl(var(--accent));
+            --text-primary: hsl(var(--foreground));
+            --text-secondary: hsl(222 15% 45%);
+            --border-color: hsla(var(--foreground) / 0.08);
+            --shadow: 0 10px 30px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+
+            --text-hero: clamp(2.25rem, 2rem + 2.8vw, 4rem);
+            --text-h2: clamp(1.5rem, 1.2rem + 1.6vw, 2.25rem);
+            --text-h3: clamp(1.25rem, 1.1rem + 1vw, 1.75rem);
+            --text-base: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+        }
+
+        .dark {
+            --background: 222 15% 10%;
+            --foreground: 210 40% 98%;
+            --primary: 221 83% 66%;
+            --secondary: 160 60% 45%;
+            --accent: 28 90% 60%;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-size: var(--text-base);
+            background: transparent;
+            color: hsl(var(--foreground));
+            min-height: 100vh;
+            line-height: 1.65;
+            position: relative;
+        }
+
+        /* Atmospheric background with gradient mesh */
+        .page-atmosphere {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            pointer-events: none;
+            background:
+                radial-gradient(60rem 40rem at 20% 10%, rgba(var(--primary-rgb),0.14), transparent 60%),
+                radial-gradient(40rem 28rem at 80% 80%, rgba(var(--secondary-rgb),0.12), transparent 60%),
+                radial-gradient(36rem 24rem at 10% 80%, rgba(var(--accent-rgb),0.10), transparent 60%),
+                hsl(var(--background));
+        }
+
+        /* Grain texture overlay */
+        .grain-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.035;
+            mix-blend-mode: soft-light;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0.4'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 300px 300px;
+        }
+
+        /* ========================================
+           HEADER
+        ======================================== */
+        header {
+            background: hsla(var(--background) / 0.75);
+            border-bottom: 1px solid hsla(var(--foreground) / 0.08);
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            height: 45px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .header-title {
+            font-family: 'Manrope', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: hsl(var(--primary));
+            letter-spacing: -0.02em;
+        }
+
+        .logout-btn {
+            background: var(--accent-red);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        /* ========================================
+           LOGIN OVERLAY
+        ======================================== */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: hsla(var(--background) / 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-box {
+            background: hsla(var(--background) / 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid hsla(var(--foreground) / 0.08);
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            animation: fadeInScale 0.4s ease;
+            position: relative;
+        }
+
+        .login-box::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            box-shadow: inset 0 1px 0 hsla(var(--foreground) / 0.08);
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .login-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            border: 5px solid hsl(var(--primary));
+            box-shadow: 0 8px 20px hsla(var(--primary-rgb), 0.25);
+            object-fit: cover;
+            animation: fadeInScale 0.5s ease 0.1s both;
+        }
+
+        .login-box h2 {
+            font-family: 'Manrope', sans-serif;
+            margin-bottom: 0.5rem;
+            color: hsl(var(--foreground));
+            font-size: var(--text-h3);
+            letter-spacing: -0.02em;
+        }
+
+        .login-box p {
+            color: hsla(var(--foreground) / 0.7);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: hsla(var(--foreground) / 0.7);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            background: hsla(var(--background) / 0.5);
+            border: 1px solid hsla(var(--foreground) / 0.15);
+            border-radius: 8px;
+            color: hsl(var(--foreground));
+            font-size: 1rem;
+            transition: all 180ms ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: hsl(var(--primary));
+            box-shadow: 0 0 0 3px hsla(var(--primary-rgb) / 0.15);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            background: var(--accent-blue-dark);
+            transform: translateY(-2px);
+        }
+
+        .login-error {
+            color: var(--accent-red);
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* ========================================
+           MAIN CONTENT
+        ======================================== */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ========================================
+           CARDS
+        ======================================== */
+        /* Glass card effect */
+        .card {
+            background: hsla(var(--background) / 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid hsla(var(--foreground) / 0.08);
+            transition: box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            box-shadow: inset 0 1px 0 hsla(var(--foreground) / 0.08);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card h2 {
+            font-family: 'Manrope', sans-serif;
+            margin-bottom: 1.5rem;
+            color: hsl(var(--primary));
+            font-size: var(--text-h3);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        /* ========================================
+           KPI SECTION
+        ======================================== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .kpi-item {
+            background: hsla(var(--background) / 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid hsla(var(--foreground) / 0.08);
+            transition: all 200ms ease;
+        }
+
+        .kpi-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+
+        .kpi-value {
+            font-family: 'Manrope', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: hsl(var(--primary));
+        }
+
+        .kpi-label {
+            color: hsla(var(--foreground) / 0.6);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ========================================
+           FORM ELEMENTS
+        ======================================== */
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: hsla(var(--background) / 0.5);
+            border: 1px solid hsla(var(--foreground) / 0.15);
+            border-radius: 8px;
+            color: hsl(var(--foreground));
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+            transition: all 180ms ease;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            background: hsla(var(--background) / 0.5);
+            border: 1px solid hsla(var(--foreground) / 0.15);
+            border-radius: 8px;
+            color: hsl(var(--foreground));
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 180ms ease;
+        }
+
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: hsl(var(--primary));
+            box-shadow: 0 0 0 3px hsla(var(--primary-rgb) / 0.15);
+        }
+
+        /* Toggle Switch */
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: hsla(var(--background) / 0.5);
+            border: 1px solid hsla(var(--foreground) / 0.08);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            transition: all 180ms ease;
+        }
+
+        .toggle-group:hover {
+            background: hsla(var(--background) / 0.7);
+        }
+
+        .toggle-label {
+            color: hsl(var(--foreground));
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: hsla(var(--foreground) / 0.15);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: hsl(var(--secondary));
+            box-shadow: 0 0 0 3px hsla(var(--secondary-rgb) / 0.15);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(24px);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: hsl(var(--primary));
+            color: white;
+            box-shadow: 0 0 0 rgba(var(--primary-rgb),0);
+        }
+
+        .btn-primary:hover {
+            background: hsl(221 83% 45%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(var(--primary-rgb),0.28);
+        }
+
+        .btn-success {
+            background: hsl(var(--secondary));
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: hsl(160 60% 35%);
+            box-shadow: 0 8px 20px rgba(var(--secondary-rgb),0.25);
+        }
+
+        .btn-danger {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-warning {
+            background: hsl(var(--accent));
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: hsl(28 90% 50%);
+            box-shadow: 0 8px 20px rgba(var(--accent-rgb),0.25);
+        }
+
+        .btn-secondary {
+            background: hsla(var(--background) / 0.5);
+            color: hsl(var(--foreground));
+            border: 1px solid hsla(var(--foreground) / 0.15);
+        }
+
+        .btn-secondary:hover {
+            background: hsla(var(--foreground) / 0.05);
+            border-color: hsla(var(--foreground) / 0.2);
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* ========================================
+           POLL LIST
+        ======================================== */
+        .filter-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .poll-card {
+            background: hsla(var(--background) / 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid hsla(var(--foreground) / 0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .poll-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            box-shadow: inset 0 1px 0 hsla(var(--foreground) / 0.08);
+        }
+
+        .poll-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .poll-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .poll-question {
+            font-family: 'Manrope', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: hsl(var(--foreground));
+            flex: 1;
+            letter-spacing: -0.01em;
+        }
+
+        .status-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 1rem;
+        }
+
+        .status-active {
+            background: hsla(var(--secondary-rgb), 0.15);
+            color: hsl(var(--secondary));
+        }
+
+        .status-closed {
+            background: hsla(var(--accent-rgb), 0.15);
+            color: hsl(var(--accent));
+        }
+
+        .status-archived {
+            background: hsla(var(--foreground) / 0.1);
+            color: hsla(var(--foreground) / 0.6);
+        }
+
+        .poll-meta {
+            color: hsla(var(--foreground) / 0.6);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .poll-meta span {
+            margin-right: 1rem;
+        }
+
+        .poll-results {
+            margin: 1rem 0;
+        }
+
+        .result-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .result-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .result-bar-container {
+            width: 100%;
+            height: 10px;
+            background: hsla(var(--foreground) / 0.08);
+            border-radius: 9999px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .result-bar {
+            height: 100%;
+            background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--secondary)));
+            border-radius: 9999px;
+            transition: width 900ms cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .poll-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        /* Voters Section */
+        .voters-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .voters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .voters-header h4 {
+            font-family: 'Manrope', sans-serif;
+            color: hsl(var(--primary));
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .voter-search {
+            width: 200px;
+            padding: 0.4rem 0.8rem;
+            background: hsla(var(--background) / 0.5);
+            border: 1px solid hsla(var(--foreground) / 0.15);
+            border-radius: 8px;
+            color: hsl(var(--foreground));
+            font-size: 0.85rem;
+            transition: all 180ms ease;
+        }
+
+        .voter-search:focus {
+            outline: none;
+            border-color: hsl(var(--primary));
+            box-shadow: 0 0 0 3px hsla(var(--primary-rgb) / 0.15);
+        }
+
+        .voters-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .voters-table th {
+            text-align: left;
+            padding: 0.5rem;
+            color: hsla(var(--foreground) / 0.6);
+            font-weight: 600;
+            border-bottom: 1px solid hsla(var(--foreground) / 0.08);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .voters-table td {
+            padding: 0.5rem;
+            border-bottom: 1px solid hsla(var(--foreground) / 0.05);
+        }
+
+        .voters-table tr:hover {
+            background: hsla(var(--foreground) / 0.03);
+        }
+
+        .no-voters {
+            color: hsla(var(--foreground) / 0.5);
+            font-style: italic;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        /* ========================================
+           PUBLIC VOTING PAGE
+        ======================================== */
+        .voting-container {
+            max-width: 600px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+        }
+
+        .voting-card {
+            background: hsla(var(--background) / 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid hsla(var(--foreground) / 0.08);
+            animation: fadeInScale 0.4s ease;
+            position: relative;
+        }
+
+        .voting-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            box-shadow: inset 0 1px 0 hsla(var(--foreground) / 0.08);
+        }
+
+        .voting-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .voting-header .logo {
+            height: 55px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .voting-header-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-blue);
+            object-fit: cover;
+            margin-left: auto;
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
+        }
+
+        .voting-header h1 {
+            color: var(--accent-blue);
+            font-size: 1.5rem;
+        }
+
+        .voting-question {
+            font-family: 'Manrope', sans-serif;
+            font-size: var(--text-h2);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .voting-info {
+            color: hsla(var(--foreground) / 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .voting-options {
+            margin: 2rem 0;
+        }
+
+        /* Ripple effect on voting options */
+        .voting-option {
+            background: hsla(var(--background) / 0.5);
+            border: 2px solid hsla(var(--foreground) / 0.10);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .voting-option::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(var(--primary-rgb),0.25) 0%, rgba(var(--primary-rgb),0.12) 40%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+            pointer-events: none;
+        }
+
+        .voting-option.clicked::before {
+            width: 500px;
+            height: 500px;
+            animation: rippleOut 600ms ease-out;
+        }
+
+        @keyframes rippleOut {
+            to { width: 500px; height: 500px; opacity: 0; }
+        }
+
+        .voting-option:hover:not(.disabled) {
+            border-color: hsl(var(--primary));
+            background: hsla(var(--foreground) / 0.04);
+            transform: translateX(8px);
+            box-shadow: 0 4px 12px hsla(var(--primary-rgb), 0.15);
+        }
+
+        .voting-option.selected {
+            border-color: hsl(var(--primary));
+            background: linear-gradient(135deg, hsla(var(--primary-rgb), 0.08), hsla(var(--primary-rgb), 0.12));
+            box-shadow: 0 4px 12px hsla(var(--primary-rgb), 0.2);
+            transform: scale(1.02);
+        }
+
+        .voting-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-label {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .submit-vote-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .submit-vote-btn:hover:not(:disabled) {
+            background: var(--accent-blue-dark);
+            transform: translateY(-2px);
+        }
+
+        .submit-vote-btn:disabled {
+            background: var(--bg-hover);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .recent-voters {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .recent-voters h3 {
+            font-family: 'Manrope', sans-serif;
+            color: hsl(var(--primary));
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .voter-item {
+            background: hsla(var(--background) / 0.5);
+            border: 1px solid hsla(var(--foreground) / 0.08);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 200ms ease;
+        }
+
+        .voter-item:hover {
+            background: hsla(var(--foreground) / 0.04);
+        }
+
+        .voter-name {
+            font-weight: 600;
+        }
+
+        .voter-choice {
+            color: hsla(var(--foreground) / 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* ========================================
+           MODAL
+        ======================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: hsla(var(--background) / 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal-overlay.hidden {
+            display: none;
+        }
+
+        .modal {
+            background: hsla(var(--background) / 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid hsla(var(--foreground) / 0.08);
+            animation: fadeInScale 0.3s ease;
+            position: relative;
+        }
+
+        .modal::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            box-shadow: inset 0 1px 0 hsla(var(--foreground) / 0.08);
+        }
+
+        .modal h3 {
+            font-family: 'Manrope', sans-serif;
+            color: hsl(var(--primary));
+            margin-bottom: 1rem;
+            font-size: var(--text-h3);
+            letter-spacing: -0.02em;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* ========================================
+           TOAST NOTIFICATIONS
+        ======================================== */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 99999;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-blue);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
+            box-shadow: var(--shadow);
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            border-left-color: var(--accent-green);
+        }
+
+        .toast.error {
+            border-left-color: var(--accent-red);
+        }
+
+        .toast.warning {
+            border-left-color: var(--accent-orange);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ========================================
+           SUCCESS MESSAGE
+        ======================================== */
+        .success-message {
+            background: hsla(var(--secondary-rgb), 0.1);
+            border: 1px solid hsl(var(--secondary));
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            animation: fadeInScale 0.3s ease;
+        }
+
+        .success-message h3 {
+            font-family: 'Manrope', sans-serif;
+            color: hsl(var(--secondary));
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .voting-link {
+            background: hsla(var(--background) / 0.5);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            word-break: break-all;
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: hsl(var(--primary));
+            border: 1px solid hsla(var(--foreground) / 0.15);
+        }
+
+        /* Thank You Message */
+        .thank-you-message {
+            background: linear-gradient(135deg, hsla(var(--secondary-rgb), 0.1), hsla(var(--secondary-rgb), 0.05));
+            border: 2px solid hsl(var(--secondary));
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+            animation: fadeInScale 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .thank-you-message::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            box-shadow: inset 0 1px 0 hsla(var(--secondary-rgb) / 0.2);
+        }
+
+        .thank-you-message h3 {
+            font-family: 'Manrope', sans-serif;
+            color: hsl(var(--secondary));
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .thank-you-icon {
+            font-size: 2rem;
+            animation: celebrate 0.6s ease;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-10deg); }
+            75% { transform: scale(1.2) rotate(10deg); }
+        }
+
+        .thank-you-message p {
+            color: hsla(var(--foreground) / 0.7);
+            margin-top: 0.5rem;
+        }
+
+        .success-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        /* ========================================
+           IMPORT/EXPORT SECTION
+        ======================================== */
+        .import-export {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .import-export h3 {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .import-export-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        /* ========================================
+           UTILITIES
+        ======================================== */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+
+        /* ========================================
+           RESPONSIVE
+        ======================================== */
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem;
+            }
+
+            .header-title {
+                font-size: 1.2rem;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .poll-actions {
+                flex-direction: column;
+            }
+
+            .poll-actions .btn {
+                width: 100%;
+            }
+
+            .voter-search {
+                width: 100%;
+            }
+
+            .voters-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!--
+    ====================================================================
+    FINDAS POLLS - ADMIN PANEL
+    ====================================================================
+    
+    HOW TO CHANGE CREDENTIALS:
+    1. Change the hardcoded username/password in the JavaScript at line ~1100
+    2. Or update the SHA-256 hash constant at line ~1050
+    
+    HOW TO RUN:
+    1. Open this file in any modern web browser (Chrome, Firefox, Safari, Edge)
+    2. Login with credentials: admin / 11223344
+    
+    HOW TO SHARE VOTING LINK:
+    1. Create a poll in the admin panel
+    2. Copy the voting link shown after creation
+    3. Share the link with voters (works with file:// or hosted URL)
+    
+    ====================================================================
+    -->
+
+    <!-- Atmosphere layers -->
+    <div class="page-atmosphere" aria-hidden="true"></div>
+    <div class="grain-overlay" aria-hidden="true"></div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <img src="https://storage.files-vault.com/images/20260219120135_original__media_3.webp" 
+                 alt="Admin" 
+                 class="login-avatar">
+            <h2>Admin Login</h2>
+            <p>Please enter your credentials to continue</p>
+            <form id="loginForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="login-btn">Login</button>
+                <div class="login-error hidden" id="loginError">Invalid credentials</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header id="mainHeader" class="hidden">
+        <div class="header-left">
+            <img src="https://storage.files-vault.com/images/20260219120306_original__media_177.webp" 
+                 alt="Findas" 
+                 class="logo">
+            <h1 class="header-title" id="headerTitle">Polls Admin</h1>
+        </div>
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+    </header>
+
+    <!-- Admin Panel -->
+    <div class="container hidden" id="adminPanel">
+        <div class="admin-layout">
+            <!-- Left Column: Create Poll -->
+            <div>
+                <div class="card">
+                    <h2>Create New Poll</h2>
+                    
+                    <!-- KPIs -->
+                    <div class="kpi-grid">
+                        <div class="kpi-item">
+                            <div class="kpi-value" id="kpiActive">0</div>
+                            <div class="kpi-label">Active</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-value" id="kpiClosed">0</div>
+                            <div class="kpi-label">Closed</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-value" id="kpiArchived">0</div>
+                            <div class="kpi-label">Archived</div>
+                        </div>
+                    </div>
+
+                    <form id="createPollForm">
+                        <div class="form-group">
+                            <label for="pollQuestion">Question</label>
+                            <textarea id="pollQuestion" placeholder="What is your question?" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="pollOptions">Options (one per line)</label>
+                            <textarea id="pollOptions" placeholder="Option 1&#10;Option 2&#10;Option 3" required rows="5"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="pollStatus">Status</label>
+                            <select id="pollStatus">
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="CLOSED">CLOSED</option>
+                                <option value="ARCHIVED">ARCHIVED</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="pollEndsAt">End Date/Time (optional)</label>
+                            <input type="datetime-local" id="pollEndsAt">
+                        </div>
+
+                        <div class="toggle-group">
+                            <span class="toggle-label">Require Name before voting</span>
+                            <div class="toggle-switch" id="toggleRequireName">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+
+                        <div class="toggle-group">
+                            <span class="toggle-label">Show voter names publicly</span>
+                            <div class="toggle-switch" id="toggleShowVoters">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Create Poll</button>
+                    </form>
+
+                    <div class="success-message hidden" id="createSuccess">
+                        <h3>✓ Poll Created Successfully!</h3>
+                        <p>Share this link with voters:</p>
+                        <div class="voting-link" id="createdVotingLink"></div>
+                        <div class="success-actions">
+                            <button class="btn btn-success btn-small" id="copyLinkBtn">Copy Link</button>
+                            <button class="btn btn-secondary btn-small" id="openVotingBtn">Open Voting Page</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import/Export -->
+                <div class="card" style="margin-top: 1rem;">
+                    <div class="import-export">
+                        <h3>Data Management</h3>
+                        <div class="import-export-actions">
+                            <button class="btn btn-secondary btn-small" id="exportBtn">Export Polls</button>
+                            <div class="file-input-wrapper">
+                                <button class="btn btn-secondary btn-small">Import Polls</button>
+                                <input type="file" id="importFile" accept=".json">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Poll List -->
+            <div>
+                <div class="card">
+                    <h2>Manage Polls</h2>
+                    
+                    <div class="filter-section">
+                        <div class="form-group">
+                            <label for="filterStatus">Filter by Status</label>
+                            <select id="filterStatus">
+                                <option value="ALL">ALL</option>
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="CLOSED">CLOSED</option>
+                                <option value="ARCHIVED">ARCHIVED</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="pollsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Public Voting Page -->
+    <div class="voting-container hidden" id="votingPanel">
+        <div class="voting-card">
+            <div class="voting-header">
+                <img src="https://storage.files-vault.com/images/20260219120306_original__media_177.webp" 
+                     alt="Findas" 
+                     class="logo">
+                <h1>Vote</h1>
+                <img src="https://storage.files-vault.com/images/20260219114820_original__media_171.webp" 
+                     alt="Host" 
+                     class="voting-header-avatar">
+            </div>
+
+            <div id="votingContent"></div>
+        </div>
+    </div>
+
+    <!-- Name Input Modal -->
+    <div class="modal-overlay hidden" id="nameModal">
+        <div class="modal">
+            <h3>Enter Your Name</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                This poll requires your name to vote.
+            </p>
+            <div class="form-group">
+                <label for="voterName">Your Name</label>
+                <input type="text" id="voterName" placeholder="Enter your name" minlength="2" required>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="submitNameBtn" style="flex: 1;">Submit Vote</button>
+                <button class="btn btn-secondary" id="cancelNameBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // CONSTANTS & STATE
+        // ========================================
+        const STORAGE_KEYS = {
+            POLLS: 'poll_admin_polls_v2',
+            AUTH: 'poll_admin_authed',
+            PASSWORD_HASH: 'poll_admin_hash'
+        };
+
+        const CREDENTIALS = {
+            USERNAME: 'admin',
+            PASSWORD: '11223344'
+        };
+
+        // Pre-computed SHA-256 hash of "admin:11223344"
+        const VALID_HASH = '6c3e9c6e7f4d0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d';
+
+        let currentRoute = '';
+        let isAuthenticated = false;
+        let polls = [];
+        let toggleStates = {
+            requireName: false,
+            showVoters: false
+        };
+        let pendingVote = null;
+
+        // ========================================
+        // UTILITY FUNCTIONS
+        // ========================================
+        function generateId() {
+            return 'poll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function formatDate(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // ========================================
+        // STORAGE FUNCTIONS
+        // ========================================
+        function loadPolls() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEYS.POLLS);
+                polls = data ? JSON.parse(data) : [];
+            } catch (e) {
+                console.error('Error loading polls:', e);
+                polls = [];
+            }
+        }
+
+        function savePolls() {
+            try {
+                localStorage.setItem(STORAGE_KEYS.POLLS, JSON.stringify(polls));
+            } catch (e) {
+                console.error('Error saving polls:', e);
+                showToast('Error saving data', 'error');
+            }
+        }
+
+        function getPoll(pollId) {
+            return polls.find(p => p.id === pollId);
+        }
+
+        // ========================================
+        // AUTHENTICATION
+        // ========================================
+        async function checkAuth() {
+            const authStatus = localStorage.getItem(STORAGE_KEYS.AUTH);
+            isAuthenticated = authStatus === '1';
+            
+            if (isAuthenticated) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainHeader').classList.remove('hidden');
+            } else {
+                document.getElementById('loginOverlay').classList.remove('hidden');
+                document.getElementById('mainHeader').classList.add('hidden');
+                document.getElementById('adminPanel').classList.add('hidden');
+            }
+
+            return isAuthenticated;
+        }
+
+        async function login(username, password) {
+            if (username === CREDENTIALS.USERNAME && password === CREDENTIALS.PASSWORD) {
+                const hash = await sha256(`${username}:${password}`);
+                localStorage.setItem(STORAGE_KEYS.PASSWORD_HASH, hash);
+                localStorage.setItem(STORAGE_KEYS.AUTH, '1');
+                isAuthenticated = true;
+                
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainHeader').classList.remove('hidden');
+                document.getElementById('loginError').classList.add('hidden');
+                
+                navigateTo('#/admin');
+                return true;
+            }
+            return false;
+        }
+
+        function logout() {
+            localStorage.setItem(STORAGE_KEYS.AUTH, '0');
+            isAuthenticated = false;
+            document.getElementById('adminPanel').classList.add('hidden');
+            document.getElementById('votingPanel').classList.add('hidden');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('mainHeader').classList.add('hidden');
+            showToast('Logged out successfully', 'success');
+        }
+
+        // ========================================
+        // ROUTING
+        // ========================================
+        function navigateTo(hash) {
+            window.location.hash = hash;
+        }
+
+        function handleRoute() {
+            const hash = window.location.hash || '#/admin';
+            currentRoute = hash;
+
+            // Hide all panels
+            document.getElementById('adminPanel').classList.add('hidden');
+            document.getElementById('votingPanel').classList.add('hidden');
+
+            if (hash.startsWith('#/vote/')) {
+                // Public voting page
+                const pollId = hash.replace('#/vote/', '');
+                showVotingPage(pollId);
+            } else {
+                // Admin page
+                if (isAuthenticated) {
+                    showAdminPanel();
+                } else {
+                    document.getElementById('loginOverlay').classList.remove('hidden');
+                }
+            }
+        }
+
+        // ========================================
+        // ADMIN PANEL
+        // ========================================
+        function showAdminPanel() {
+            document.getElementById('adminPanel').classList.remove('hidden');
+            document.getElementById('votingPanel').classList.add('hidden');
+            document.getElementById('headerTitle').textContent = 'Polls Admin';
+            updateKPIs();
+            renderPollsList();
+        }
+
+        function updateKPIs() {
+            const active = polls.filter(p => p.status === 'ACTIVE').length;
+            const closed = polls.filter(p => p.status === 'CLOSED').length;
+            const archived = polls.filter(p => p.status === 'ARCHIVED').length;
+
+            document.getElementById('kpiActive').textContent = active;
+            document.getElementById('kpiClosed').textContent = closed;
+            document.getElementById('kpiArchived').textContent = archived;
+        }
+
+        function createPoll(question, options, status, endsAt) {
+            const poll = {
+                id: generateId(),
+                question: question.trim(),
+                status: status,
+                created_at: new Date().toISOString(),
+                ends_at: endsAt || null,
+                require_name: toggleStates.requireName,
+                show_voters_publicly: toggleStates.showVoters,
+                options: options.map((opt, idx) => ({
+                    id: 'opt_' + idx,
+                    label: opt.trim(),
+                    votes: 0
+                })),
+                voters: []
+            };
+
+            polls.unshift(poll);
+            savePolls();
+            updateKPIs();
+            renderPollsList();
+            showCreateSuccess(poll);
+            showToast('Poll created successfully!', 'success');
+
+            return poll;
+        }
+
+        function showCreateSuccess(poll) {
+            const successDiv = document.getElementById('createSuccess');
+            const linkDiv = document.getElementById('createdVotingLink');
+            const votingUrl = `${window.location.origin}${window.location.pathname}#/vote/${poll.id}`;
+            
+            linkDiv.textContent = votingUrl;
+            successDiv.classList.remove('hidden');
+
+            // Store URL for copy/open buttons
+            successDiv.dataset.url = votingUrl;
+
+            // Hide after 10 seconds
+            setTimeout(() => {
+                successDiv.classList.add('hidden');
+            }, 10000);
+        }
+
+        function renderPollsList() {
+            const container = document.getElementById('pollsList');
+            const filter = document.getElementById('filterStatus').value;
+
+            let filteredPolls = polls;
+            if (filter !== 'ALL') {
+                filteredPolls = polls.filter(p => p.status === filter);
+            }
+
+            if (filteredPolls.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No polls found</p>';
+                return;
+            }
+
+            container.innerHTML = filteredPolls.map(poll => {
+                const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
+                const isActive = poll.status === 'ACTIVE';
+                const hasEnded = poll.ends_at && new Date(poll.ends_at) < new Date();
+
+                return `
+                    <div class="poll-card">
+                        <div class="poll-header">
+                            <div class="poll-question">${escapeHtml(poll.question)}</div>
+                            <span class="status-pill status-${poll.status.toLowerCase()}">${poll.status}</span>
+                        </div>
+                        
+                        <div class="poll-meta">
+                            <span>📅 Created: ${formatDate(poll.created_at)}</span>
+                            ${poll.ends_at ? `<span>⏰ Ends: ${formatDate(poll.ends_at)}</span>` : ''}
+                            <span>🗳️ Total Votes: ${totalVotes}</span>
+                        </div>
+
+                        <div class="poll-meta">
+                            <span>👤 ${poll.require_name ? '✓' : '✗'} Requires Name</span>
+                            <span>👁️ ${poll.show_voters_publicly ? '✓' : '✗'} Shows Voters Publicly</span>
+                        </div>
+
+                        <div class="poll-results">
+                            ${poll.options.map(opt => {
+                                const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+                                return `
+                                    <div class="result-item">
+                                        <div class="result-label">
+                                            <span>${escapeHtml(opt.label)}</span>
+                                            <span>${opt.votes} (${percentage}%)</span>
+                                        </div>
+                                        <div class="result-bar-container">
+                                            <div class="result-bar" style="width: ${percentage}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <div class="poll-actions">
+                            ${poll.status !== 'ACTIVE' ? `<button class="btn btn-success btn-small" onclick="updatePollStatus('${poll.id}', 'ACTIVE')">Activate</button>` : ''}
+                            ${poll.status !== 'CLOSED' ? `<button class="btn btn-warning btn-small" onclick="updatePollStatus('${poll.id}', 'CLOSED')">Close</button>` : ''}
+                            ${poll.status !== 'ARCHIVED' ? `<button class="btn btn-secondary btn-small" onclick="updatePollStatus('${poll.id}', 'ARCHIVED')">Archive</button>` : ''}
+                            ${isActive && !hasEnded ? `<button class="btn btn-secondary btn-small" onclick="testVote('${poll.id}')">Test Vote</button>` : ''}
+                            <button class="btn btn-secondary btn-small" onclick="copyVotingLink('${poll.id}')">Copy Link</button>
+                            <button class="btn btn-danger btn-small" onclick="deletePoll('${poll.id}')">Delete</button>
+                        </div>
+
+                        ${renderVotersSection(poll)}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderVotersSection(poll) {
+            if (poll.voters.length === 0) {
+                return `
+                    <div class="voters-section">
+                        <div class="voters-header">
+                            <h4>Voters (0)</h4>
+                        </div>
+                        <p class="no-voters">No votes yet</p>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="voters-section">
+                    <div class="voters-header">
+                        <h4>Voters (${poll.voters.length})</h4>
+                        <input type="text" 
+                               class="voter-search" 
+                               placeholder="Search voters..." 
+                               onkeyup="filterVoters('${poll.id}', this.value)">
+                    </div>
+                    <table class="voters-table" id="voters-${poll.id}">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Selected</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${poll.voters.map(voter => `
+                                <tr class="voter-row">
+                                    <td>${escapeHtml(voter.name || 'Anonymous')}</td>
+                                    <td>${escapeHtml(voter.optionLabel)}</td>
+                                    <td>${formatDate(voter.timeISO)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <button class="btn btn-danger btn-small mt-1" onclick="clearVoters('${poll.id}')">Clear All Voters</button>
+                </div>
+            `;
+        }
+
+        function filterVoters(pollId, searchTerm) {
+            const table = document.getElementById(`voters-${pollId}`);
+            const rows = table.getElementsByClassName('voter-row');
+            const term = searchTerm.toLowerCase();
+
+            Array.from(rows).forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        }
+
+        function clearVoters(pollId) {
+            const poll = getPoll(pollId);
+            if (!poll) return;
+
+            if (!confirm(`Clear all ${poll.voters.length} voters from this poll?`)) return;
+
+            // Reset votes and voters
+            poll.options.forEach(opt => opt.votes = 0);
+            poll.voters = [];
+            savePolls();
+            renderPollsList();
+            showToast('Voters cleared', 'success');
+        }
+
+        function updatePollStatus(pollId, newStatus) {
+            const poll = getPoll(pollId);
+            if (!poll) return;
+
+            poll.status = newStatus;
+            savePolls();
+            updateKPIs();
+            renderPollsList();
+            showToast(`Poll ${newStatus.toLowerCase()}`, 'success');
+        }
+
+        function deletePoll(pollId) {
+            const poll = getPoll(pollId);
+            if (!poll) return;
+
+            const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
+            const message = totalVotes > 0 
+                ? `Delete this poll? It has ${totalVotes} vote(s).`
+                : 'Delete this poll?';
+
+            if (!confirm(message)) return;
+
+            polls = polls.filter(p => p.id !== pollId);
+            savePolls();
+            updateKPIs();
+            renderPollsList();
+            showToast('Poll deleted', 'success');
+        }
+
+        function testVote(pollId) {
+            const poll = getPoll(pollId);
+            if (!poll) return;
+
+            // Random option
+            const randomOption = poll.options[Math.floor(Math.random() * poll.options.length)];
+            recordVote(pollId, randomOption.id, 'Test User ' + Math.floor(Math.random() * 1000));
+            showToast('Test vote recorded', 'success');
+        }
+
+        function copyVotingLink(pollId) {
+            const url = `${window.location.origin}${window.location.pathname}#/vote/${pollId}`;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('Voting link copied!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy link', 'error');
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========================================
+        // PUBLIC VOTING PAGE
+        // ========================================
+        function showVotingPage(pollId, showThankYou = false) {
+            document.getElementById('votingPanel').classList.remove('hidden');
+            document.getElementById('adminPanel').classList.add('hidden');
+            document.getElementById('mainHeader').classList.remove('hidden');
+            document.getElementById('headerTitle').textContent = 'Vote';
+
+            const poll = getPoll(pollId);
+            const content = document.getElementById('votingContent');
+
+            if (!poll) {
+                content.innerHTML = '<p style="color: var(--accent-red); text-align: center;">Poll not found</p>';
+                return;
+            }
+
+            const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
+            const hasEnded = poll.ends_at && new Date(poll.ends_at) < new Date();
+            const hasVoted = localStorage.getItem(`voted_${pollId}`) === '1';
+            const canVote = poll.status === 'ACTIVE' && !hasEnded && !hasVoted;
+
+            let statusMessage = '';
+            if (poll.status !== 'ACTIVE') {
+                statusMessage = `<p style="color: var(--accent-orange);">This poll is ${poll.status.toLowerCase()}</p>`;
+            } else if (hasEnded) {
+                statusMessage = '<p style="color: var(--accent-orange);">This poll has ended</p>';
+            } else if (hasVoted && !showThankYou) {
+                statusMessage = '<p style="color: var(--accent-green);">✓ You have already voted</p>';
+            }
+
+            content.innerHTML = `
+                ${showThankYou ? `
+                    <div class="thank-you-message">
+                        <h3><span class="thank-you-icon">🎉</span> Thank You for Voting!</h3>
+                        <p>Your vote has been successfully recorded.</p>
+                    </div>
+                ` : ''}
+
+                <h2 class="voting-question">${escapeHtml(poll.question)}</h2>
+                
+                <div class="voting-info">
+                    <div>Status: <strong>${poll.status}</strong></div>
+                    ${poll.ends_at ? `<div>Ends: ${formatDate(poll.ends_at)}</div>` : ''}
+                    <div>Total Votes: <strong>${totalVotes}</strong></div>
+                    ${statusMessage}
+                </div>
+
+                <div class="voting-options" id="votingOptions">
+                    ${poll.options.map(opt => {
+                        const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+                        
+                        if (canVote) {
+                            return `
+                                <div class="voting-option" data-option-id="${opt.id}" onclick="selectOption('${opt.id}')">
+                                    <div class="option-label">${escapeHtml(opt.label)}</div>
+                                </div>
+                            `;
+                        } else {
+                            return `
+                                <div class="result-item">
+                                    <div class="result-label">
+                                        <span>${escapeHtml(opt.label)}</span>
+                                        <span>${opt.votes} (${percentage}%)</span>
+                                    </div>
+                                    <div class="result-bar-container">
+                                        <div class="result-bar" style="width: ${percentage}%"></div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }).join('')}
+                </div>
+
+                ${canVote ? `
+                    <button class="submit-vote-btn" id="submitVoteBtn" disabled onclick="submitVote('${pollId}')">
+                        Select an option to vote
+                    </button>
+                ` : ''}
+
+                ${renderPublicVotersList(poll)}
+            `;
+        }
+
+        function renderPublicVotersList(poll) {
+            if (!poll.show_voters_publicly || poll.voters.length === 0) {
+                return '';
+            }
+
+            const recentVoters = poll.voters.slice(-10).reverse();
+
+            return `
+                <div class="recent-voters">
+                    <h3>Recent Voters</h3>
+                    ${recentVoters.map(voter => `
+                        <div class="voter-item">
+                            <span class="voter-name">${escapeHtml(voter.name || 'Anonymous')}</span>
+                            <span class="voter-choice">${escapeHtml(voter.optionLabel)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        let selectedOptionId = null;
+
+        function selectOption(optionId) {
+            selectedOptionId = optionId;
+            
+            // Update UI with animation
+            document.querySelectorAll('.voting-option').forEach(opt => {
+                opt.classList.remove('selected', 'clicked');
+                if (opt.dataset.optionId === optionId) {
+                    opt.classList.add('clicked');
+                    setTimeout(() => {
+                        opt.classList.add('selected');
+                        opt.classList.remove('clicked');
+                    }, 100);
+                }
+            });
+
+            const btn = document.getElementById('submitVoteBtn');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Submit Vote';
+            }
+        }
+
+        function submitVote(pollId) {
+            if (!selectedOptionId) return;
+
+            const poll = getPoll(pollId);
+            if (!poll) return;
+
+            // Check if name is required
+            if (poll.require_name) {
+                // Store pending vote and show modal
+                pendingVote = { pollId, optionId: selectedOptionId };
+                document.getElementById('nameModal').classList.remove('hidden');
+                document.getElementById('voterName').value = '';
+                document.getElementById('voterName').focus();
+            } else {
+                // Vote without name
+                recordVote(pollId, selectedOptionId, 'Anonymous');
+            }
+        }
+
+        function recordVote(pollId, optionId, voterName) {
+            const poll = getPoll(pollId);
+            if (!poll) return;
+
+            const option = poll.options.find(opt => opt.id === optionId);
+            if (!option) return;
+
+            // Update vote count
+            option.votes++;
+
+            // Add voter record
+            poll.voters.push({
+                name: voterName,
+                optionId: optionId,
+                optionLabel: option.label,
+                timeISO: new Date().toISOString()
+            });
+
+            // Mark as voted
+            localStorage.setItem(`voted_${pollId}`, '1');
+
+            savePolls();
+            showToast('Vote recorded!', 'success');
+            
+            // Refresh the voting page with thank you message
+            showVotingPage(pollId, true);
+        }
+
+        // ========================================
+        // IMPORT/EXPORT
+        // ========================================
+        function exportPolls() {
+            const dataStr = JSON.stringify(polls, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `polls-export-${Date.now()}.json`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            showToast('Polls exported', 'success');
+        }
+
+        function importPolls(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    
+                    if (!Array.isArray(imported)) {
+                        throw new Error('Invalid format');
+                    }
+
+                    // Validate required fields
+                    const valid = imported.every(poll => 
+                        poll.id && poll.question && poll.options && Array.isArray(poll.options)
+                    );
+
+                    if (!valid) {
+                        throw new Error('Missing required fields');
+                    }
+
+                    // Merge with existing polls (avoid duplicates)
+                    const existingIds = new Set(polls.map(p => p.id));
+                    const newPolls = imported.filter(p => !existingIds.has(p.id));
+                    
+                    polls = [...polls, ...newPolls];
+                    savePolls();
+                    updateKPIs();
+                    renderPollsList();
+                    showToast(`Imported ${newPolls.length} poll(s)`, 'success');
+                } catch (err) {
+                    showToast('Import failed: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ========================================
+        // EVENT LISTENERS
+        // ========================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadPolls();
+            await checkAuth();
+            handleRoute();
+
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                const success = await login(username, password);
+                if (!success) {
+                    document.getElementById('loginError').classList.remove('hidden');
+                }
+            });
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+
+            // Toggle switches
+            document.getElementById('toggleRequireName').addEventListener('click', function() {
+                toggleStates.requireName = !toggleStates.requireName;
+                this.classList.toggle('active', toggleStates.requireName);
+            });
+
+            document.getElementById('toggleShowVoters').addEventListener('click', function() {
+                toggleStates.showVoters = !toggleStates.showVoters;
+                this.classList.toggle('active', toggleStates.showVoters);
+            });
+
+            // Create poll form
+            document.getElementById('createPollForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const question = document.getElementById('pollQuestion').value;
+                const optionsText = document.getElementById('pollOptions').value;
+                const status = document.getElementById('pollStatus').value;
+                const endsAt = document.getElementById('pollEndsAt').value;
+
+                const options = optionsText.split('\n')
+                    .map(opt => opt.trim())
+                    .filter(opt => opt.length > 0);
+
+                if (options.length < 2) {
+                    showToast('Please provide at least 2 options', 'error');
+                    return;
+                }
+
+                createPoll(question, options, status, endsAt);
+
+                // Reset form
+                e.target.reset();
+                toggleStates.requireName = false;
+                toggleStates.showVoters = false;
+                document.getElementById('toggleRequireName').classList.remove('active');
+                document.getElementById('toggleShowVoters').classList.remove('active');
+            });
+
+            // Filter
+            document.getElementById('filterStatus').addEventListener('change', renderPollsList);
+
+            // Success message actions
+            document.getElementById('copyLinkBtn').addEventListener('click', () => {
+                const url = document.getElementById('createSuccess').dataset.url;
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast('Link copied!', 'success');
+                });
+            });
+
+            document.getElementById('openVotingBtn').addEventListener('click', () => {
+                const url = document.getElementById('createSuccess').dataset.url;
+                const hash = url.split('#')[1];
+                navigateTo('#' + hash);
+            });
+
+            // Export
+            document.getElementById('exportBtn').addEventListener('click', exportPolls);
+
+            // Import
+            document.getElementById('importFile').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    importPolls(file);
+                    e.target.value = ''; // Reset input
+                }
+            });
+
+            // Name modal
+            document.getElementById('submitNameBtn').addEventListener('click', () => {
+                const name = document.getElementById('voterName').value.trim();
+                if (name.length < 2) {
+                    showToast('Name must be at least 2 characters', 'error');
+                    return;
+                }
+
+                if (pendingVote) {
+                    recordVote(pendingVote.pollId, pendingVote.optionId, name);
+                    pendingVote = null;
+                }
+
+                document.getElementById('nameModal').classList.add('hidden');
+            });
+
+            document.getElementById('cancelNameBtn').addEventListener('click', () => {
+                document.getElementById('nameModal').classList.add('hidden');
+                pendingVote = null;
+            });
+
+            // Hash change
+            window.addEventListener('hashchange', handleRoute);
+        });
+    </script>
+</body>
+</html>
