@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Findas Polls - Admin</title>
+    <link rel="icon" href="https://storage.files-vault.com/images/20260219120306_original__media_177.webp" type="image/webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700&display=swap" rel="stylesheet">
@@ -66,6 +67,18 @@
             min-height: 100vh;
             line-height: 1.65;
             position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ensure main content area can grow */
+        header,
+        .container,
+        #adminPanel,
+        #toastContainer,
+        .page-atmosphere,
+        .grain-overlay {
+            flex-shrink: 0;
         }
 
         /* Atmospheric background with gradient mesh */
@@ -956,6 +969,61 @@
         }
 
         /* ========================================
+           FOOTER
+        ======================================== */
+        footer {
+            background: hsla(var(--background) / 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid hsla(var(--foreground) / 0.08);
+            padding: 1rem;
+            margin-top: auto;
+            text-align: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        footer::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, hsla(var(--primary-rgb), 0.3), transparent);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            font-size: 0.8rem;
+            color: hsla(var(--foreground) / 0.6);
+        }
+
+        .footer-logo {
+            width: 80px;
+            height: auto;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+            opacity: 0.7;
+        }
+
+        .footer-text {
+            display: inline;
+        }
+
+        .footer-text a {
+            color: hsl(var(--primary));
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-text a:hover {
+            color: hsl(var(--secondary));
+        }
+
+        /* ========================================
            MODAL
         ======================================== */
         .modal-overlay {
@@ -1262,7 +1330,7 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- Login Overlay -->
-    <div class="login-overlay" id="loginOverlay">
+    <div class="login-overlay hidden" id="loginOverlay">
         <div class="login-box">
             <img src="https://storage.files-vault.com/images/20260219120135_original__media_3.webp" 
                  alt="Admin" 
@@ -1292,7 +1360,9 @@
                  class="logo">
             <h1 class="header-title" id="headerTitle">Polls Admin</h1>
         </div>
-        <button class="logout-btn" id="logoutBtn">Logout</button>
+        <div class="header-right" style="display: flex; gap: 10px; align-items: center;">
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
     </header>
 
     <!-- Admin Panel -->
@@ -1372,6 +1442,14 @@
                     </div>
                 </div>
 
+                <!-- Credentials Management -->
+                <div class="card" style="margin-top: 1rem;">
+                    <h3>Admin Settings</h3>
+                    <div class="form-group">
+                        <button class="btn btn-warning" onclick="showCredentialsModal()">Change Username & Password</button>
+                    </div>
+                </div>
+
                 <!-- Import/Export -->
                 <div class="card" style="margin-top: 1rem;">
                     <div class="import-export">
@@ -1390,14 +1468,19 @@
             <!-- Right Column: Poll List -->
             <div>
                 <div class="card">
-                    <h2>Manage Polls</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">Manage Polls</h2>
+                        <button class="action-btn" id="editWhatsAppBtn" style="background: #25D366; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 0.9rem;">
+                            Connect WA
+                        </button>
+                    </div>
                     
                     <div class="filter-section">
                         <div class="form-group">
                             <label for="filterStatus">Filter by Status</label>
                             <select id="filterStatus">
                                 <option value="ALL">ALL</option>
-                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="ACTIVE" selected>ACTIVE</option>
                                 <option value="CLOSED">CLOSED</option>
                                 <option value="ARCHIVED">ARCHIVED</option>
                             </select>
@@ -1445,23 +1528,56 @@
         </div>
     </div>
 
+    <!-- Credentials Modal -->
+    <div class="modal-overlay hidden" id="credentialsModal">
+        <div class="modal">
+            <h3>Change Admin Credentials</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                Update your admin username and password. Changes are saved to Google Sheets.
+            </p>
+            <div class="form-group">
+                <label for="newUsername">New Username</label>
+                <input type="text" id="newUsername" placeholder="Enter new username" minlength="3" required>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password" minlength="4" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm new password" minlength="4" required>
+            </div>
+            <div id="credentialsError" style="color: var(--accent-red); margin-bottom: 1rem; display: none;"></div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="saveCredentialsBtn" style="flex: 1;">Save Changes</button>
+                <button class="btn btn-secondary" id="cancelCredentialsBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./appscript-config.js"></script>
     <script>
         // ========================================
         // CONSTANTS & STATE
         // ========================================
-        const STORAGE_KEYS = {
-            POLLS: 'poll_admin_polls_v2',
-            AUTH: 'poll_admin_authed',
-            PASSWORD_HASH: 'poll_admin_hash'
-        };
 
         const CREDENTIALS = {
             USERNAME: 'admin',
             PASSWORD: '11223344'
         };
 
+        // Google Sheets Integration (Update with your values)
+        const GOOGLE_SHEETS_CONFIG = {
+            DEPLOYMENT_URL: (window.FINDAS_CONFIG && window.FINDAS_CONFIG.POLLS_DEPLOYMENT_URL) || window.FINDAS_POLLS_DEPLOYMENT_URL || 'https://script.google.com/macros/s/AKfycbzr52WyJVmS0UIBHRvrlVzXEqEFkFyuDE_sq625zq1utSPnfzwC0d4fNMq0VwNosRiz/exec',
+            API_KEY: (window.FINDAS_CONFIG && window.FINDAS_CONFIG.POLLS_API_KEY) || window.FINDAS_POLLS_API_KEY || '851e995f-f691-4d8f-a630-5b3b83210eef',
+            ENABLED: true // CLOUD SYNC ENABLED
+        };
+
         // Pre-computed SHA-256 hash of "admin:11223344"
         const VALID_HASH = '6c3e9c6e7f4d0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d';
+
+        // Default WhatsApp number
+        let adminWhatsAppNumber = '918766514883';
 
         let currentRoute = '';
         let isAuthenticated = false;
@@ -1471,6 +1587,13 @@
             showVoters: false
         };
         let pendingVote = null;
+
+        const STORAGE_KEYS = {
+            POLLS: 'findas_polls_v2',
+            AUTH: 'findas_admin_auth',
+            PASSWORD_HASH: 'findas_admin_hash',
+            WHATSAPP: 'findas_admin_whatsapp'
+        };
 
         // ========================================
         // UTILITY FUNCTIONS
@@ -1524,13 +1647,70 @@
             }
         }
 
+        async function loadPollsFromGoogleSheets() {
+            if (!GOOGLE_SHEETS_CONFIG.ENABLED) return false;
+            
+            try {
+                const url = `${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getAllPolls&apiKey=${encodeURIComponent(GOOGLE_SHEETS_CONFIG.API_KEY)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data && data.success && Array.isArray(data.polls)) {
+                    polls = data.polls;
+                    localStorage.setItem(STORAGE_KEYS.POLLS, JSON.stringify(polls));
+                    console.log('✅ Polls loaded from Google Sheets');
+                    renderPollsList(); // Ensure UI updates
+                    return true;
+                }
+            } catch (e) {
+                console.warn('⚠️ Could not sync with Google Sheets, using local data:', e);
+            }
+            return false;
+        }
+
         function savePolls() {
             try {
                 localStorage.setItem(STORAGE_KEYS.POLLS, JSON.stringify(polls));
+                
+                // Also sync to Google Sheets if enabled
+                if (GOOGLE_SHEETS_CONFIG.ENABLED) {
+                    syncPollsToGoogleSheets();
+                }
             } catch (e) {
                 console.error('Error saving polls:', e);
                 showToast('Error saving data', 'error');
             }
+        }
+
+        async function syncPollsToGoogleSheets() {
+            if (!GOOGLE_SHEETS_CONFIG.ENABLED) return;
+            
+            try {
+                // Use no-cors mode to bypass CORS issues entirely
+                // Note: We won't get a response body back, but the request will go through
+                const payload = JSON.stringify({
+                    action: 'saveAllPolls',
+                    apiKey: GOOGLE_SHEETS_CONFIG.API_KEY,
+                    polls: polls
+                });
+
+                // Sending as text/plain with no-cors creates a "simple request"
+                // but we can't read the response success/failure
+                await fetch(GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: payload
+                });
+                
+                console.log('✅ Polls sync request sent (no-cors)');
+                return true;
+            } catch (e) {
+                console.warn('⚠️ Could not sync to Google Sheets:', e);
+            }
+            return false;
         }
 
         function getPoll(pollId) {
@@ -1544,19 +1724,85 @@
             const authStatus = localStorage.getItem(STORAGE_KEYS.AUTH);
             isAuthenticated = authStatus === '1';
             
+            // Just update global state and header visibility here
+            // Don't force login overlay yet - let the router decide
             if (isAuthenticated) {
                 document.getElementById('loginOverlay').classList.add('hidden');
                 document.getElementById('mainHeader').classList.remove('hidden');
             } else {
-                document.getElementById('loginOverlay').classList.remove('hidden');
+                // Should not force removed hidden here, wait for route
                 document.getElementById('mainHeader').classList.add('hidden');
-                document.getElementById('adminPanel').classList.add('hidden');
             }
 
             return isAuthenticated;
         }
 
+        async function loadAdminCredentialsFromGoogleSheets() {
+            if (!GOOGLE_SHEETS_CONFIG.ENABLED) return false;
+            
+            // Optimisation: Check if we have cached credentials first to avoid blocking login
+            const cachedCreds = localStorage.getItem('findas_admin_creds_cache');
+            if (cachedCreds) {
+                try {
+                    const parsed = JSON.parse(cachedCreds);
+                    window.adminUsername = parsed.username;
+                    window.adminPasswordHash = parsed.passwordHash;
+                    // Keep fetching in background to update cache, but don't block return if we have cache
+                    // However, for security, we usually want fresh auth. 
+                    // Given the slowness, we'll return true immediately if cached, 
+                    // and let the network request update the global variables for next time.
+                    
+                    // Fire-and-forget update
+                    fetch(`${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getCredentials&apiKey=${encodeURIComponent(GOOGLE_SHEETS_CONFIG.API_KEY)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success && data.credentials) {
+                                window.adminUsername = data.credentials.username;
+                                window.adminPasswordHash = data.credentials.passwordHash;
+                                localStorage.setItem('findas_admin_creds_cache', JSON.stringify(data.credentials));
+                            }
+                        })
+                        .catch(e => console.warn('Background creds update failed', e));
+
+                    console.log('✅ Credentials loaded from Cache (Background update started)');
+                    return true;
+                } catch(e) {
+                    localStorage.removeItem('findas_admin_creds_cache');
+                }
+            }
+
+            try {
+                const url = `${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getCredentials&apiKey=${encodeURIComponent(GOOGLE_SHEETS_CONFIG.API_KEY)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.credentials) {
+                    window.adminUsername = data.credentials.username;
+                    window.adminPasswordHash = data.credentials.passwordHash;
+                    
+                    // Cache the credentials
+                    localStorage.setItem('findas_admin_creds_cache', JSON.stringify(data.credentials));
+                    
+                    console.log('✅ Credentials loaded from Google Sheets');
+                    return true;
+                }
+            } catch (e) {
+                console.warn('⚠️ Using default admin credentials:', e);
+                return false;
+            }
+        }
+
         async function login(username, password) {
+            // Load credentials from Google Sheets when user logs in
+            if (GOOGLE_SHEETS_CONFIG.ENABLED) {
+                try {
+                    await loadAdminCredentialsFromGoogleSheets();
+                } catch (e) {
+                    console.log('Using local credentials');
+                }
+            }
+
+            // Check with default credentials first
             if (username === CREDENTIALS.USERNAME && password === CREDENTIALS.PASSWORD) {
                 const hash = await sha256(`${username}:${password}`);
                 localStorage.setItem(STORAGE_KEYS.PASSWORD_HASH, hash);
@@ -1570,6 +1816,24 @@
                 navigateTo('#/admin');
                 return true;
             }
+            
+            // If Google Sheets credentials differ, check them
+            if (GOOGLE_SHEETS_CONFIG.ENABLED && window.adminPasswordHash) {
+                const hash = await sha256(`${username}:${password}`);
+                if (username === CREDENTIALS.USERNAME && hash === window.adminPasswordHash) {
+                    localStorage.setItem(STORAGE_KEYS.PASSWORD_HASH, hash);
+                    localStorage.setItem(STORAGE_KEYS.AUTH, '1');
+                    isAuthenticated = true;
+                    
+                    document.getElementById('loginOverlay').classList.add('hidden');
+                    document.getElementById('mainHeader').classList.remove('hidden');
+                    document.getElementById('loginError').classList.add('hidden');
+                    
+                    navigateTo('#/admin');
+                    return true;
+                }
+            }
+            
             return false;
         }
 
@@ -1581,6 +1845,109 @@
             document.getElementById('loginOverlay').classList.remove('hidden');
             document.getElementById('mainHeader').classList.add('hidden');
             showToast('Logged out successfully', 'success');
+            
+            // Redirect to Findas Academy after a brief delay
+            setTimeout(() => {
+                window.location.href = 'https://findasacademy.in';
+            }, 800);
+        }
+
+        // ========================================
+        // CREDENTIALS MANAGEMENT
+        // ========================================
+        function showCredentialsModal() {
+            document.getElementById('credentialsModal').classList.remove('hidden');
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('credentialsError').style.display = 'none';
+        }
+
+        function hideCredentialsModal() {
+            document.getElementById('credentialsModal').classList.add('hidden');
+        }
+
+        async function saveAdminCredentials() {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorDiv = document.getElementById('credentialsError');
+
+            // Validation
+            if (!username || username.length < 3) {
+                errorDiv.textContent = 'Username must be at least 3 characters';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (!password || password.length < 4) {
+                errorDiv.textContent = 'Password must be at least 4 characters';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (!GOOGLE_SHEETS_CONFIG.ENABLED) {
+                showToast('Google Sheets sync is disabled', 'error');
+                return;
+            }
+
+            try {
+                // Hash the password
+                const passwordHash = await sha256(`${username}:${password}`);
+
+                // Send to Google Sheets using POST
+                const payload = JSON.stringify({
+                    action: 'updateAdminCredentials',
+                    apiKey: GOOGLE_SHEETS_CONFIG.API_KEY,
+                    username: username,
+                    passwordHash: passwordHash
+                });
+
+                const response = await fetch(GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL, {
+                    method: 'POST',
+                    body: payload,
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    }
+                });
+
+                const responseText = await response.text();
+                
+                try {
+                    const result = JSON.parse(responseText);
+
+                    if (result.success) {
+                        // Update local credentials
+                        CREDENTIALS.USERNAME = username;
+                        window.adminPasswordHash = passwordHash;
+
+                        showToast('✅ Credentials updated successfully!', 'success');
+                        hideCredentialsModal();
+                    } else {
+                        showToast('Failed to update credentials', 'error');
+                    }
+                } catch (parseError) {
+                    console.log('Response:', responseText);
+                    // If we can't parse, assume success if no error
+                    if (!responseText.includes('error')) {
+                        CREDENTIALS.USERNAME = username;
+                        window.adminPasswordHash = passwordHash;
+                        showToast('✅ Credentials updated successfully!', 'success');
+                        hideCredentialsModal();
+                    } else {
+                        showToast('Error updating credentials', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving credentials:', error);
+                showToast('Error saving credentials: ' + error.message, 'error');
+            }
         }
 
         // ========================================
@@ -1590,25 +1957,111 @@
             window.location.hash = hash;
         }
 
-        function handleRoute() {
+        async function handleRoute() {
             const hash = window.location.hash || '#/admin';
             currentRoute = hash;
 
             // Hide all panels
             document.getElementById('adminPanel').classList.add('hidden');
             document.getElementById('votingPanel').classList.add('hidden');
+            
+            // Stop auto-refresh when navigating away from Admin
+            stopAdminAutoRefresh();
+
+            // Stop auto-refresh when navigating away from voting page
+            if (!hash.startsWith('#/vote/')) {
+                stopVotingPageAutoRefresh();
+            }
 
             if (hash.startsWith('#/vote/')) {
-                // Public voting page
-                const pollId = hash.replace('#/vote/', '');
-                showVotingPage(pollId);
+                // Public voting page - Hide login, Show voting panel
+                document.getElementById('loginOverlay').classList.add('hidden'); // Ensure hidden
+                let pollId = hash.replace('#/vote/', '');
+                let embeddedPollData = null;
+                
+                // Check if poll data is embedded in URL (for cross-browser sharing)
+                if (pollId.includes('?data=')) {
+                    const parts = pollId.split('?data=');
+                    pollId = parts[0];
+                    try {
+                        const decoded = decodeURIComponent(atob(parts[1]));
+                        embeddedPollData = JSON.parse(decoded);
+                    } catch (e) {
+                        console.error('Failed to decode poll data:', e);
+                    }
+                }
+                
+                // Show loading state immediately
+                document.getElementById('votingPanel').classList.remove('hidden');
+                document.getElementById('votingContent').innerHTML = `
+                    <div style="text-align: center; padding: 3rem;">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+                        <p style="color: var(--text-secondary);">Loading poll...</p>
+                    </div>
+                `;
+                
+                // Try to fetch from Google Sheets if poll not found locally
+                let poll = getPoll(pollId);
+                if (!poll && !embeddedPollData && GOOGLE_SHEETS_CONFIG.ENABLED) {
+                    console.log('Poll not found locally, fetching from server...');
+                    await loadPollsFromGoogleSheets();
+                    poll = getPoll(pollId);
+                }
+                
+                showVotingPage(pollId, false, embeddedPollData);
             } else {
-                // Admin page
+                // Admin page - If not authenticated, show login
                 if (isAuthenticated) {
+                    document.getElementById('loginOverlay').classList.add('hidden');
                     showAdminPanel();
                 } else {
                     document.getElementById('loginOverlay').classList.remove('hidden');
+                    document.getElementById('adminPanel').classList.add('hidden');
                 }
+            }
+        }
+
+
+        let adminRefreshInterval;
+
+        function startAdminAutoRefresh() {
+            if (adminRefreshInterval) clearInterval(adminRefreshInterval);
+            adminRefreshInterval = setInterval(async () => {
+                // Background refresh
+                if (GOOGLE_SHEETS_CONFIG.ENABLED) {
+                    try {
+                        // Use loadPollsFromGoogleSheets but handle update smartly
+                        const url = `${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getAllPolls&apiKey=${encodeURIComponent(GOOGLE_SHEETS_CONFIG.API_KEY)}`;
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        
+                        if (data && data.success && Array.isArray(data.polls)) {
+                            const newPolls = data.polls;
+                            const currentPollsStr = JSON.stringify(polls);
+                            const newPollsStr = JSON.stringify(newPolls);
+                            
+                            // Only update if data changed
+                            if (currentPollsStr !== newPollsStr) {
+                                polls = newPolls;
+                                localStorage.setItem(STORAGE_KEYS.POLLS, JSON.stringify(polls));
+                                // Don't full re-render if user is interacting, maybe check focus?
+                                // For now, simple re-render
+                                renderPollsList();
+                                updateKPIs();
+                                // console.log('Polls auto-refreshed');
+                            }
+                        }
+                    } catch (e) {
+                       // console.warn('Auto-refresh failed', e);
+                    }
+                }
+            }, 2000); // 2 seconds
+        }
+
+        function stopAdminAutoRefresh() {
+            if (adminRefreshInterval) {
+                clearInterval(adminRefreshInterval);
+                adminRefreshInterval = null;
             }
         }
 
@@ -1619,8 +2072,17 @@
             document.getElementById('adminPanel').classList.remove('hidden');
             document.getElementById('votingPanel').classList.add('hidden');
             document.getElementById('headerTitle').textContent = 'Polls Admin';
+            
+            // Load WhatsApp number from localStorage first
+            const savedWA = localStorage.getItem(STORAGE_KEYS.WHATSAPP); 
+            if (savedWA) adminWhatsAppNumber = savedWA;
+            
+            // Fetch latest WhatsApp number from Google Sheets (async)
+            syncWhatsAppNumberFromServer();
+
             updateKPIs();
             renderPollsList();
+            startAdminAutoRefresh();
         }
 
         function updateKPIs() {
@@ -1677,7 +2139,32 @@
             }, 10000);
         }
 
+        function autoArchiveEndedPolls() {
+            let shouldSave = false;
+            const now = new Date();
+            
+            polls.forEach(poll => {
+                // Auto-archive active polls that have ended
+                if (poll.status === 'ACTIVE' && poll.ends_at && new Date(poll.ends_at) < now) {
+                    poll.status = 'ARCHIVED';
+                    shouldSave = true;
+                }
+                // Auto-archive closed polls that have ended
+                if (poll.status === 'CLOSED' && poll.ends_at && new Date(poll.ends_at) < now) {
+                    poll.status = 'ARCHIVED';
+                    shouldSave = true;
+                }
+            });
+            
+            if (shouldSave) {
+                savePolls();
+            }
+        }
+
         function renderPollsList() {
+            // Auto-archive any polls that have ended
+            autoArchiveEndedPolls();
+            
             const container = document.getElementById('pollsList');
             const filter = document.getElementById('filterStatus').value;
 
@@ -1692,15 +2179,17 @@
             }
 
             container.innerHTML = filteredPolls.map(poll => {
-                const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
-                const isActive = poll.status === 'ACTIVE';
+                // Ensure status is valid
+                const safeStatus = (poll.status || 'CLOSED').toUpperCase();
+                const totalVotes = (poll.options || []).reduce((sum, opt) => sum + (opt.votes || 0), 0);
+                const isActive = safeStatus === 'ACTIVE';
                 const hasEnded = poll.ends_at && new Date(poll.ends_at) < new Date();
 
                 return `
-                    <div class="poll-card">
+                    <div class="poll-card" id="poll-card-${poll.id}">
                         <div class="poll-header">
-                            <div class="poll-question">${escapeHtml(poll.question)}</div>
-                            <span class="status-pill status-${poll.status.toLowerCase()}">${poll.status}</span>
+                            <div class="poll-question">${escapeHtml(poll.question || 'Untitled Poll')}</div>
+                            <span class="status-pill status-${safeStatus.toLowerCase()}">${safeStatus}</span>
                         </div>
                         
                         <div class="poll-meta">
@@ -1732,11 +2221,12 @@
                         </div>
 
                         <div class="poll-actions">
-                            ${poll.status !== 'ACTIVE' ? `<button class="btn btn-success btn-small" onclick="updatePollStatus('${poll.id}', 'ACTIVE')">Activate</button>` : ''}
-                            ${poll.status !== 'CLOSED' ? `<button class="btn btn-warning btn-small" onclick="updatePollStatus('${poll.id}', 'CLOSED')">Close</button>` : ''}
-                            ${poll.status !== 'ARCHIVED' ? `<button class="btn btn-secondary btn-small" onclick="updatePollStatus('${poll.id}', 'ARCHIVED')">Archive</button>` : ''}
-                            ${isActive && !hasEnded ? `<button class="btn btn-secondary btn-small" onclick="testVote('${poll.id}')">Test Vote</button>` : ''}
+                            ${safeStatus !== 'ACTIVE' ? `<button class="btn btn-success btn-small" onclick="updatePollStatus('${poll.id}', 'ACTIVE')">Activate</button>` : ''}
+                            ${safeStatus !== 'CLOSED' ? `<button class="btn btn-warning btn-small" onclick="updatePollStatus('${poll.id}', 'CLOSED')">Close</button>` : ''}
+                            ${safeStatus !== 'ARCHIVED' ? `<button class="btn btn-secondary btn-small" onclick="updatePollStatus('${poll.id}', 'ARCHIVED')">Archive</button>` : ''}
+                            ${isActive && !hasEnded ? `<button class="btn btn-secondary btn-small" onclick="testVote('${poll.id}')">Test Poll</button>` : ''}
                             <button class="btn btn-secondary btn-small" onclick="copyVotingLink('${poll.id}')">Copy Link</button>
+                            <button class="btn btn-success btn-small" style="background-color: #25D366;" onclick="shareToWhatsApp('${poll.id}')">WhatsApp Report</button>
                             <button class="btn btn-danger btn-small" onclick="deletePoll('${poll.id}')">Delete</button>
                         </div>
 
@@ -1751,9 +2241,9 @@
                 return `
                     <div class="voters-section">
                         <div class="voters-header">
-                            <h4>Voters (0)</h4>
+                            <h4>Poll Responses (0)</h4>
                         </div>
-                        <p class="no-voters">No votes yet</p>
+                        <p class="no-voters">No responses yet</p>
                     </div>
                 `;
             }
@@ -1761,10 +2251,10 @@
             return `
                 <div class="voters-section">
                     <div class="voters-header">
-                        <h4>Voters (${poll.voters.length})</h4>
+                        <h4>Poll Responses (${poll.voters.length})</h4>
                         <input type="text" 
                                class="voter-search" 
-                               placeholder="Search voters..." 
+                               placeholder="Search responses..." 
                                onkeyup="filterVoters('${poll.id}', this.value)">
                     </div>
                     <table class="voters-table" id="voters-${poll.id}">
@@ -1773,21 +2263,46 @@
                                 <th>Name</th>
                                 <th>Selected</th>
                                 <th>Time</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${poll.voters.map(voter => `
+                            ${poll.voters.map((voter, idx) => `
                                 <tr class="voter-row">
                                     <td>${escapeHtml(voter.name || 'Anonymous')}</td>
                                     <td>${escapeHtml(voter.optionLabel)}</td>
                                     <td>${formatDate(voter.timeISO)}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-small" style="padding: 2px 8px; font-size: 0.8rem;" onclick="deleteVote('${poll.id}', ${idx})">Remove</button>
+                                    </td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
-                    <button class="btn btn-danger btn-small mt-1" onclick="clearVoters('${poll.id}')">Clear All Voters</button>
+                    <button class="btn btn-danger btn-small mt-1" onclick="clearVoters('${poll.id}')">Clear All Responses</button>
                 </div>
             `;
+        }
+
+        function deleteVote(pollId, voterIndex) {
+            const poll = getPoll(pollId);
+            if (!poll) return;
+
+            const voter = poll.voters[voterIndex];
+            if (!confirm(`Remove response by ${voter.name || 'Anonymous'}?`)) return;
+
+            // Find option and decrement count
+            const option = poll.options.find(opt => opt.id === voter.optionId);
+            if (option && option.votes > 0) {
+                option.votes--;
+            }
+
+            // Remove voter
+            poll.voters.splice(voterIndex, 1);
+            
+            savePolls();
+            renderPollsList();
+            showToast('Response removed', 'success');
         }
 
         function filterVoters(pollId, searchTerm) {
@@ -1805,14 +2320,14 @@
             const poll = getPoll(pollId);
             if (!poll) return;
 
-            if (!confirm(`Clear all ${poll.voters.length} voters from this poll?`)) return;
+            if (!confirm(`Clear all ${poll.voters.length} responses from this poll?`)) return;
 
             // Reset votes and voters
             poll.options.forEach(opt => opt.votes = 0);
             poll.voters = [];
             savePolls();
             renderPollsList();
-            showToast('Voters cleared', 'success');
+            showToast('Responses cleared', 'success');
         }
 
         function updatePollStatus(pollId, newStatus) {
@@ -1850,8 +2365,20 @@
 
             // Random option
             const randomOption = poll.options[Math.floor(Math.random() * poll.options.length)];
-            recordVote(pollId, randomOption.id, 'Test User ' + Math.floor(Math.random() * 1000));
-            showToast('Test vote recorded', 'success');
+            
+            // Manually record vote without triggering navigation
+            randomOption.votes++;
+            
+            poll.voters.push({
+                name: 'Test Response ' + Math.floor(Math.random() * 1000),
+                optionId: randomOption.id,
+                optionLabel: randomOption.label,
+                timeISO: new Date().toISOString()
+            });
+            
+            savePolls();
+            renderPollsList(); // Update UI in place
+            showToast(`Test response added for "${randomOption.label}"`, 'success');
         }
 
         function copyVotingLink(pollId) {
@@ -1860,6 +2387,73 @@
                 showToast('Voting link copied!', 'success');
             }).catch(() => {
                 showToast('Failed to copy link', 'error');
+            });
+        }
+
+        function shareToWhatsApp(pollId) {
+            const poll = getPoll(pollId);
+            if (!poll) return;
+
+            const totalVotes = poll.options.reduce((sum, opt) => sum + (opt.votes || 0), 0);
+            
+            let message = `*Poll Report: ${poll.question}*\n\n`;
+            message += `Total Responses: ${totalVotes}\n\n`;
+            message += `*Results:*\n`;
+            
+            poll.options.forEach(opt => {
+                const count = opt.votes || 0;
+                const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                message += `- ${opt.label}: ${count} (${percentage}%)\n`;
+            });
+            
+            const votingUrl = `${window.location.origin}${window.location.pathname}#/vote/${pollId}`;
+            message += `\nVote here: ${votingUrl}`;
+            
+            const phone = localStorage.getItem(STORAGE_KEYS.WHATSAPP) || adminWhatsAppNumber;
+            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function syncWhatsAppNumberFromServer() {
+            // Fetch the latest WhatsApp number from Google Sheets
+            fetch(`${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getWhatsAppNumber&apiKey=${GOOGLE_SHEETS_CONFIG.API_KEY}`, {
+                method: 'GET',
+                mode: 'cors'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.whatsappNumber) {
+                    adminWhatsAppNumber = data.whatsappNumber;
+                    localStorage.setItem(STORAGE_KEYS.WHATSAPP, data.whatsappNumber);
+                    Logger.log('✅ Synced WhatsApp number from server: ' + adminWhatsAppNumber);
+                }
+            })
+            .catch(error => {
+                console.log('Could not sync WhatsApp number from server (offline?), using cached value');
+            });
+        }
+
+        function saveWhatsAppNumberToServer(number) {
+            // Save the WhatsApp number to Google Sheets
+            fetch(GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'setWhatsAppNumber',
+                    apiKey: GOOGLE_SHEETS_CONFIG.API_KEY,
+                    whatsappNumber: number
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ WhatsApp number saved to server');
+                }
+            })
+            .catch(error => {
+                console.log('Could not save WhatsApp number to server: ' + error);
             });
         }
 
@@ -1872,17 +2466,30 @@
         // ========================================
         // PUBLIC VOTING PAGE
         // ========================================
-        function showVotingPage(pollId, showThankYou = false) {
+        function showVotingPage(pollId, showThankYou = false, embeddedPollData = null) {
             document.getElementById('votingPanel').classList.remove('hidden');
             document.getElementById('adminPanel').classList.add('hidden');
             document.getElementById('mainHeader').classList.remove('hidden');
             document.getElementById('headerTitle').textContent = 'Vote';
 
-            const poll = getPoll(pollId);
+            let poll = getPoll(pollId);
             const content = document.getElementById('votingContent');
+            
+            // If poll not found in localStorage, use embedded data from URL
+            if (!poll && embeddedPollData) {
+                poll = embeddedPollData;
+                // Temporarily store in memory for this session
+                window.sharedPoll = poll;
+            }
 
             if (!poll) {
-                content.innerHTML = '<p style="color: var(--accent-red); text-align: center;">Poll not found</p>';
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 2rem;">
+                        <p style="color: var(--accent-red); font-size: 1.2rem; margin-bottom: 1rem;">⚠️ Poll Not Accessible</p>
+                        <p style="color: var(--foreground); opacity: 0.7;">This poll link appears to be invalid or expired.</p>
+                        <p style="color: var(--foreground); opacity: 0.6; font-size: 0.9rem; margin-top: 1rem;">Please contact the poll creator for a new link.</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -1951,6 +2558,9 @@
 
                 ${renderPublicVotersList(poll)}
             `;
+            
+            // Start auto-refresh of voting results
+            startVotingPageAutoRefresh(pollId);
         }
 
         function renderPublicVotersList(poll) {
@@ -1974,6 +2584,101 @@
         }
 
         let selectedOptionId = null;
+        let currentVotingPollId = null;
+        let votingPageRefreshInterval = null;
+
+        // Auto-refresh voting results every 2 seconds
+        function startVotingPageAutoRefresh(pollId) {
+            // Clear any existing interval
+            if (votingPageRefreshInterval) {
+                clearInterval(votingPageRefreshInterval);
+            }
+            
+            currentVotingPollId = pollId;
+            votingPageRefreshInterval = setInterval(() => {
+                updateVotingResults(pollId);
+            }, 2000);
+        }
+
+        function stopVotingPageAutoRefresh() {
+            if (votingPageRefreshInterval) {
+                clearInterval(votingPageRefreshInterval);
+                votingPageRefreshInterval = null;
+            }
+            currentVotingPollId = null;
+        }
+
+        function updateVotingResults(pollId) {
+            let poll = getPoll(pollId);
+            
+            // Check if poll data is shared from URL
+            if (!poll && window.sharedPoll && window.sharedPoll.id === pollId) {
+                poll = window.sharedPoll;
+            }
+            
+            if (!poll) return;
+
+            const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
+            const votingOptionsContainer = document.getElementById('votingOptions');
+            
+            if (!votingOptionsContainer) return;
+
+            const hasVoted = localStorage.getItem(`voted_${pollId}`) === '1';
+            const hasEnded = poll.ends_at && new Date(poll.ends_at) < new Date();
+            const canVote = poll.status === 'ACTIVE' && !hasEnded && !hasVoted;
+
+            // Update the options/results display
+            votingOptionsContainer.innerHTML = poll.options.map(opt => {
+                const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+                
+                if (canVote) {
+                    // User can still vote - show voting options
+                    const isSelected = selectedOptionId === opt.id;
+                    return `
+                        <div class="voting-option ${isSelected ? 'selected' : ''}" data-option-id="${opt.id}" onclick="selectOption('${opt.id}')">
+                            <div class="option-label">${escapeHtml(opt.label)}</div>
+                        </div>
+                    `;
+                } else {
+                    // Show results
+                    return `
+                        <div class="result-item">
+                            <div class="result-label">
+                                <span>${escapeHtml(opt.label)}</span>
+                                <span>${opt.votes} (${percentage}%)</span>
+                            </div>
+                            <div class="result-bar-container">
+                                <div class="result-bar" style="width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+
+            // Update total votes count
+            const votingInfo = document.querySelector('.voting-info');
+            if (votingInfo) {
+                votingInfo.innerHTML = votingInfo.innerHTML.replace(
+                    /Total Votes: <strong>\d+<\/strong>/,
+                    `Total Votes: <strong>${totalVotes}</strong>`
+                );
+            }
+
+            // Update recent voters if visible
+            const recentVotersDiv = document.querySelector('.recent-voters');
+            if (recentVotersDiv && poll.show_voters_publicly) {
+                const recentVoters = poll.voters.slice(-10).reverse();
+                recentVotersDiv.innerHTML = `
+                    <h3>Recent Voters</h3>
+                    ${recentVoters.map(voter => `
+                        <div class="voter-item">
+                            <span class="voter-name">${escapeHtml(voter.name || 'Anonymous')}</span>
+                            <span class="voter-choice">${escapeHtml(voter.optionLabel)}</span>
+                        </div>
+                    `).join('')}
+                `;
+            }
+        }
 
         function selectOption(optionId) {
             selectedOptionId = optionId;
@@ -2000,7 +2705,11 @@
         function submitVote(pollId) {
             if (!selectedOptionId) return;
 
-            const poll = getPoll(pollId);
+            let poll = getPoll(pollId);
+            // Check if this is a shared poll from URL
+            if (!poll && window.sharedPoll && window.sharedPoll.id === pollId) {
+                poll = window.sharedPoll;
+            }
             if (!poll) return;
 
             // Check if name is required
@@ -2017,7 +2726,11 @@
         }
 
         function recordVote(pollId, optionId, voterName) {
-            const poll = getPoll(pollId);
+            let poll = getPoll(pollId);
+            // Check if this is a shared poll from URL
+            if (!poll && window.sharedPoll && window.sharedPoll.id === pollId) {
+                poll = window.sharedPoll;
+            }
             if (!poll) return;
 
             const option = poll.options.find(opt => opt.id === optionId);
@@ -2036,12 +2749,19 @@
 
             // Mark as voted
             localStorage.setItem(`voted_${pollId}`, '1');
-
-            savePolls();
+            
+            // If this is a local poll (in localStorage), save it
+            if (getPoll(pollId)) {
+                savePolls();
+            } else if (window.sharedPoll) {
+                // Update shared poll data
+                window.sharedPoll = poll;
+            }
+            
             showToast('Vote recorded!', 'success');
             
             // Refresh the voting page with thank you message
-            showVotingPage(pollId, true);
+            showVotingPage(pollId, true, window.sharedPoll);
         }
 
         // ========================================
@@ -2101,8 +2821,14 @@
         // ========================================
         document.addEventListener('DOMContentLoaded', async () => {
             loadPolls();
+            
+            // Try to load from Google Sheets if enabled (optional)
+            if (GOOGLE_SHEETS_CONFIG.ENABLED) {
+                await loadPollsFromGoogleSheets();
+            }
+            
             await checkAuth();
-            handleRoute();
+            await handleRoute();
 
             // Login form
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -2118,6 +2844,19 @@
 
             // Logout
             document.getElementById('logoutBtn').addEventListener('click', logout);
+            // WhatsApp Number Config
+            document.getElementById('editWhatsAppBtn').addEventListener('click', () => {
+                const current = localStorage.getItem(STORAGE_KEYS.WHATSAPP) || adminWhatsAppNumber;
+                const newNumber = prompt("Enter WhatsApp number (with country code, no +):", current);
+                if (newNumber && /^\d+$/.test(newNumber)) {
+                    adminWhatsAppNumber = newNumber;
+                    localStorage.setItem(STORAGE_KEYS.WHATSAPP, newNumber);
+                    saveWhatsAppNumberToServer(newNumber); // Save to Google Sheets
+                    showToast('WhatsApp number updated', 'success');
+                } else if (newNumber !== null) {
+                    showToast('Invalid number format', 'error');
+                }
+            });
 
             // Toggle switches
             document.getElementById('toggleRequireName').addEventListener('click', function() {
@@ -2208,9 +2947,28 @@
                 pendingVote = null;
             });
 
+            // Credentials Modal Listeners
+            document.getElementById('saveCredentialsBtn').addEventListener('click', saveAdminCredentials);
+            document.getElementById('cancelCredentialsBtn').addEventListener('click', hideCredentialsModal);
+
             // Hash change
             window.addEventListener('hashchange', handleRoute);
         });
     </script>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-text">
+                <a href="https://dcoresystems.com" target="_blank" rel="noopener noreferrer">
+                    <img src="https://storage.files-vault.com/uploads/1771740950-r9B7iWXuln.png" 
+                         alt="Dcore Systems LLP" 
+                         class="footer-logo">
+                </a>
+                Created by <a href="https://dcoresystems.com" target="_blank" rel="noopener noreferrer">Dcore Systems LLP</a>
+            </div>
+            <div class="footer-text">© 2026 Copyright Findas Academy. All rights reserved.</div>
+        </div>
+    </footer>
 </body>
 </html>

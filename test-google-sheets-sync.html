@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSONP + Sheets Diagnostic - Findas Academy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .config-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .config-section code {
+            display: block;
+            background: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-top: 5px;
+        }
+
+        .test-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .test-section:last-child {
+            border-bottom: none;
+        }
+
+        .test-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .test-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            color: #0c5460;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .result pre {
+            background: rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.pending {
+            background: #ffeaa7;
+            color: #856404;
+        }
+
+        .status-badge.running {
+            background: #74b9ff;
+            color: #004085;
+        }
+
+        .status-badge.pass {
+            background: #55efc4;
+            color: #155724;
+        }
+
+        .status-badge.fail {
+            background: #ff7675;
+            color: #721c24;
+        }
+
+        .run-all-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            font-size: 16px;
+            padding: 15px 30px;
+            margin-bottom: 30px;
+            display: block;
+            width: 100%;
+        }
+
+        .summary {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .summary h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .summary-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 JSONP + Google Sheets Diagnostic</h1>
+        <p class="subtitle">Diagnoses the content API JSONP startup issue (<code>getGlobalSettings</code>) and polls sync. Mirrors the exact retry/failover logic used by <code>index.html</code>.</p>
+
+        <div class="config-section">
+            <h3>📡 Endpoint Configuration</h3>
+            <strong>Content API — primary (JSONP):</strong>
+            <code id="content-url-display">Loading...</code>
+            <strong style="display: block; margin-top: 8px;">Content API — backup/failover:</strong>
+            <code id="backup-url-display">Loading...</code>
+            <strong style="display: block; margin-top: 8px;">Polls API URL:</strong>
+            <code id="polls-url-display">Loading...</code>
+            <strong style="display: block; margin-top: 8px;">Polls API Key:</strong>
+            <code id="api-key-display">Loading...</code>
+        </div>
+
+        <button class="btn run-all-btn" onclick="runAllTests()">
+            ▶️ Run All 10 Tests
+        </button>
+
+        <h2 style="margin: 24px 0 4px; color: #333; font-size: 20px;">Part A — Content API (JSONP)</h2>
+        <p style="color: #666; font-size: 13px; margin-bottom: 16px;">These tests use the same JSONP transport as <code>index.html</code> and target the intermittent <code>getGlobalSettings</code> startup failure.</p>
+
+        <!-- Test A0: Endpoint reachability -->
+        <div class="test-section">
+            <div class="test-title">
+                <span class="status-badge pending" id="status-testA0">PENDING</span>
+                <span>A0 · Live endpoint reachability (no cache)</span>
+            </div>
+            <p class="test-description">Checks raw JSONP script-load reachability for primary and backup endpoints directly (no cache fallback). Use this first to confirm live browser connectivity.</p>
+            <button class="btn" onclick="testEndpointReachability()">Run Test</button>
+            <div class="result" id="result-testA0"></div>
+        </div>
+
+        <!-- Test A: getGlobalSettings -->
+        <div class="test-section">
+            <div class="test-title">
+                <span class="status-badge pending" id="status-testA">PENDING</span>
+                <span>A1 · getGlobalSettings (with retry)</span>
+            </div>
+            <p class="test-description">Calls <code>getGlobalSettings</code> via JSONP with up to 4 retry attempts and endpoint rotation — exactly as <code>index.html</code> does on startup. Reports latency and which attempt succeeded.</p>
+            <button class="btn" onclick="testGetGlobalSettings()">Run Test</button>
+            <div class="result" id="result-testA"></div>
+        </div>
+
+        <!-- Test B: getCourses -->
+        <div class="test-section">
+            <div class="test-title">
+                <span class="status-badge pending" id="status-testB">PENDING</span>
+                <span>A2 · getCourses (JSONP)</span>
+            </div>
+            <p class="test-description">Verifies the courses endpoint responds correctly and returns structured data.</p>
+            <button class="btn" onclick="testGetCourses()">Run Test</button>
+            <div class="result" id="result-testB"></div>
+        </div>
+
+        <!-- Test C: getWebinars -->
+        <div class="test-section">
+            <div class="test-title">
+                <span class="status-badge pending" id="status-testC">PENDING</span>
+                <span>A3 · getWebinars (JSONP)</span>
+            </div>
+            <p class="test-description">Verifies the webinars endpoint responds correctly.</p>
+            <button class="btn" onclick="testGetWebinars()">Run Test</button>
+            <div class="result" id="result-testC"></div>
+        </div>
+
+        <!-- Test D: Intermittency detector -->
+        <div class="test-section">
+            <div class="test-title">
+                <span class="status-badge pending" id="status-testD">PENDING</span>
+                <span>A4 · Intermittency detector (5× rapid calls)</span>
+            </div>
+            <p class="test-description">Fires <code>getGlobalSettings</code> 5 times in quick succession to expose flaky responses. If any fail, the endpoint is intermittent — the root cause of the startup issue.</p>
+            <button class="btn" onclick="testIntermittency()">Run Test</button>
+            <div class="result" id="result-testD"></div>
+        </div>
+
+        <!-- Test E: Failover -->
+        <div class="test-section">
+            <div class="test-title">
+                <span class="status-badge pending" id="status-testE">PENDING</span>
+                <span>A5 · Failover endpoint check</span>
+            </div>
+            <p class="test-description">Tests whether <code>WEBAPP_BACKUP_URL</code> is configured and reachable. Without a backup URL any single endpoint failure causes a full page load failure.</p>
+            <button class="btn" onclick="testFailover()">Run Test</button>
+            <div class="result" id="result-testE"></div>
+        </div>
+
+        <h2 style="margin: 32px 0 4px; color: #333; font-size: 20px;">Part B — Polls API</h2>
+        <p style="color: #666; font-size: 13px; margin-bottom: 16px;">These tests use REST/POST to the Polls Apps Script deployment.</p>
+
+        <!-- Test 1: Get All Polls -->
+        <div class="test-section">
+            <div class="test-title">
+                <span class="status-badge pending" id="status-test1">PENDING</span>
+                <span>B1 · Get All Polls</span>
+            </div>
+            <p class="test-description">Retrieves all polls from Google Sheets via the Polls API.</p>
+            <button class="btn" onclick="testGetAllPolls()">Run Test</button>
+            <div class="result" id="result-test1"></div>
+        </div>
+
+        <!-- Test 2: Save Poll -->
+        <div class="test-section">
+            <div class="test-title">
+                <span class="status-badge pending" id="status-test2">PENDING</span>
+                <span>B2 · Save Test Poll</span>
+            </div>
+            <p class="test-description">Creates a temporary test poll via POST and confirms it was accepted.</p>
+            <button class="btn" onclick="testSavePoll()">Run Test</button>
+            <div class="result" id="result-test2"></div>
+        </div>
+
+        <!-- Test 3: Data Persistence -->
+        <div class="test-section">
+            <div class="test-title">
+                <span class="status-badge pending" id="status-test3">PENDING</span>
+                <span>B3 · Data Persistence (save → retrieve → delete)</span>
+            </div>
+            <p class="test-description">Saves a poll with known data, retrieves it, verifies the round-trip matches, then cleans up.</p>
+            <button class="btn" onclick="testDataPersistence()">Run Test</button>
+            <div class="result" id="result-test3"></div>
+        </div>
+
+        <!-- Test 4: Delete Poll -->
+        <div class="test-section">
+            <div class="test-title">
+                <span class="status-badge pending" id="status-test4">PENDING</span>
+                <span>B4 · Delete Test Poll</span>
+            </div>
+            <p class="test-description">Deletes the test poll created by B2 and confirms removal.</p>
+            <button class="btn" onclick="testDeletePoll()">Run Test</button>
+            <div class="result" id="result-test4"></div>
+        </div>
+
+        <div class="summary" id="summary" style="display: none;">
+            <h2>📊 Test Summary</h2>
+            <div class="summary-stats">
+                <div class="stat">
+                    <span class="stat-number" style="color: #28a745;" id="passed-count">0</span>
+                    <span class="stat-label">Passed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number" style="color: #dc3545;" id="failed-count">0</span>
+                    <span class="stat-label">Failed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number" style="color: #667eea;" id="total-count">10</span>
+                    <span class="stat-label">Total</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./appscript-config.js"></script>
+    <script>
+        // ── Configuration ──────────────────────────────────────────────────────
+        const CONTENT_URL = (window.FINDAS_CONFIG && window.FINDAS_CONFIG.WEBAPP_URL)
+            || window.FINDAS_WEBAPP_URL || '';
+        const CONTENT_BACKUP_URL = (window.FINDAS_CONFIG && (window.FINDAS_CONFIG.WEBAPP_BACKUP_URL || window.FINDAS_CONFIG.WEBAPP_FALLBACK_URL))
+            || window.FINDAS_WEBAPP_BACKUP_URL || '';
+        const CONTENT_ENDPOINTS = [CONTENT_URL, CONTENT_BACKUP_URL]
+            .map(v => String(v || '').trim())
+            .filter((v, i, arr) => v && arr.indexOf(v) === i);
+        const POLLS_URL = (window.FINDAS_CONFIG && window.FINDAS_CONFIG.POLLS_DEPLOYMENT_URL)
+            || window.FINDAS_POLLS_DEPLOYMENT_URL || '';
+        const API_KEY = (window.FINDAS_CONFIG && window.FINDAS_CONFIG.POLLS_API_KEY)
+            || window.FINDAS_POLLS_API_KEY || '';
+        const TEST_POLL_ID = 'test-poll-' + Date.now();
+        const API_CACHE_PREFIX = 'findas_api_cache_v1:';
+        const API_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+        const API_CACHEABLE_METHODS = {
+            getGlobalSettings: true,
+            getSiteConfig: true,
+            getCourses: true,
+            getDigitalProducts: true,
+            getWebinars: true,
+            getMembershipPlans: true,
+            getGalleryImages: true,
+            getShortReviews: true,
+            getFeaturedReviews: true,
+            getFAQ: true,
+            getWhoFor: true,
+            getBookingPage: true,
+            getCourseDetails: true,
+            getDigitalProductDetails: true,
+            getWebinarDetails: true
+        };
+
+        // ── State ───────────────────────────────────────────────────────────
+        let testResults = { testA0: null, testA: null, testB: null, testC: null, testD: null, testE: null, test1: null, test2: null, test3: null, test4: null };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('content-url-display').textContent = CONTENT_URL || '(not set — check appscript-config.js)';
+            document.getElementById('backup-url-display').textContent = CONTENT_BACKUP_URL || '(not configured)';
+            document.getElementById('polls-url-display').textContent = POLLS_URL || '(not set)';
+            document.getElementById('api-key-display').textContent = API_KEY || '(not set)';
+        });
+
+        function updateStatus(id, status) {
+            const el = document.getElementById('status-' + id);
+            if (!el) return;
+            el.className = 'status-badge ' + status;
+            el.textContent = status.toUpperCase();
+        }
+
+        function showResult(id, type, title, message, data) {
+            const el = document.getElementById('result-' + id);
+            if (!el) return;
+            el.className = 'result ' + type + ' show';
+            let html = '<div class="result-title">' + title + '</div><div>' + message + '</div>';
+            if (data !== undefined) {
+                const str = JSON.stringify(data, null, 2);
+                html += '<pre>' + str.slice(0, 3000) + (str.length > 3000 ? '\n... truncated' : '') + '</pre>';
+            }
+            el.innerHTML = html;
+            testResults[id] = (type === 'success');
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const vals = Object.values(testResults);
+            const done = vals.filter(r => r !== null).length;
+            const passed = vals.filter(r => r === true).length;
+            const failed = vals.filter(r => r === false).length;
+            if (done > 0) {
+                document.getElementById('summary').style.display = 'block';
+                document.getElementById('passed-count').textContent = passed;
+                document.getElementById('failed-count').textContent = failed;
+            }
+        }
+
+        // ── JSONP Transport (mirrors index.html exactly) ───────────────────────
+        function apiJsonp(fnName, endpointUrl, timeoutMs) {
+            return new Promise((ok, bad) => {
+                if (!endpointUrl) { bad(new Error('No endpoint URL configured')); return; }
+                const cb = '__diag_cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+                const src = endpointUrl + '?api=1&fn=' + encodeURIComponent(fnName)
+                    + '&callback=' + encodeURIComponent(cb) + '&_cb=' + Date.now();
+                const s = document.createElement('script');
+                let done = false;
+
+                function cleanup() {
+                    if (s && s.parentNode) s.parentNode.removeChild(s);
+                    try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+                }
+
+                const timer = setTimeout(() => {
+                    if (done) return;
+                    done = true; cleanup();
+                    bad(new Error('Timeout (' + ((timeoutMs || 40000) / 1000) + 's) — endpoint unreachable or very slow'));
+                }, timeoutMs || 40000);
+
+                window[cb] = function (payload) {
+                    if (done) return;
+                    done = true; clearTimeout(timer); cleanup();
+                    if (payload && payload.ok) ok(payload.data);
+                    else bad(new Error(payload && payload.error ? payload.error : 'API returned ok:false'));
+                };
+
+                s.onerror = function () {
+                    if (done) return;
+                    done = true; clearTimeout(timer); cleanup();
+                    bad(new Error('Script load failed — network error, wrong URL, or CORS block'));
+                };
+
+                s.async = true;
+                s.src = src;
+                document.head.appendChild(s);
+            });
+        }
+
+        async function apiJsonpWithRetry(fnName, maxAttempts, timeoutMs) {
+            let lastErr = null;
+            for (let i = 1; i <= maxAttempts; i++) {
+                const endpoint = CONTENT_ENDPOINTS[(i - 1) % CONTENT_ENDPOINTS.length] || CONTENT_URL;
+                const isBackup = CONTENT_ENDPOINTS.length > 1 && endpoint !== CONTENT_ENDPOINTS[0];
+                try {
+                    const t0 = Date.now();
+                    const data = await apiJsonp(fnName, endpoint, timeoutMs || 30000);
+                    return { data, attempt: i, ms: Date.now() - t0, endpoint, usedBackup: isBackup };
+                } catch (err) {
+                    lastErr = err;
+                    if (i < maxAttempts) await new Promise(r => setTimeout(r, 650 * i));
+                }
+            }
+            throw lastErr;
+        }
+
+        function getApiCacheKey(name, params) {
+            if (!API_CACHEABLE_METHODS[name]) return null;
+            const p = params && typeof params === 'object' ? params : {};
+            return API_CACHE_PREFIX + name + ':' + JSON.stringify(p);
+        }
+
+        function readApiCache(name, params) {
+            const key = getApiCacheKey(name, params);
+            if (!key) return null;
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed !== 'object') return null;
+                const at = Number(parsed.at || 0);
+                if (!at || (Date.now() - at) > API_CACHE_TTL_MS) return null;
+                return parsed.data;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function writeApiCache(name, params, data) {
+            const key = getApiCacheKey(name, params);
+            if (!key) return;
+            try {
+                localStorage.setItem(key, JSON.stringify({ at: Date.now(), data: data }));
+            } catch (e) {
+                // Ignore storage quota/private mode errors.
+            }
+        }
+
+        async function runLikeIndex(name, params, maxAttempts, timeoutMs) {
+            try {
+                const r = await apiJsonpWithRetry(name, maxAttempts || 4, timeoutMs || 40000);
+                writeApiCache(name, params, r.data);
+                return { data: r.data, meta: { fromCache: false, attempt: r.attempt, endpoint: r.endpoint, usedBackup: !!r.usedBackup, ms: r.ms } };
+            } catch (err) {
+                const cached = readApiCache(name, params);
+                if (cached !== null) {
+                    return { data: cached, meta: { fromCache: true, error: (err && err.message) ? err.message : String(err || 'Unknown error') } };
+                }
+                throw err;
+            }
+        }
+
+        async function testEndpointReachability() {
+            updateStatus('testA0', 'running');
+
+            const endpoints = [];
+            if (CONTENT_URL) endpoints.push({ label: 'primary', url: CONTENT_URL });
+            if (CONTENT_BACKUP_URL) endpoints.push({ label: 'backup', url: CONTENT_BACKUP_URL });
+
+            if (!endpoints.length) {
+                updateStatus('testA0', 'fail');
+                showResult('testA0', 'error', '❌ No endpoints configured', 'Set WEBAPP_URL (and optionally WEBAPP_BACKUP_URL) in appscript-config.js first.');
+                return;
+            }
+
+            const results = [];
+            for (const ep of endpoints) {
+                const t0 = Date.now();
+                try {
+                    await apiJsonp('getGlobalSettings', ep.url, 12000);
+                    results.push({ endpointType: ep.label, endpoint: ep.url, ok: true, ms: Date.now() - t0 });
+                } catch (err) {
+                    results.push({ endpointType: ep.label, endpoint: ep.url, ok: false, ms: Date.now() - t0, error: err.message });
+                }
+            }
+
+            const primary = results.find(r => r.endpointType === 'primary');
+            const backup = results.find(r => r.endpointType === 'backup');
+
+            if (primary && primary.ok) {
+                updateStatus('testA0', 'pass');
+                showResult('testA0', 'success',
+                    '✅ Live primary endpoint reachable' + (backup ? (' | backup ' + (backup.ok ? 'reachable' : 'unreachable')) : ''),
+                    'Raw JSONP script-load succeeded. You have live browser connectivity to the content API.',
+                    results
+                );
+            } else {
+                updateStatus('testA0', 'fail');
+                showResult('testA0', 'error',
+                    '❌ Live primary endpoint unreachable (no cache mode)',
+                    'This indicates a real browser connectivity/blocking issue to the primary endpoint. Cached data may still allow the website to load.',
+                    results
+                );
+            }
+        }
+
+        // ── Content API Tests ──────────────────────────────────────────────────
+        async function testGetGlobalSettings() {
+            updateStatus('testA', 'running');
+            const t0 = Date.now();
+            try {
+                const out = await runLikeIndex('getGlobalSettings', undefined, 4, 20000);
+                const r = out.meta;
+                const total = Date.now() - t0;
+                const keys = out.data && typeof out.data === 'object' ? Object.keys(out.data) : [];
+                updateStatus('testA', 'pass');
+                showResult('testA', 'success',
+                    r.fromCache
+                        ? '✅ getGlobalSettings — cache fallback used'
+                        : '✅ getGlobalSettings — ' + r.ms + 'ms (attempt ' + r.attempt + '/' + 4 + ')',
+                    r.fromCache
+                        ? 'Live endpoint failed but cached data exists (same behavior as index.html). Last error: ' + r.error
+                        : 'Total with retries: ' + total + 'ms. Endpoint: ' + r.endpoint
+                            + (r.usedBackup ? ' <strong>(backup used)</strong>' : ' (primary)')
+                            + '. Keys returned: ' + (keys.length ? keys.join(', ') : '(empty object)'),
+                    out.data
+                );
+            } catch (err) {
+                updateStatus('testA', 'fail');
+                showResult('testA', 'error',
+                    '❌ getGlobalSettings failed after all retries — ' + (Date.now() - t0) + 'ms',
+                    err.message,
+                    { error: err.message, primaryEndpoint: CONTENT_URL, backupConfigured: !!CONTENT_BACKUP_URL }
+                );
+            }
+        }
+
+        async function testGetCourses() {
+            updateStatus('testB', 'running');
+            const t0 = Date.now();
+            try {
+                const out = await runLikeIndex('getCourses', undefined, 3, 25000);
+                const r = out.meta;
+                const count = Array.isArray(out.data) ? out.data.length : '?';
+                updateStatus('testB', 'pass');
+                showResult('testB', 'success',
+                    r.fromCache
+                        ? '✅ getCourses — cache fallback used'
+                        : '✅ getCourses — ' + r.ms + 'ms (attempt ' + r.attempt + ')',
+                    r.fromCache
+                        ? count + ' course(s) loaded from cache. Last live error: ' + r.error
+                        : count + ' course(s) returned in ' + (Date.now() - t0) + 'ms total.',
+                    Array.isArray(out.data) ? out.data.map(c => ({ id: c.id, title: c.title })) : out.data
+                );
+            } catch (err) {
+                updateStatus('testB', 'fail');
+                showResult('testB', 'error',
+                    '❌ getCourses failed — ' + (Date.now() - t0) + 'ms', err.message);
+            }
+        }
+
+        async function testGetWebinars() {
+            updateStatus('testC', 'running');
+            const t0 = Date.now();
+            try {
+                const out = await runLikeIndex('getWebinars', undefined, 3, 25000);
+                const r = out.meta;
+                const count = Array.isArray(out.data) ? out.data.length : '?';
+                updateStatus('testC', 'pass');
+                showResult('testC', 'success',
+                    r.fromCache
+                        ? '✅ getWebinars — cache fallback used'
+                        : '✅ getWebinars — ' + r.ms + 'ms (attempt ' + r.attempt + ')',
+                    r.fromCache
+                        ? count + ' webinar(s) loaded from cache. Last live error: ' + r.error
+                        : count + ' webinar(s) returned.',
+                    Array.isArray(out.data) ? out.data.map(w => ({ id: w.id, title: w.title })) : out.data
+                );
+            } catch (err) {
+                updateStatus('testC', 'fail');
+                showResult('testC', 'error',
+                    '❌ getWebinars failed — ' + (Date.now() - t0) + 'ms', err.message);
+            }
+        }
+
+        async function testIntermittency() {
+            updateStatus('testD', 'running');
+            const RUNS = 5;
+            const results = [];
+            for (let i = 1; i <= RUNS; i++) {
+                const t0 = Date.now();
+                try {
+                    await apiJsonp('getGlobalSettings', CONTENT_URL, 15000);
+                    results.push({ run: i, ok: true, ms: Date.now() - t0 });
+                } catch (err) {
+                    results.push({ run: i, ok: false, ms: Date.now() - t0, error: err.message });
+                }
+                if (i < RUNS) await new Promise(r => setTimeout(r, 400));
+            }
+            const passed = results.filter(r => r.ok).length;
+            const avgMs = Math.round(results.reduce((s, r) => s + r.ms, 0) / RUNS);
+            const maxMs = Math.max(...results.map(r => r.ms));
+            if (passed === RUNS) {
+                updateStatus('testD', 'pass');
+                showResult('testD', 'success',
+                    '✅ ' + RUNS + '/' + RUNS + ' calls succeeded — avg ' + avgMs + 'ms, max ' + maxMs + 'ms',
+                    'No intermittency detected on this run.', results);
+            } else {
+                updateStatus('testD', 'fail');
+                showResult('testD', 'error',
+                    '❌ ' + passed + '/' + RUNS + ' calls succeeded — intermittent failures detected',
+                    'avg ' + avgMs + 'ms, max ' + maxMs + 'ms. The endpoint is unreliable — check Apps Script execution quotas or configure a WEBAPP_BACKUP_URL in appscript-config.js.',
+                    results);
+            }
+        }
+
+        async function testFailover() {
+            updateStatus('testE', 'running');
+            if (!CONTENT_BACKUP_URL) {
+                updateStatus('testE', 'fail');
+                showResult('testE', 'error',
+                    '⚠️ No backup URL configured',
+                    'Set WEBAPP_BACKUP_URL in appscript-config.js to enable failover. Without it, any primary endpoint outage causes a full page load failure.',
+                    { WEBAPP_URL: CONTENT_URL, WEBAPP_BACKUP_URL: '(empty)' });
+                return;
+            }
+            const t0 = Date.now();
+            try {
+                const t1 = Date.now();
+                await apiJsonp('getGlobalSettings', CONTENT_URL, 15000);
+                const primaryMs = Date.now() - t1;
+                const t2 = Date.now();
+                await apiJsonp('getGlobalSettings', CONTENT_BACKUP_URL, 15000);
+                const backupMs = Date.now() - t2;
+                updateStatus('testE', 'pass');
+                showResult('testE', 'success',
+                    '✅ Both endpoints healthy — primary ' + primaryMs + 'ms, backup ' + backupMs + 'ms',
+                    'Failover is fully configured and both URLs respond correctly.',
+                    { primary: CONTENT_URL, backup: CONTENT_BACKUP_URL });
+            } catch (err) {
+                updateStatus('testE', 'fail');
+                showResult('testE', 'error',
+                    '❌ Failover test failed — ' + (Date.now() - t0) + 'ms',
+                    err.message,
+                    { primary: CONTENT_URL, backup: CONTENT_BACKUP_URL });
+            }
+        }
+
+        // ── Polls API Tests ────────────────────────────────────────────────────
+        async function testGetAllPolls() {
+            updateStatus('test1', 'running');
+            try {
+                const t0 = Date.now();
+                const res = await fetch(POLLS_URL + '?action=getAllPolls&apiKey=' + encodeURIComponent(API_KEY));
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    updateStatus('test1', 'pass');
+                    showResult('test1', 'success',
+                        '✅ getAllPolls — ' + (Date.now() - t0) + 'ms',
+                        'Retrieved ' + data.polls.length + ' poll(s).',
+                        data.polls.map(p => ({ id: p.id, question: p.question, status: p.status, options: (p.options || []).length }))
+                    );
+                } else {
+                    updateStatus('test1', 'fail');
+                    showResult('test1', 'error', '❌ getAllPolls failed', data.error || 'HTTP ' + res.status, data);
+                }
+            } catch (err) {
+                updateStatus('test1', 'fail');
+                showResult('test1', 'error', '❌ getAllPolls — network error', err.message);
+            }
+        }
+
+        async function testSavePoll() {
+            updateStatus('test2', 'running');
+            const testPoll = {
+                id: TEST_POLL_ID,
+                question: 'Sync Test Poll',
+                status: 'ACTIVE',
+                created_at: new Date().toISOString(),
+                description: 'Auto-generated by diagnostic tool.',
+                options: [{ id: 'a', text: 'Yes', votes: 0 }, { id: 'b', text: 'No', votes: 0 }],
+                voters: []
+            };
+            try {
+                const t0 = Date.now();
+                const res = await fetch(POLLS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: 'savePoll', apiKey: API_KEY, poll: testPoll })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    updateStatus('test2', 'pass');
+                    showResult('test2', 'success', '✅ savePoll — ' + (Date.now() - t0) + 'ms', 'Poll saved successfully.', { id: TEST_POLL_ID });
+                } else {
+                    updateStatus('test2', 'fail');
+                    showResult('test2', 'error', '❌ savePoll failed', data.error || 'HTTP ' + res.status, data);
+                }
+            } catch (err) {
+                updateStatus('test2', 'fail');
+                showResult('test2', 'error', '❌ savePoll — network error', err.message);
+            }
+        }
+
+        async function testDataPersistence() {
+            updateStatus('test3', 'running');
+            const pid = 'persist-' + Date.now();
+            const poll = {
+                id: pid,
+                question: 'Persistence Check',
+                status: 'ACTIVE',
+                created_at: new Date().toISOString(),
+                description: 'Verify round-trip',
+                options: [{ id: 'x', text: 'A', votes: 2 }, { id: 'y', text: 'B', votes: 1 }],
+                voters: ['u1']
+            };
+            try {
+                const res1 = await fetch(POLLS_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: 'savePoll', apiKey: API_KEY, poll })
+                });
+                const d1 = await res1.json();
+                if (!d1.success) throw new Error('Save failed: ' + d1.error);
+
+                await new Promise(r => setTimeout(r, 1200));
+
+                const res2 = await fetch(POLLS_URL + '?action=getAllPolls&apiKey=' + encodeURIComponent(API_KEY));
+                const d2 = await res2.json();
+                const found = d2.polls && d2.polls.find(p => p.id === pid);
+                if (!found) throw new Error('Saved poll not found in getAllPolls — data did not persist');
+
+                const optionsMatch = JSON.stringify(found.options || []) === JSON.stringify(poll.options || []);
+                const votersMatch = JSON.stringify(found.voters || []) === JSON.stringify(poll.voters || []);
+                const ok =
+                    found.question === poll.question &&
+                    found.status === poll.status &&
+                    optionsMatch &&
+                    votersMatch;
+
+                await fetch(POLLS_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: 'deletePoll', apiKey: API_KEY, pollId: pid })
+                });
+
+                if (ok) {
+                    updateStatus('test3', 'pass');
+                    showResult('test3', 'success', '✅ Persistence verified', 'Save → retrieve round-trip matches exactly.', { saved: poll, retrieved: found });
+                } else {
+                    updateStatus('test3', 'fail');
+                    showResult('test3', 'error', '❌ Data mismatch on round-trip', 'Saved and retrieved data differ.', { saved: poll, retrieved: found });
+                }
+            } catch (err) {
+                updateStatus('test3', 'fail');
+                showResult('test3', 'error', '❌ Persistence test failed', err.message);
+            }
+        }
+
+        async function testDeletePoll() {
+            updateStatus('test4', 'running');
+            try {
+                const t0 = Date.now();
+                const res = await fetch(POLLS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: 'deletePoll', apiKey: API_KEY, pollId: TEST_POLL_ID })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    updateStatus('test4', 'pass');
+                    showResult('test4', 'success', '✅ deletePoll — ' + (Date.now() - t0) + 'ms', 'Poll deleted.', data);
+                } else {
+                    updateStatus('test4', 'fail');
+                    showResult('test4', 'error', '❌ deletePoll failed', data.error || 'HTTP ' + res.status, data);
+                }
+            } catch (err) {
+                updateStatus('test4', 'fail');
+                showResult('test4', 'error', '❌ deletePoll — network error', err.message);
+            }
+        }
+
+        // ── Run All ─────────────────────────────────────────────────────────────
+        async function runAllTests() {
+            testResults = { testA0: null, testA: null, testB: null, testC: null, testD: null, testE: null, test1: null, test2: null, test3: null, test4: null };
+            ['testA0','testA','testB','testC','testD','testE','test1','test2','test3','test4'].forEach(id => {
+                updateStatus(id, 'pending');
+                const r = document.getElementById('result-' + id);
+                if (r) r.classList.remove('show');
+            });
+            document.getElementById('summary').style.display = 'none';
+
+            await testEndpointReachability(); await new Promise(r => setTimeout(r, 600));
+            await testGetGlobalSettings(); await new Promise(r => setTimeout(r, 600));
+            await testGetCourses();        await new Promise(r => setTimeout(r, 600));
+            await testGetWebinars();       await new Promise(r => setTimeout(r, 600));
+            await testIntermittency();     await new Promise(r => setTimeout(r, 600));
+            await testFailover();          await new Promise(r => setTimeout(r, 800));
+            await testGetAllPolls();       await new Promise(r => setTimeout(r, 800));
+            await testSavePoll();          await new Promise(r => setTimeout(r, 1000));
+            await testDataPersistence();   await new Promise(r => setTimeout(r, 1000));
+            await testDeletePoll();
+        }
+
+    </script>
+</body>
+</html>

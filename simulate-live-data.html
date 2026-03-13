@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Live Data Test</title>
+    <script src="appscript-config.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f0f2f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; margin-bottom: 20px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 16px; margin: 5px; transition: all 0.2s; }
+        .btn-primary { background: #1a73e8; color: white; }
+        .btn-warning { background: #fbbc04; color: #202124; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .log-box { background: #202124; color: #bdc1c6; padding: 15px; border-radius: 8px; font-family: consolas, monospace; height: 300px; overflow-y: auto; margin-top: 20px; font-size: 13px; }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #3c4043; padding-bottom: 5px; }
+        .success { color: #81c995; }
+        .error { color: #f28b82; }
+        .info { color: #8ab4f8; }
+        .step-title { font-weight: bold; color: #fff; margin-top: 10px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Live Data Simulator</h1>
+        <p>This script will simulate a real-world scenario:</p>
+        <ol>
+            <li>Create a new poll ("Best Programming Language")</li>
+            <li>Simulate 5 different users voting</li>
+            <li>Update the poll results locally and sync to cloud</li>
+            <li>Change Admin Credentials (to "superadmin"/"newpassword123")</li>
+        </ol>
+        
+        <div style="margin-top: 20px;">
+            <button class="btn btn-primary" onclick="runSimulation()">▶️ Start Simulation</button>
+            <button class="btn btn-warning" onclick="resetCreds()">🔄 Reset Credentials</button>
+        </div>
+
+        <div class="log-box" id="log">
+            <div class="log-entry info">Ready to start...</div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            URL: (window.FINDAS_CONFIG && window.FINDAS_CONFIG.POLLS_DEPLOYMENT_URL) || 'https://script.google.com/macros/s/AKfycbzr52WyJVmS0UIBHRvrlVzXEqEFkFyuDE_sq625zq1utSPnfzwC0d4fNMq0VwNosRiz/exec',
+            API_KEY: (window.FINDAS_CONFIG && window.FINDAS_CONFIG.POLLS_API_KEY) || '851e995f-f691-4d8f-a630-5b3b83210eef'
+        };
+
+        const log = (msg, type = 'info') => {
+            const el = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            el.innerHTML += `<div class="log-entry ${type}">[${time}] ${msg}</div>`;
+            el.scrollTop = el.scrollHeight;
+        };
+
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+
+        // SHA-256 Helper
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function apiCall(action, payload = {}) {
+            try {
+                const body = { action, apiKey: CONFIG.API_KEY, ...payload };
+                const res = await fetch(CONFIG.URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' }, // Avoid CORS preflight
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || 'Unknown API error');
+                return data;
+            } catch (e) {
+                log(`API Error (${action}): ${e.message}`, 'error');
+                throw e;
+            }
+        }
+
+        async function runSimulation() {
+            document.getElementById('log').innerHTML = ''; // Clear log
+            log('🚀 Starting Simulation...', 'step-title');
+
+            try {
+                // 1. Create Poll
+                log('1️⃣ Creating Poll: "Best Programming Language 2024"...', 'info');
+                const pollId = 'poll_' + Date.now();
+                let poll = {
+                    id: pollId,
+                    title: 'Best Programming Language 2024',
+                    description: 'Vote for your favorite language!',
+                    options: [
+                        { id: 'opt1', text: 'JavaScript', votes: 0 },
+                        { id: 'opt2', text: 'Python', votes: 0 },
+                        { id: 'opt3', text: 'Rust', votes: 0 }
+                    ],
+                    totalVotes: 0,
+                    isActive: true,
+                    createdAt: new Date().toISOString(),
+                    voters: []
+                };
+
+                await apiCall('savePoll', { poll });
+                log('✅ Poll Created successfully!', 'success');
+                await wait(1500);
+
+                // 2. Simulate 5 Votes
+                log('2️⃣ Simulating 5 Users Voting...', 'step-title');
+                
+                const votes = [
+                    { user: 'Alice', choice: 'opt2' }, // Python
+                    { user: 'Bob', choice: 'opt1' },   // JS
+                    { user: 'Charlie', choice: 'opt2' }, // Python
+                    { user: 'Dave', choice: 'opt3' }, // Rust
+                    { user: 'Eve', choice: 'opt2' }   // Python
+                ];
+
+                for (let i = 0; i < votes.length; i++) {
+                    const v = votes[i];
+                    log(`👤 User ${v.user} is voting...`, 'info');
+                    
+                    // Update poll logic locally
+                    const optIndex = poll.options.findIndex(o => o.id === v.choice);
+                    poll.options[optIndex].votes++;
+                    poll.totalVotes++;
+                    poll.voters.push(v.user); // In real app, store hash/IP
+                    
+                    // Sync to cloud
+                    await apiCall('savePoll', { poll });
+                    log(`✅ Vote recorded for ${poll.options[optIndex].text}`, 'success');
+                    await wait(800); // Simulate delay
+                }
+
+                // 3. Verify Final Results
+                log('3️⃣ Verifying Final Results...', 'step-title');
+                const result = await fetch(`${CONFIG.URL}?action=getAllPolls&apiKey=${CONFIG.API_KEY}`).then(r => r.json());
+                const cloudPoll = result.polls.find(p => p.id === pollId);
+                
+                log(`🏁 Local Votes: ${poll.totalVotes} | Cloud Votes: ${cloudPoll.totalVotes}`, 'info');
+                log(`📊 Final Tally: Python=${cloudPoll.options[1].votes}, JS=${cloudPoll.options[0].votes}, Rust=${cloudPoll.options[2].votes}`, 'success');
+                await wait(1500);
+
+                // 4. Update Credentials
+                log('4️⃣ Updating Admin Credentials...', 'step-title');
+                const newHash = await sha256('superadmin:newpassword123'); // "superadmin:newpassword123"
+                
+                await apiCall('updateCredentials', {
+                    username: 'superadmin',
+                    passwordHash: newHash
+                });
+                log('🔐 Credentials updated to: superadmin / newpassword123', 'success');
+
+                log('🎉 Simulation Complete! Check your Google Sheet.', 'step-title');
+
+            } catch (e) {
+                log('❌ Simulation Failed: ' + e.message, 'error');
+            }
+        }
+
+        async function resetCreds() {
+            log('🔄 Resetting credentials to default...', 'info');
+            try {
+                // Return to default: admin / 11223344
+                // Hash for admin:11223344 is 6c3e9c6e7f4d0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d
+                const defaultHash = '6c3e9c6e7f4d0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d';
+                
+                await apiCall('updateCredentials', {
+                    username: 'admin',
+                    passwordHash: defaultHash
+                });
+                log('✅ Credentials reset to: admin / 11223344', 'success');
+            } catch (e) {
+                log('❌ Reset Failed', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Deploy Apps Script (Both)",
+      "type": "shell",
+      "command": "./scripts/deploy-appscript.ps1",
+      "args": [
+        "-Target",
+        "all"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Deploy Apps Script (Content Only)",
+      "type": "shell",
+      "command": "./scripts/deploy-appscript.ps1",
+      "args": [
+        "-Target",
+        "content"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Deploy Apps Script (Polls Only)",
+      "type": "shell",
+      "command": "./scripts/deploy-appscript.ps1",
+      "args": [
+        "-Target",
+        "polls"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Push Apps Script (No Deploy)",
+      "type": "shell",
+      "command": "./scripts/deploy-appscript.ps1",
+      "args": [
+        "-Target",
+        "all",
+        "-PushOnly"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    }
+  ]
+}

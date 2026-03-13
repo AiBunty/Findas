@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Deployed Endpoint - Findas</title>
+  <script src="appscript-config.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f4f7ff;
+    }
+    .section {
+      background: white;
+      border: 1px solid #d9e1ef;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #13263f;
+      margin: 0 0 10px;
+    }
+    .url {
+      background: #f5f8fd;
+      padding: 10px;
+      border-radius: 6px;
+      word-break: break-all;
+      font-size: 13px;
+      border: 1px solid #e4ecf6;
+      margin: 10px 0;
+    }
+    button {
+      background: #1f66ff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #124ec3;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 400px;
+      overflow: auto;
+    }
+    .success {
+      background: #dff8ed;
+      border: 1px solid #b3e6cf;
+      color: #0a7b4d;
+    }
+    .error {
+      background: #fff5f7;
+      border: 1px solid #f1c4cb;
+      color: #a11f31;
+    }
+    .loading {
+      background: #fff8e6;
+      border: 1px solid #ffe6a3;
+      color: #8b6914;
+    }
+    .info {
+      background: #edf2fb;
+      border: 1px solid #c8d7ea;
+      color: #4b6381;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .status.ok { background: #dff8ed; color: #0a7b4d; }
+    .status.fail { background: #fff5f7; color: #a11f31; }
+    .status.pending { background: #fff8e6; color: #8b6914; }
+  </style>
+</head>
+<body>
+  <div class="section">
+    <h1>🔍 Test Deployed Google Apps Script Endpoint</h1>
+    <p>This tool tests your deployed Web App endpoint to diagnose connection and data issues.</p>
+    <div class="url">
+      <strong>Endpoint:</strong><br>
+      <span id="endpointUrl">Loading...</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Test API Functions</h2>
+    <p>Click each button to test individual API endpoints:</p>
+    <button onclick="testFunc('bootstrap')">Test Bootstrap (All Data)</button>
+    <button onclick="testFunc('getGlobalSettings')">Test Global Settings</button>
+    <button onclick="testFunc('getCourses')">Test Courses</button>
+    <button onclick="testFunc('getDigitalProducts')">Test Digital Products</button>
+    <button onclick="testFunc('getWebinars')">Test Webinars</button>
+    <button onclick="testFunc('getMembershipPlans')">Test Membership Plans</button>
+    <div id="result"></div>
+  </div>
+
+  <div class="section">
+    <h2>Direct HTML Access Test</h2>
+    <p>Test if the Web App serves HTML directly (without ?api=1 parameter):</p>
+    <button onclick="testHtml()">Test HTML Output</button>
+    <div id="htmlResult"></div>
+  </div>
+
+  <div class="section">
+    <h2>📋 Diagnostic Information</h2>
+    <div id="diagnostics" class="result info">Waiting for tests...</div>
+  </div>
+
+  <script>
+    const WEBAPP_URL = (window.FINDAS_CONFIG && window.FINDAS_CONFIG.WEBAPP_URL) || 'https://script.google.com/macros/s/AKfycbzFw_6IJdypAyQ6m8fCkmPKacPcWlJjrkKJdHUzkDo4yOb-Fqv0jZhUmo5CGWHh2r2auw/exec';
+    
+    document.getElementById('endpointUrl').textContent = WEBAPP_URL;
+
+    let testResults = {};
+
+    function apiJsonp(fnName) {
+      return new Promise((resolve, reject) => {
+        const cb = '__test_cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+        const src = WEBAPP_URL + '?api=1&fn=' + encodeURIComponent(fnName) + '&callback=' + encodeURIComponent(cb);
+        const script = document.createElement('script');
+        let done = false;
+
+        function cleanup() {
+          if (script && script.parentNode) script.parentNode.removeChild(script);
+          try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+        }
+
+        const timer = setTimeout(() => {
+          if (done) return;
+          done = true;
+          cleanup();
+          reject(new Error('Request timeout (15s) for ' + fnName));
+        }, 15000);
+
+        window[cb] = function(payload) {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          cleanup();
+          resolve(payload);
+        };
+
+        script.onerror = function() {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          cleanup();
+          reject(new Error('Failed to load Apps Script endpoint'));
+        };
+
+        script.src = src;
+        document.head.appendChild(script);
+      });
+    }
+
+    async function testFunc(fnName) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = `<div class="result loading">⏳ Testing ${fnName}...</div>`;
+
+      const startTime = Date.now();
+      try {
+        const payload = await apiJsonp(fnName);
+        const duration = Date.now() - startTime;
+        
+        testResults[fnName] = { success: true, payload, duration };
+
+        if (payload && payload.ok) {
+          const dataSize = JSON.stringify(payload.data).length;
+          let dataPreview = JSON.stringify(payload.data, null, 2);
+          if (dataPreview.length > 1000) {
+            dataPreview = dataPreview.substring(0, 1000) + '\n\n... (truncated, full size: ' + dataSize + ' bytes)';
+          }
+
+          resultDiv.innerHTML = `
+            <span class="status ok">✅ SUCCESS</span>
+            <div class="result success">
+<strong>Function:</strong> ${fnName}
+<strong>Duration:</strong> ${duration}ms
+<strong>Data Size:</strong> ${dataSize} bytes
+<strong>Response:</strong>
+${dataPreview}
+            </div>
+          `;
+        } else {
+          testResults[fnName] = { success: false, error: payload.error || 'Unknown error', duration };
+          resultDiv.innerHTML = `
+            <span class="status fail">❌ API ERROR</span>
+            <div class="result error">
+<strong>Function:</strong> ${fnName}
+<strong>Duration:</strong> ${duration}ms
+<strong>Error:</strong> ${payload && payload.error ? payload.error : 'Unknown error'}
+<strong>Full Response:</strong>
+${JSON.stringify(payload, null, 2)}
+            </div>
+          `;
+        }
+      } catch (error) {
+        const duration = Date.now() - startTime;
+        testResults[fnName] = { success: false, error: error.message, duration };
+        resultDiv.innerHTML = `
+          <span class="status fail">❌ REQUEST FAILED</span>
+          <div class="result error">
+<strong>Function:</strong> ${fnName}
+<strong>Duration:</strong> ${duration}ms
+<strong>Error:</strong> ${error.message}
+<strong>Details:</strong> ${error.stack || 'No stack trace'}
+          </div>
+        `;
+      }
+
+      updateDiagnostics();
+    }
+
+    async function testHtml() {
+      const resultDiv = document.getElementById('htmlResult');
+      resultDiv.innerHTML = `<div class="result loading">⏳ Testing HTML output...</div>`;
+
+      try {
+        const response = await fetch(WEBAPP_URL, { method: 'GET' });
+        const text = await response.text();
+        const contentType = response.headers.get('content-type');
+
+        const preview = text.length > 500 ? text.substring(0, 500) + '\n\n... (truncated)' : text;
+
+        resultDiv.innerHTML = `
+          <span class="status ${response.ok ? 'ok' : 'fail'}">
+            ${response.ok ? '✅ SUCCESS' : '❌ FAILED'}
+          </span>
+          <div class="result ${response.ok ? 'success' : 'error'}">
+<strong>Status:</strong> ${response.status} ${response.statusText}
+<strong>Content-Type:</strong> ${contentType}
+<strong>Response Size:</strong> ${text.length} bytes
+<strong>Preview:</strong>
+${preview}
+          </div>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <span class="status fail">❌ REQUEST FAILED</span>
+          <div class="result error">
+<strong>Error:</strong> ${error.message}
+          </div>
+        `;
+      }
+    }
+
+    function updateDiagnostics() {
+      const diag = document.getElementById('diagnostics');
+      const total = Object.keys(testResults).length;
+      const successful = Object.values(testResults).filter(r => r.success).length;
+      const failed = total - successful;
+
+      let report = `📊 Test Summary:\n`;
+      report += `Total Tests: ${total}\n`;
+      report += `✅ Successful: ${successful}\n`;
+      report += `❌ Failed: ${failed}\n\n`;
+
+      if (total > 0) {
+        report += `Detailed Results:\n`;
+        for (const [fn, result] of Object.entries(testResults)) {
+          report += `\n${result.success ? '✅' : '❌'} ${fn}:\n`;
+          report += `   Duration: ${result.duration}ms\n`;
+          if (result.success) {
+            if (result.payload && result.payload.data) {
+              const data = result.payload.data;
+              if (Array.isArray(data)) {
+                report += `   Items: ${data.length}\n`;
+              } else if (typeof data === 'object') {
+                report += `   Keys: ${Object.keys(data).length}\n`;
+              }
+            }
+          } else {
+            report += `   Error: ${result.error}\n`;
+          }
+        }
+
+        // Common issues
+        if (failed > 0) {
+          report += `\n\n🔍 Common Issues:\n`;
+          const errors = Object.values(testResults)
+            .filter(r => !r.success)
+            .map(r => r.error);
+          
+          if (errors.some(e => e.includes('SPREADSHEET_ID'))) {
+            report += `\n❗ SPREADSHEET_ID Not Set:\n`;
+            report += `   → Open your Apps Script project\n`;
+            report += `   → Update Code.gs line 21 with your real Spreadsheet ID\n`;
+            report += `   → Deploy a new version\n`;
+          }
+          
+          if (errors.some(e => e.includes('Sheet tab not found'))) {
+            report += `\n❗ Missing Sheet Tabs:\n`;
+            report += `   → Your Google Sheet needs these tabs:\n`;
+            report += `      • global_settings\n`;
+            report += `      • courses\n`;
+            report += `      • digital_products\n`;
+            report += `      • webinars\n`;
+            report += `      • membership_plans\n`;
+          }
+
+          if (errors.some(e => e.includes('timeout') || e.includes('Failed to load'))) {
+            report += `\n❗ Connection Issues:\n`;
+            report += `   → Check if the Web App URL is correct\n`;
+            report += `   → Ensure Web App is deployed with "Anyone" access\n`;
+            report += `   → Check your internet connection\n`;
+          }
+        }
+      }
+
+      diag.textContent = report;
+      diag.className = 'result ' + (failed === 0 && total > 0 ? 'success' : total === 0 ? 'info' : 'error');
+    }
+
+    // Auto-run bootstrap test on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        console.log('Auto-running bootstrap test...');
+        testFunc('bootstrap');
+      }, 500);
+    });
+  </script>
+</body>
+</html>

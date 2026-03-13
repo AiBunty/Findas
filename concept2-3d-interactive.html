@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Findas Academy - 3D Interactive</title>
+  <link rel="icon" href="https://storage.files-vault.com/images/20260219120135_original__media_3.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f9ff;
+      --card: rgba(255, 255, 255, 0.98);
+      --text: #0a1628;
+      --muted: #5a6b82;
+      --brand: #3b82f6;
+      --brand2: #2563eb;
+      --accent: #ec4899;
+      --accent2: #f59e0b
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+      width: 100%
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #f8f9ff 0%, #f0f5ff 50%, #f8f9ff 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      perspective: 1000px
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: -0.02em
+    }
+
+    a { color: inherit; text-decoration: none }
+    button, input, textarea { font: inherit }
+    img { max-width: 100%; display: block }
+
+    /* Navigation */
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+      transition: all .3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05)
+    }
+
+    .top.scrolled {
+      box-shadow: 0 4px 30px rgba(59, 130, 246, 0.15)
+    }
+
+    .topin {
+      max-width: 1200px;
+      margin: auto;
+      padding: 8px 20px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      min-height: 80px
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      font-weight: 800;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: -0.02em;
+      flex-shrink: 0;
+      color: var(--brand)
+    }
+
+    .brand-logo-card {
+      display: grid;
+      place-items: center;
+      width: 140px;
+      height: 50px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(236, 72, 153, 0.08));
+      border: 1px solid rgba(59, 130, 246, 0.15);
+      overflow: hidden;
+      transition: all .3s ease;
+      animation: floatBrand 3s ease-in-out infinite
+    }
+
+    @keyframes floatBrand {
+      0%, 100% { transform: translateY(0px) }
+      50% { transform: translateY(-4px) }
+    }
+
+    .brand-logo-card:hover {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(236, 72, 153, 0.12));
+      border-color: rgba(59, 130, 246, 0.3);
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2)
+    }
+
+    .brand img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      transition: transform .3s ease
+    }
+
+    .brand:hover img {
+      transform: scale(1.05) rotateZ(2deg)
+    }
+
+    .nav {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-left: auto
+    }
+
+    .nav a {
+      padding: 8px 14px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: .9rem;
+      transition: all .2s ease;
+      position: relative;
+      overflow: hidden
+    }
+
+    .nav a::before {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--brand), var(--accent));
+      transition: width .3s ease
+    }
+
+    .nav a:hover::before {
+      width: 100%
+    }
+
+    .nav a:hover {
+      color: var(--brand);
+      background: rgba(59, 130, 246, 0.08)
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: .88rem;
+      transition: all .2s ease
+    }
+
+    .b1 {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
+      color: #fff;
+      border-color: var(--brand2);
+      box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3)
+    }
+
+    .b1:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(59, 130, 246, 0.4)
+    }
+
+    .b2 {
+      background: #fff;
+      color: var(--brand);
+      border-color: rgba(59, 130, 246, 0.2)
+    }
+
+    .b2:hover {
+      background: rgba(59, 130, 246, 0.05);
+      border-color: var(--brand)
+    }
+
+    .login-btn {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .25s ease;
+      font-size: .88rem;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3)
+    }
+
+    .login-btn:hover {
+      transform: scale(1.05) translateY(-2px);
+      box-shadow: 0 10px 28px rgba(236, 72, 153, 0.4)
+    }
+
+    /* Hero Section with 3D */
+    .hero {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      padding: 80px 24px 180px;
+      background: linear-gradient(180deg, #f8f9ff 0%, #f0f5ff 50%, #fff 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, .08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, .06) 0%, transparent 50%),
+        radial-gradient(circle at 40% 0%, rgba(245, 158, 11, .04) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 1
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 880px;
+      margin: 0 auto;
+      text-align: center;
+      color: var(--text);
+      animation: heroSlideUp 0.8s ease-out
+    }
+
+    @keyframes heroSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px)
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .hero-content h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2.05rem, 4.7vw, 4.15rem);
+      font-weight: 800;
+      line-height: 1.06;
+      letter-spacing: -.03em;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .hero-content p {
+      margin: 0 auto;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.45vw, 1.24rem);
+      line-height: 1.6
+    }
+
+    .hero-ctas {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 26px;
+      animation: fadeInDelay 1s ease-out 0.2s both
+    }
+
+    @keyframes fadeInDelay {
+      from { opacity: 0; transform: translateY(20px) }
+      to { opacity: 1; transform: translateY(0) }
+    }
+
+    .hero-ctas .btn {
+      padding: 14px 26px;
+      font-size: 1rem;
+      border-radius: 999px
+    }
+
+    /* 3D Rotating Cube */
+    .cube-container {
+      position: absolute;
+      right: 5%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 300px;
+      height: 300px;
+      perspective: 1000px;
+      z-index: 1
+    }
+
+    .cube {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      animation: rotateCube 20s infinite linear
+    }
+
+    @keyframes rotateCube {
+      0% { transform: rotateX(0) rotateY(0) rotateZ(0) }
+      100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(0) }
+    }
+
+    .cube-face {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(236, 72, 153, 0.1));
+      border: 2px solid rgba(59, 130, 246, 0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--brand);
+      font-size: 1.2rem;
+      backdrop-filter: blur(10px)
+    }
+
+    .cube-face:nth-child(1) { transform: translateZ(150px) }
+    .cube-face:nth-child(2) { transform: rotateY(180deg) translateZ(150px) }
+    .cube-face:nth-child(3) { transform: rotateY(90deg) translateZ(150px) }
+    .cube-face:nth-child(4) { transform: rotateY(-90deg) translateZ(150px) }
+    .cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(150px) }
+    .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(150px) }
+
+    /* Cards with 3D Flip */
+    .grid {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))
+    }
+
+    .card {
+      position: relative;
+      height: 380px;
+      cursor: pointer;
+      perspective: 1000px
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d
+    }
+
+    .card:hover .card-inner {
+      transform: rotateY(180deg)
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid rgba(59, 130, 246, 0.1);
+      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.08)
+    }
+
+    .card-front {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 245, 255, 0.95));
+      border: 2px solid rgba(59, 130, 246, 0.12);
+      backdrop-filter: blur(10px)
+    }
+
+    .card-back {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
+      color: #fff;
+      transform: rotateY(180deg);
+      padding: 24px;
+      text-align: center;
+      justify-content: center;
+      border: none
+    }
+
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      display: block;
+      animation: bounce 2s infinite
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) }
+      50% { transform: translateY(-10px) }
+    }
+
+    .card-title {
+      margin: 0 0 8px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .card-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5
+    }
+
+    .card-price {
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--brand);
+      margin-top: auto
+    }
+
+    .card-description {
+      margin: 0;
+      color: #fff;
+      font-size: 0.95rem;
+      line-height: 1.6
+    }
+
+    /* Layout */
+    .wrap {
+      max-width: 1200px;
+      margin: auto;
+      padding: 0 20px 80px
+    }
+
+    .sec {
+      margin-top: 60px;
+      scroll-margin-top: 120px;
+      animation: fadeInUp 0.8s ease-out
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px)
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+      position: relative;
+      padding-bottom: 16px
+    }
+
+    .head h2 {
+      margin: 0;
+      position: relative;
+      font-size: 2rem;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .head h2::after {
+      content: '';
+      position: absolute;
+      bottom: -16px;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--brand), var(--accent))
+    }
+
+    .chip {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(59, 130, 246, .2);
+      font-size: .82rem;
+      color: var(--muted);
+      background: rgba(59, 130, 246, 0.05);
+      font-weight: 600
+    }
+
+    /* About Section */
+    .about-coach {
+      margin: 100px auto 0;
+      max-width: 1200px;
+      padding: 0 20px
+    }
+
+    .about-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+      gap: 36px;
+      align-items: center;
+      padding: 50px 44px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(236, 72, 153, 0.08));
+      border: 2px solid rgba(59, 130, 246, 0.15);
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 1s ease-out
+    }
+
+    .about-inner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent);
+      border-radius: 50%;
+      animation: float 6s ease-in-out infinite
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) }
+      50% { transform: translateY(30px) }
+    }
+
+    .about-text h2 {
+      font-size: clamp(2rem, 3.8vw, 3rem);
+      margin: 0 0 18px;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .about-text p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 1.05rem;
+      max-width: 620px
+    }
+
+    .about-photo {
+      position: relative;
+      transform: perspective(1000px) rotateY(5deg);
+      transition: transform 0.6s ease;
+    }
+
+    .about-photo:hover {
+      transform: perspective(1000px) rotateY(-5deg) scale(1.02)
+    }
+
+    .about-photo img {
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(59, 130, 246, 0.2);
+      width: 100%;
+      height: auto;
+    }
+
+    /* Footer */
+    .site-footer {
+      background: linear-gradient(90deg, #f8f9ff 0%, #f0f5ff 50%, #f8f9ff 100%);
+      color: var(--muted);
+      margin-top: 80px;
+      border-top: 2px solid rgba(59, 130, 246, 0.1)
+    }
+
+    .footer-main {
+      max-width: 1200px;
+      margin: auto;
+      padding: 60px 20px 40px;
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr 1.2fr;
+      gap: 40px
+    }
+
+    .footer-col h4 {
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.05rem;
+      margin-bottom: 16px;
+      position: relative;
+      padding-bottom: 10px
+    }
+
+    .footer-col h4::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 30px;
+      height: 3px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--brand), var(--accent))
+    }
+
+    .footer-links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .footer-links li a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .9rem;
+      transition: all .2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .footer-links li a:hover {
+      color: var(--brand);
+      transform: translateX(4px)
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(59, 130, 246, 0.1);
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px
+    }
+
+    .footer-bottom p {
+      margin: 0;
+      font-size: .84rem;
+      color: var(--muted)
+    }
+
+    /* Scroll to Top */
+    .scroll-to-top {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 24px rgba(59, 130, 246, .3);
+      font-weight: 700
+    }
+
+    .scroll-to-top.show {
+      opacity: 1;
+      pointer-events: auto
+    }
+
+    .scroll-to-top:hover {
+      transform: translateY(-4px) scale(1.1);
+      box-shadow: 0 12px 32px rgba(59, 130, 246, .4)
+    }
+
+    /* Responsive */
+    @media(max-width:980px) {
+      .cube-container {
+        display: none
+      }
+
+      .about-inner {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 38px 24px
+      }
+
+      .footer-main {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px
+      }
+    }
+
+    @media(max-width:760px) {
+      .hero {
+        padding: 60px 16px 100px
+      }
+
+      .hero-content h1 {
+        font-size: 2rem
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px
+      }
+
+      .card {
+        height: 320px
+      }
+
+      .footer-main {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding: 40px 20px 24px
+      }
+
+      .topin {
+        min-height: auto
+      }
+    }
+
+    @media(max-width:480px) {
+      .head h2 {
+        font-size: 1.3rem
+      }
+
+      .grid {
+        gap: 12px
+      }
+
+      .card {
+        height: 280px
+      }
+
+      .card-front, .card-back {
+        padding: 16px
+      }
+
+      .card-title {
+        font-size: 1rem
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top" id="navbar">
+    <div class="topin">
+      <a href="#" class="brand" aria-label="Home">
+        <span class="brand-logo-card">
+          <img id="siteLogo" alt="Site logo" src="https://storage.files-vault.com/uploads/1771482761-H0bNoWSgQU.jpg">
+        </span>
+        <span>Findas Academy</span>
+      </a>
+      <nav class="nav" id="nav" aria-label="Main">
+        <a href="#courses">Courses</a>
+        <a href="#webinars">Webinars</a>
+        <a href="#membership">Membership</a>
+        <a href="#gallery">Gallery</a>
+        <a class="login-btn" href="https://community.findasacademy.in/" target="_blank" rel="noopener noreferrer">Member Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Learn Financial Mastery with 3D Interactive Experience</h1>
+      <p>Immersive, interactive courses designed for the modern learner. Explore a new dimension of financial education.</p>
+      <div class="hero-ctas">
+        <button class="btn b1">Start Learning Now</button>
+        <button class="btn b2">Free Trial</button>
+      </div>
+    </div>
+
+    <div class="cube-container">
+      <div class="cube">
+        <div class="cube-face">Learn</div>
+        <div class="cube-face">Grow</div>
+        <div class="cube-face">Invest</div>
+        <div class="cube-face">Succeed</div>
+        <div class="cube-face">Excel</div>
+        <div class="cube-face">Thrive</div>
+      </div>
+    </div>
+  </section>
+
+  <main class="wrap">
+    <section class="sec about-coach">
+      <div class="about-inner">
+        <div class="about-text">
+          <h2>Experience Financial Education Like Never Before</h2>
+          <p>With interactive 3D elements and immersive design, learning becomes an engaging experience that sticks with you.</p>
+          <p style="color: var(--muted);">Our innovative teaching methods combined with beautiful, interactive interfaces make complex financial concepts simple and memorable.</p>
+        </div>
+        <div class="about-photo">
+          <img src="https://storage.files-vault.com/uploads/1772207760-dgdy7ilGGl.png" alt="Founder - Interactive Experience">
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="courses">
+      <div class="head">
+        <h2>Interactive Learning Paths</h2>
+        <span class="chip">Hover to explore</span>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-front">
+              <div>
+                <span class="card-icon">📈</span>
+                <h3 class="card-title">Stock Market 101</h3>
+                <p class="card-subtitle">Master the fundamentals of stock market investing</p>
+              </div>
+              <div class="card-price">INR 2,999</div>
+            </div>
+            <div class="card-back">
+              <div>
+                <p class="card-description">Learn how to analyze stocks, build a portfolio, and create long-term wealth through strategic market investing.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-front">
+              <div>
+                <span class="card-icon">💰</span>
+                <h3 class="card-title">Wealth Building</h3>
+                <p class="card-subtitle">Create a sustainable financial future</p>
+              </div>
+              <div class="card-price">INR 3,999</div>
+            </div>
+            <div class="card-back">
+              <div>
+                <p class="card-description">Discover proven strategies to build, manage, and grow your wealth over time with expert guidance.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-front">
+              <div>
+                <span class="card-icon">🏠</span>
+                <h3 class="card-title">Real Estate Investing</h3>
+                <p class="card-subtitle">Build income through property investment</p>
+              </div>
+              <div class="card-price">INR 4,999</div>
+            </div>
+            <div class="card-back">
+              <div>
+                <p class="card-description">Explore residential and commercial real estate opportunities to create passive income streams.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-front">
+              <div>
+                <span class="card-icon">🔐</span>
+                <h3 class="card-title">Crypto & Digital Assets</h3>
+                <p class="card-subtitle">Navigate the digital finance revolution</p>
+              </div>
+              <div class="card-price">INR 2,499</div>
+            </div>
+            <div class="card-back">
+              <div>
+                <p class="card-description">Understand blockchain, cryptocurrencies, and digital assets in the modern financial landscape.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-front">
+              <div>
+                <span class="card-icon">📊</span>
+                <h3 class="card-title">Financial Analysis</h3>
+                <p class="card-subtitle">Analyze data like a professional</p>
+              </div>
+              <div class="card-price">INR 3,499</div>
+            </div>
+            <div class="card-back">
+              <div>
+                <p class="card-description">Learn advanced analytical tools and techniques to make data-driven financial decisions.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-front">
+              <div>
+                <span class="card-icon">🎯</span>
+                <h3 class="card-title">Financial Planning</h3>
+                <p class="card-subtitle">Plan your financial future today</p>
+              </div>
+              <div class="card-price">INR 1,999</div>
+            </div>
+            <div class="card-back">
+              <div>
+                <p class="card-description">Create a comprehensive financial plan that aligns with your goals and aspirations.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="membership">
+      <div class="head">
+        <h2>Premium Memberships</h2>
+        <span class="chip">Unlimited Access</span>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-front">
+              <div>
+                <span class="card-icon">⭐</span>
+                <h3 class="card-title">Silver Member</h3>
+                <p class="card-subtitle">Perfect for beginners</p>
+              </div>
+              <div class="card-price">INR 999/mo</div>
+            </div>
+            <div class="card-back">
+              <div>
+                <p class="card-description">Access all courses, monthly webinars, and community forums. Perfect to start your financial journey.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-front">
+              <div>
+                <span class="card-icon">✨</span>
+                <h3 class="card-title">Gold Member</h3>
+                <p class="card-subtitle">Most popular option</p>
+              </div>
+              <div class="card-price">INR 1,999/mo</div>
+            </div>
+            <div class="card-back">
+              <div>
+                <p class="card-description">Everything in Silver plus 1-on-1 mentoring sessions and priority support from experts.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-front">
+              <div>
+                <span class="card-icon">👑</span>
+                <h3 class="card-title">Platinum Member</h3>
+                <p class="card-subtitle">Elite experience</p>
+              </div>
+              <div class="card-price">INR 4,999/mo</div>
+            </div>
+            <div class="card-back">
+              <div>
+                <p class="card-description">Complete VIP treatment: lifetime access, white-glove service, and exclusive networking events.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div class="footer-col">
+        <h4>Findas Academy</h4>
+        <p>Experience financial education with an interactive 3D twist. Modern learning for the modern investor.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <ul class="footer-links">
+          <li><a href="#courses">Courses</a></li>
+          <li><a href="#membership">Membership</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul class="footer-links">
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">Facebook</a></li>
+          <li><a href="#">YouTube</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul class="footer-links">
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Refund Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Findas Academy. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <button class="scroll-to-top" id="scrollToTop" aria-label="Scroll to top" title="Back to top">&uarr;</button>
+
+  <script>
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Parallax effect on mouse move
+    document.addEventListener('mousemove', (e) => {
+      const cubeContainer = document.querySelector('.cube-container');
+      if (cubeContainer) {
+        const x = (e.clientX - window.innerWidth / 2) * 0.02;
+        const y = (e.clientY - window.innerHeight / 2) * 0.02;
+        cubeContainer.style.transform = `translateY(calc(-50% + ${y}px)) translateX(calc(5% + ${x}px))`;
+      }
+    });
+
+    // Scroll to top button
+    const scrollBtn = document.getElementById('scrollToTop');
+    window.addEventListener('scroll', () => {
+      scrollBtn.classList.toggle('show', window.scrollY > 300);
+    });
+
+    scrollBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Smooth scrolling for links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const target = this.getAttribute('href');
+        if (target !== '#') {
+          e.preventDefault();
+          const elem = document.querySelector(target);
+          if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // Animate elements on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.sec').forEach(section => {
+      section.style.opacity = '0';
+      section.style.transform = 'translateY(30px)';
+      observer.observe(section);
+    });
+  </script>
+</body>
+</html>
