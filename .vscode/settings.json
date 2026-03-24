@@ -1,3 +1,7 @@
 {
-    "liveServer.settings.port": 5501
+    "liveServer.settings.port": 5501,
+    "findas.ftp.host": "ftp.theboxerp.com",
+    "findas.ftp.username": "findas@findasacademy.in",
+    "findas.ftp.password": "Zebra@789",
+    "findas.ftp.remoteRoot": ""
 }

@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  php-api:
+    image: php:8.2-apache
+    volumes:
+      - ./api:/var/www/html
+    ports:
+      - "8080:80"
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: findas_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build: ./backend
+    environment:
+      PORT: 3000
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: findas_db
+      JWT_SECRET: change_this_secret
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: change_me
+    depends_on:
+      - mysql
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysql_data:

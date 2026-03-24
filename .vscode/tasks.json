@@ -13,10 +13,6 @@
       "presentation": {
         "reveal": "always",
         "panel": "new"
-      },
-      "group": {
-        "kind": "build",
-        "isDefault": true
       }
     },
     {
@@ -55,6 +51,67 @@
         "-Target",
         "all",
         "-PushOnly"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Deploy FTP (One Click)",
+      "type": "shell",
+      "command": "./scripts/deploy-ftp.ps1",
+      "args": [
+        "-Mode",
+        "Changed"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Deploy FTP (One Click Dry Run)",
+      "type": "shell",
+      "command": "./scripts/deploy-ftp.ps1",
+      "args": [
+        "-Mode",
+        "Changed",
+        "-DryRun"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Deploy FTP (Changed Files)",
+      "type": "shell",
+      "command": "./scripts/deploy-ftp.ps1",
+      "args": [
+        "-Mode",
+        "Changed"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Deploy FTP (All Web Files)",
+      "type": "shell",
+      "command": "./scripts/deploy-ftp.ps1",
+      "args": [
+        "-Mode",
+        "All"
       ],
       "problemMatcher": [],
       "presentation": {

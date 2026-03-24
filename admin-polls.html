@@ -1555,7 +1555,6 @@
         </div>
     </div>
 
-    <script src="./appscript-config.js"></script>
     <script>
         // ========================================
         // CONSTANTS & STATE
@@ -1566,11 +1565,17 @@
             PASSWORD: '11223344'
         };
 
-        // Google Sheets Integration (Update with your values)
+        function resolveApiBase() {
+            const origin = window.location.origin;
+            const path = (window.location.pathname || '').toLowerCase();
+            return path.startsWith('/findas/') ? `${origin}/findas/api` : `${origin}/api`;
+        }
+
+        // Polls API (MySQL-backed)
         const GOOGLE_SHEETS_CONFIG = {
-            DEPLOYMENT_URL: (window.FINDAS_CONFIG && window.FINDAS_CONFIG.POLLS_DEPLOYMENT_URL) || window.FINDAS_POLLS_DEPLOYMENT_URL || 'https://script.google.com/macros/s/AKfycbzr52WyJVmS0UIBHRvrlVzXEqEFkFyuDE_sq625zq1utSPnfzwC0d4fNMq0VwNosRiz/exec',
-            API_KEY: (window.FINDAS_CONFIG && window.FINDAS_CONFIG.POLLS_API_KEY) || window.FINDAS_POLLS_API_KEY || '851e995f-f691-4d8f-a630-5b3b83210eef',
-            ENABLED: true // CLOUD SYNC ENABLED
+            DEPLOYMENT_URL: `${resolveApiBase()}/polls-api`,
+            API_KEY: window.FINDAS_POLLS_API_KEY || '851e995f-f691-4d8f-a630-5b3b83210eef',
+            ENABLED: true
         };
 
         // Pre-computed SHA-256 hash of "admin:11223344"
@@ -1686,29 +1691,28 @@
             if (!GOOGLE_SHEETS_CONFIG.ENABLED) return;
             
             try {
-                // Use no-cors mode to bypass CORS issues entirely
-                // Note: We won't get a response body back, but the request will go through
                 const payload = JSON.stringify({
                     action: 'saveAllPolls',
                     apiKey: GOOGLE_SHEETS_CONFIG.API_KEY,
                     polls: polls
                 });
 
-                // Sending as text/plain with no-cors creates a "simple request"
-                // but we can't read the response success/failure
-                await fetch(GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL, {
+                const response = await fetch(GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', 
                     headers: {
-                        'Content-Type': 'text/plain;charset=utf-8'
+                        'Content-Type': 'application/json'
                     },
                     body: payload
                 });
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error || 'Save failed');
+                }
                 
-                console.log('✅ Polls sync request sent (no-cors)');
+                console.log('✅ Polls saved to MySQL API');
                 return true;
             } catch (e) {
-                console.warn('⚠️ Could not sync to Google Sheets:', e);
+                console.warn('⚠️ Could not sync polls to MySQL API:', e);
             }
             return false;
         }
@@ -2416,7 +2420,7 @@
         }
 
         function syncWhatsAppNumberFromServer() {
-            // Fetch the latest WhatsApp number from Google Sheets
+            // Fetch the latest WhatsApp number from API
             fetch(`${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getWhatsAppNumber&apiKey=${GOOGLE_SHEETS_CONFIG.API_KEY}`, {
                 method: 'GET',
                 mode: 'cors'
@@ -2426,16 +2430,16 @@
                 if (data.success && data.whatsappNumber) {
                     adminWhatsAppNumber = data.whatsappNumber;
                     localStorage.setItem(STORAGE_KEYS.WHATSAPP, data.whatsappNumber);
-                    Logger.log('✅ Synced WhatsApp number from server: ' + adminWhatsAppNumber);
+                    console.log('✅ Synced WhatsApp number from API: ' + adminWhatsAppNumber);
                 }
             })
             .catch(error => {
-                console.log('Could not sync WhatsApp number from server (offline?), using cached value');
+                console.log('Could not sync WhatsApp number from API, using cached value');
             });
         }
 
         function saveWhatsAppNumberToServer(number) {
-            // Save the WhatsApp number to Google Sheets
+            // Save the WhatsApp number to MySQL API
             fetch(GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL, {
                 method: 'POST',
                 mode: 'cors',

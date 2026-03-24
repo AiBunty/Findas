@@ -2064,6 +2064,97 @@
       color: rgba(255, 255, 255, 0.92);
     }
 
+    #academy {
+      margin-top: 24px;
+      scroll-margin-top: 120px;
+      background: linear-gradient(180deg, #f7faff 0%, #ffffff 100%);
+      border: 1px solid rgba(31, 77, 135, .08);
+      border-radius: 16px;
+    }
+
+    .academy-intro {
+      margin: 0 0 18px;
+      color: #34435f;
+      line-height: 1.65;
+      font-size: 1.02rem;
+    }
+
+    .academy-cta-row {
+      margin-bottom: 18px;
+    }
+
+    .academy-subhead {
+      margin-top: 20px;
+    }
+
+    .academy-split {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    .academy-panel {
+      border: 1px solid rgba(31, 77, 135, .12);
+      border-radius: 14px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .academy-panel h3 {
+      margin: 0 0 10px;
+      color: #1F4D87;
+      font-size: 1.05rem;
+    }
+
+    .academy-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 8px;
+      color: #425472;
+    }
+
+    .academy-feature-card {
+      border: 1px solid rgba(31, 77, 135, .10);
+      border-radius: 14px;
+      padding: 16px;
+      background: #fff;
+      display: grid;
+      gap: 8px;
+    }
+
+    .academy-feature-card h3 {
+      margin: 0;
+      color: #1F4D87;
+      font-size: 1rem;
+    }
+
+    .academy-feature-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(31, 77, 135, .08);
+      display: grid;
+      place-items: center;
+      color: #1F4D87;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .academy-steps-list {
+      margin: 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 10px;
+      color: #34435f;
+      line-height: 1.6;
+    }
+
+    .academy-tools {
+      margin-top: 14px;
+    }
+
     /* Ã¢â€â‚¬Ã¢â€â‚¬ GALLERY Ã¢â€â‚¬Ã¢â€â‚¬ */
     .gallery {
       display: grid;
@@ -2226,6 +2317,7 @@
       font-size: 1rem;
       line-height: 1.25;
       display: -webkit-box;
+      line-clamp: 2;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden
@@ -2237,6 +2329,7 @@
       line-height: 1.35;
       font-size: .9rem;
       display: -webkit-box;
+      line-clamp: 5;
       -webkit-line-clamp: 5;
       -webkit-box-orient: vertical;
       overflow: hidden
@@ -3222,11 +3315,13 @@
 
       .featured-reviews .featured-copy h4 {
         font-size: .92rem;
+        line-clamp: 2;
         -webkit-line-clamp: 2
       }
 
       .featured-reviews .featured-copy .section-body {
         font-size: .82rem;
+        line-clamp: 4;
         -webkit-line-clamp: 4
       }
 
@@ -3536,10 +3631,12 @@
       }
 
       .featured-reviews .featured-copy h4 {
+        line-clamp: 1;
         -webkit-line-clamp: 1
       }
 
       .featured-reviews .featured-copy .section-body {
+        line-clamp: 3;
         -webkit-line-clamp: 3
       }
 
@@ -4097,6 +4194,10 @@
     }
 
     @media(max-width:760px) {
+      .academy-split {
+        grid-template-columns: 1fr;
+      }
+
       .nav {
         background: linear-gradient(180deg, #071a34 0%, #1f4d93 100%);
         border-left: 1px solid rgba(255, 255, 255, .25)
@@ -4144,6 +4245,7 @@
       </a>
       <button class="menu-btn" id="menuToggle" aria-label="Toggle menu" aria-expanded="false"><span></span></button>
       <nav class="nav" aria-label="Main">
+        <a href="#academy">Academy</a>
         <a href="#courses">Courses</a>
         <a href="#webinars">Webinars</a>
         <a href="#digital-products">Digital Products</a>
@@ -4160,15 +4262,15 @@
   <!-- HERO SECTION -->
   <section class="hero">
     <div class="hero-content">
-      <h1 id="heroTitle">Skyrocket Your <span id="heroTitleHighlight">Financial Growth</span></h1>
-      <p id="heroSubtitle">Years of experience distilled into practical, risk-aware programs you can apply immediately.</p>
+      <h1 id="heroTitle">Build Wealth. <span id="heroTitleHighlight">Upgrade Your Mindset.</span> Design Your Life of Freedom.</h1>
+      <p id="heroSubtitle">Findas Academy is a learning community built to help you manage money wisely, create long-term wealth, and grow with like-minded people focused on continuous improvement.</p>
       <div class="hero-benefits" aria-label="Hero highlights">
-        <span class="hero-benefit" id="heroBenefit1">Lifetime Access</span>
-        <span class="hero-benefit" id="heroBenefit2">14-Day Refund Policy</span>
-        <span class="hero-benefit" id="heroBenefit3">4.8+ Lakh Enrolled</span>
+        <span class="hero-benefit" id="heroBenefit1">Structured Learning</span>
+        <span class="hero-benefit" id="heroBenefit2">Actionable Systems</span>
+        <span class="hero-benefit" id="heroBenefit3">Growth Community</span>
       </div>
       <div class="hero-ctas">
-        <a href="#courses" class="btn b1" id="heroBtn1">Explore Findas Courses</a>
+        <a href="#academy" class="btn b1" id="heroBtn1">Join Findas Academy</a>
         <button class="btn b2" id="heroCta" type="button">Book Free Call</button>
       </div>
     </div>
@@ -4186,16 +4288,16 @@
   <section class="about-coach">
     <div class="about-inner">
       <div class="about-text">
-        <h2 id="founderTitle">Meet <span id="founderTitleHighlight">Our Founder</span></h2>
+        <h2 id="founderTitle">Meet <span id="founderTitleHighlight">The Founder</span></h2>
         <h3 class="founder-name">Samir Machawe</h3>
         <div class="founder-intro">
-          <p id="founderParagraph1" class="typewriter-text">A dynamic educator, entrepreneur, and mentor who has helped thousands of learners build financial confidence through practical, easy-to-apply frameworks.</p>
+          <p id="founderParagraph1" class="typewriter-text">Hello, I am Samir Machawe, founder of Findas Academy and a Financial Freedom Coach with more than two decades of experience helping individuals build wealth and financial clarity.</p>
         </div>
         <div class="founder-story">
-          <p id="founderParagraph2" class="typewriter-text">He founded <strong>Findas in 1999</strong> and has guided learners since <strong>2016</strong> through courses, webinars, and coaching calls.</p>
+          <p id="founderParagraph2" class="typewriter-text">Most people struggle with money not because they lack intelligence, but because no one teaches them how money actually works. Schools rarely teach financial literacy and workplaces rarely teach wealth creation.</p>
         </div>
         <div class="founder-philosophy">
-          <p id="founderParagraph3" class="typewriter-text">His teaching style simplifies complex financial concepts into clear action steps that people can apply in real life.</p>
+          <p id="founderParagraph3" class="typewriter-text">My mission is simple: to help people move from survival mode to freedom mode with practical systems, mindset upgrades, and a supportive environment.</p>
         </div>
       </div>
       <div class="about-photo" id="hostImg"><img src="https://storage.files-vault.com/uploads/1772207760-dgdy7ilGGl.png"
@@ -4205,6 +4307,72 @@
 
   <main class="wrap">
     <div id="error" class="err" role="alert"></div>
+
+    <section class="sec" id="academy">
+      <div class="head">
+        <h2>Findas Academy</h2><span class="chip">Community First</span>
+      </div>
+      <p class="academy-intro">Learn what took decades of real-world experience to discover in a structured environment built for clarity, action, and growth. Your journey toward financial freedom begins here.</p>
+      <div class="hero-ctas academy-cta-row">
+        <a href="#membership" class="btn b1">Join Findas Academy</a>
+      </div>
+
+      <div class="academy-split">
+        <article class="academy-panel">
+          <h3>Before Joining</h3>
+          <ul id="academyBeforeList" class="academy-list"></ul>
+        </article>
+        <article class="academy-panel">
+          <h3>After Joining</h3>
+          <ul id="academyAfterList" class="academy-list"></ul>
+        </article>
+      </div>
+
+      <div class="head academy-subhead">
+        <h2>What You Get Inside</h2><span class="chip">Continuous Growth</span>
+      </div>
+      <div class="grid" id="academyFeaturesGrid"></div>
+
+      <div class="academy-tools section-card">
+        <h3 class="section-title">Digital Products &amp; Practical Tools</h3>
+        <p class="section-body">Knowledge alone does not create change. Action does. Use budgeting trackers, financial planning templates, goal planners, journaling tools, and habit-building frameworks to turn learning into results.</p>
+      </div>
+
+      <div class="head academy-subhead">
+        <h2>Sneak Peek into the Community</h2><span class="chip">Preview</span>
+      </div>
+      <div class="grid" id="academyCommunityGrid"></div>
+
+      <div class="academy-steps section-card">
+        <h3 class="section-title">What Happens After You Join</h3>
+        <ol class="academy-steps-list">
+          <li><strong>Step 1 - Introduce Yourself:</strong> Start in the Start Here and Say Hello channel and share your goals.</li>
+          <li><strong>Step 2 - Begin Learning:</strong> Explore Book of the Month, Weekly Learning, and Daily Dose.</li>
+          <li><strong>Step 3 - Build Your Systems:</strong> Apply trackers, planners, and habit systems daily.</li>
+          <li><strong>Step 4 - Participate in Challenges:</strong> Join monthly challenges to build consistency.</li>
+          <li><strong>Step 5 - Grow with the Community:</strong> Learn together, ask questions, and celebrate progress.</li>
+        </ol>
+      </div>
+
+      <div class="head academy-subhead">
+        <h2>Findas Academy Growth Roadmap</h2><span class="chip">5 Stages</span>
+      </div>
+      <div class="grid" id="academyRoadmapGrid"></div>
+
+      <div class="academy-tools section-card">
+        <h3 class="section-title">Who Should Join</h3>
+        <p class="section-body">Entrepreneurs, employees, students, investors, business owners, and anyone committed to improving financial literacy and life systems.</p>
+      </div>
+
+      <div class="academy-tools section-card">
+        <h3 class="section-title">Membership &amp; Pricing</h3>
+        <p class="section-body">Simple membership with unlimited access to courses, channels, tools, challenges, and support. Every new member receives a 14-day free look period.</p>
+        <div class="hero-ctas academy-cta-row">
+          <a href="#membership" class="btn b1">Join Findas Academy</a>
+        </div>
+      </div>
+
+    </section>
 
     <!-- WHY FINDAS -->
     <section class="sec section-collapsible" id="why-section">
@@ -4303,14 +4471,14 @@
 
     <section class="sec" id="courses">
       <div class="head">
-        <h2>Courses</h2><span class="chip" id="coursesCount">0 items</span>
+        <h2>Courses</h2>
       </div>
       <div class="grid" id="coursesGrid"></div>
     </section>
 
     <section class="sec" id="webinars">
       <div class="head">
-        <h2>Webinars</h2><span class="chip" id="webinarsCount">0 upcoming</span>
+        <h2>Webinars</h2>
       </div>
       <div class="tabs" id="wTabs" role="tablist" aria-label="Webinar tabs">
         <button class="tab act" role="tab" aria-selected="true" data-tab="upcoming">Upcoming</button>
@@ -4321,28 +4489,28 @@
 
     <section class="sec" id="digital-products">
       <div class="head">
-        <h2>Digital Products</h2><span class="chip" id="digitalCount">0 items</span>
+        <h2>Digital Products</h2>
       </div>
       <div class="grid" id="digitalGrid"></div>
     </section>
 
     <section class="sec" id="membership">
       <div class="head">
-        <h2>Community Membership Plans</h2><span class="chip" id="membershipCount">0 plans</span>
+        <h2>Community Membership Plans</h2>
       </div>
       <div class="grid" id="membershipGrid"></div>
     </section>
 
     <section class="sec" id="gallery">
       <div class="head">
-        <h2>Gallery</h2><span class="chip" id="galleryCount">0 images</span>
+        <h2>Gallery</h2>
       </div>
       <div class="gallery" id="galleryGrid"></div>
     </section>
 
     <section class="sec" id="reviews">
       <div class="head">
-        <h2>Reviews</h2><span class="chip" id="reviewsCount">0 reviews</span>
+        <h2>Reviews</h2>
       </div>
       <div class="reviews-wrap">
         <div class="featured-reviews" id="featuredReviews"></div>
@@ -4640,50 +4808,32 @@
   <!-- Floating Go-to-Top Button -->
   <button class="scroll-to-top" id="scrollToTop" aria-label="Scroll to top" title="Back to top">&uarr;</button>
 
-  <script src="./appscript-config.js?v=20260309"></script>
+  <script src="js/config.js"></script>
+  <script src="js/data/defaults.js"></script>
+  <script src="js/utils/dom.js"></script>
+  <script src="js/utils/format.js"></script>
+  <script src="js/api/cache.js"></script>
+  <script src="js/api/php-client.js"></script>
+  <script src="js/api/client.js"></script>
+  <script src="js/cart/manager.js"></script>
+  <script src="js/render/cards.js"></script>
+  <script src="js/render/sections.js"></script>
+  <script src="js/modals/core.js"></script>
+  <script src="js/modals/booking.js"></script>
+  <script src="js/modals/details.js"></script>
   <script>
-    const K = 'findas_lite_cart_v1';
-    const API_CACHE_PREFIX = 'findas_api_cache_v1:';
-    const API_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
-    const API_MAX_ATTEMPTS = 4;
-    const API_RETRY_BASE_MS = 650;
-    const API_JSONP_TIMEOUT_MS = 40000;
-    const DEFAULT_PAGE_LOADER_TEXT = 'Loading Your Academy';
-    const API_CACHEABLE_METHODS = {
-      getGlobalSettings: true,
-      getSiteConfig: true,
-      getCourses: true,
-      getDigitalProducts: true,
-      getWebinars: true,
-      getMembershipPlans: true,
-      getGalleryImages: true,
-      getShortReviews: true,
-      getFeaturedReviews: true,
-      getFAQ: true,
-      getWhoFor: true,
-      getBookingPage: true,
-      getCourseDetails: true,
-      getDigitalProductDetails: true,
-      getWebinarDetails: true
-    };
-    const S = { settings: {}, courses: [], digital: [], webinars: [], plans: [], gallery: [], shortReviews: [], featuredReviews: [], faq: [], whoFor: [], tab: 'upcoming', q: '', cart: [] };
+    const S = { settings: {}, courses: [], digital: [], webinars: [], plans: [], gallery: [], shortReviews: [], featuredReviews: [], faq: [], whoFor: [], academySections: [], academyBefore: [], academyAfter: [], academyRoadmap: [], academyCommunity: [], tab: 'upcoming', q: '', cart: [] };
     const DETAILS_CACHE = {}; // Cache for course/digital details to speed up repeated loads
-    const HAS_GAS_RUNTIME = !!(window.google && google.script && google.script.run);
     const LOCAL_DATA = window.FINDAS_LOCAL_DATA || null;
-    const WEBAPP_API_URL = (window.FINDAS_CONFIG && window.FINDAS_CONFIG.WEBAPP_URL) || window.FINDAS_WEBAPP_URL || 'https://script.google.com/macros/s/AKfycbySQGmEoW1zwK048wxXCY4cBWSxd8U4sjXsDL6hPymg2Df5cCkBEwYkv8B65SK4-y6MkA/exec';
-    const WEBAPP_API_FALLBACK_URL = (window.FINDAS_CONFIG && (window.FINDAS_CONFIG.WEBAPP_BACKUP_URL || window.FINDAS_CONFIG.WEBAPP_FALLBACK_URL)) || window.FINDAS_WEBAPP_BACKUP_URL || '';
-    const API_ENDPOINTS = [WEBAPP_API_URL, WEBAPP_API_FALLBACK_URL]
-      .map(v => String(v || '').trim())
-      .filter((v, i, arr) => v && arr.indexOf(v) === i);
-    const POLLS_API_URL = (window.FINDAS_CONFIG && window.FINDAS_CONFIG.POLLS_DEPLOYMENT_URL) || window.FINDAS_POLLS_DEPLOYMENT_URL || '';
-    const POLLS_API_KEY = (window.FINDAS_CONFIG && window.FINDAS_CONFIG.POLLS_API_KEY) || window.FINDAS_POLLS_API_KEY || '';
+    const PHP_API_BASE = (window.FINDAS_PHP_API_BASE || '/api').replace(/\/$/, '');
     const D = {
       top: qs('.top'), menu: qs('#menuToggle'), nav: qs('.nav'), navBackdrop: qs('#navBackdrop'),
       logo: qs('#siteLogo'), name: qs('#siteName'), err: qs('#error'),
       cGrid: qs('#coursesGrid'), wGrid: qs('#webinarsGrid'), dGrid: qs('#digitalGrid'), pGrid: qs('#membershipGrid'),
-      cCount: qs('#coursesCount'), wCount: qs('#webinarsCount'), dCount: qs('#digitalCount'), pCount: qs('#membershipCount'),
-      gGrid: qs('#galleryGrid'), gCount: qs('#galleryCount'), reviewsCount: qs('#reviewsCount'),
+      gGrid: qs('#galleryGrid'),
       faqGrid: qs('#faqGrid'), whoGrid: qs('#whoGrid'),
+      academyFeaturesGrid: qs('#academyFeaturesGrid'), academyBeforeList: qs('#academyBeforeList'), academyAfterList: qs('#academyAfterList'),
+      academyRoadmapGrid: qs('#academyRoadmapGrid'), academyCommunityGrid: qs('#academyCommunityGrid'),
       bookingLink: qs('#bookingLink'), heroCta: qs('#heroCta'),
       heroTitle: qs('#heroTitle'), heroTitleHighlight: qs('#heroTitleHighlight'), heroSubtitle: qs('#heroSubtitle'),
       heroBenefit1: qs('#heroBenefit1'), heroBenefit2: qs('#heroBenefit2'), heroBenefit3: qs('#heroBenefit3'),
@@ -4709,7 +4859,6 @@
     };
     let mf = [], prev = null, mc = null, featuredIdx = 0, featuredTimer = null, countdownTimer = null, galleryFeaturedSlot = null, galleryIsMobile = null, heroVideoMuted = true;
 
-    function qs(s) { return document.querySelector(s) }
     function setupHeroVideoMuteBtn() {
       if (!D.heroVideoMuteBtn || !D.heroVideoIframe) return;
       D.heroVideoMuteBtn.addEventListener('click', function(e) {
@@ -4783,17 +4932,6 @@
       }
     }
 
-    function esc(v) { return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;') }
-    function n(v) { const x = Number(v); return Number.isFinite(x) ? x : 0 }
-    function b(v) { if (typeof v === 'boolean') return v; const t = String(v ?? '').trim().toLowerCase(); return ['true', '1', 'yes', 'y'].includes(t) }
-    function money(v) { return 'INR ' + n(v).toFixed(0) }
-    function parseDate(v) {
-      if (!v) return null; if (Object.prototype.toString.call(v) === '[object Date]') return Number.isNaN(v.getTime()) ? null : v;
-      let t = String(v).trim().replace(/\//g, '-'); if (!t) return null;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(t)) t += 'T00:00:00'; else if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2})?$/.test(t)) t = t.replace(' ', 'T');
-      const d = new Date(t); return Number.isNaN(d.getTime()) ? null : d;
-    }
-    function fmtDate(d, tz) { if (!d) return 'Date TBA'; try { return new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: tz || undefined }).format(d) } catch (e) { return d.toLocaleString() } }
     function past(w) { return w.endAt ? Date.now() > w.endAt.getTime() : false }
     function showErr(m) { if (D.err) { D.err.textContent = m; D.err.classList.add('show') } }
     function clearErr() { if (D.err) { D.err.textContent = ''; D.err.classList.remove('show') } }
@@ -4806,201 +4944,6 @@
       if (typeof e === 'string') return e;
       if (e.message) return e.message;
       try { return JSON.stringify(e) } catch (x) { return String(e) }
-    }
-
-    function localDataFor(name) {
-      if (!LOCAL_DATA) return null;
-      if (name === 'getGlobalSettings') return LOCAL_DATA.global_settings || LOCAL_DATA.settings || {};
-      if (name === 'getCourses') return LOCAL_DATA.courses || [];
-      if (name === 'getCourseDetails') return LOCAL_DATA.course_details || null;
-      if (name === 'getDigitalProducts') return LOCAL_DATA.digital_products || LOCAL_DATA.digital || [];
-      if (name === 'getDigitalProductDetails') return LOCAL_DATA.digital_product_details || null;
-      if (name === 'getWebinars') return LOCAL_DATA.webinars || [];
-      if (name === 'getWebinarDetails') return LOCAL_DATA.webinar_details || null;
-      if (name === 'getMembershipPlans') return LOCAL_DATA.membership_plans || LOCAL_DATA.memberships || [];
-      if (name === 'getBookingPage') return LOCAL_DATA.booking_page || {};
-      if (name === 'getGalleryImages') return LOCAL_DATA.gallery_images || [];
-      if (name === 'getShortReviews') return LOCAL_DATA.short_reviews || [];
-      if (name === 'getFeaturedReviews') return LOCAL_DATA.featured_reviews || [];
-      if (name === 'getFAQ') return LOCAL_DATA.faq || null;
-      if (name === 'getWhoFor') return LOCAL_DATA.who_for || null;
-      return null;
-    }
-
-    function getDefaultFAQ() {
-      return [
-        { question: 'What is the refund policy?', answer: 'We offer a full refund within 14 days of purchase if you are not satisfied with the course or product. No questions asked. Simply reach out to our support team.' },
-        { question: 'Are courses self-paced?', answer: 'Yes! All courses are completely self-paced with lifetime access. You can learn at your own speed, anytime, anywhere.' },
-        { question: 'Is there any live interaction?', answer: 'Most courses include access to live group Q&A sessions where you can ask questions and get feedback from our instructors.' },
-        { question: 'Do I need any prior experience?', answer: 'Most of our courses are designed for everyone, regardless of prior experience. Just get started and learn at your own pace.' },
-        { question: 'Can I take multiple courses?', answer: 'Absolutely! There are no limits. We encourage you to explore and take any courses that interest you.' },
-        { question: 'Is there a community?', answer: 'Yes, premium members get access to our exclusive community where you can connect with fellow learners and network.' }
-      ];
-    }
-
-    function getDefaultWhoFor() {
-      return [
-        { icon: 'Ã°Å¸â€˜Â¤', title: 'Beginners', description: 'Start your financial journey from scratch with foundational knowledge.' },
-        { icon: 'Ã°Å¸â€™Â¼', title: 'Professionals', description: 'Enhance your financial skills while managing a busy career.' },
-        { icon: 'Ã°Å¸â€™Â°', title: 'Investors', description: 'Deepen your investment knowledge and build a stronger portfolio.' },
-        { icon: 'Ã°Å¸Å¡â‚¬', title: 'Entrepreneurs', description: 'Master financial management for your business or startup.' },
-        { icon: 'Ã°Å¸â€˜Â¨Ã¢â‚¬ÂÃ°Å¸â€˜Â©Ã¢â‚¬ÂÃ°Å¸â€˜Â§Ã¢â‚¬ÂÃ°Å¸â€˜Â¦', title: 'Parents', description: 'Manage personal finances while balancing family responsibilities.' },
-        { icon: 'Ã°Å¸Å½Â¯', title: 'Goal Seekers', description: 'Create and achieve clear financial objectives with our guidance.' }
-      ];
-    }
-
-    function apiJsonp(fnName, params, transportOptions) {
-      return new Promise((ok, bad) => {
-        const endpointUrl = String((transportOptions && transportOptions.endpointUrl) || WEBAPP_API_URL || '').trim();
-        if (!endpointUrl) { bad(new Error('WEBAPP_API_URL is missing')); return }
-        const timeoutMs = (transportOptions && n(transportOptions.timeoutMs)) || API_JSONP_TIMEOUT_MS;
-        const extraQuery = (transportOptions && transportOptions.extraQuery) || null;
-        const cb = '__findas_cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
-        const q = ['api=1', 'fn=' + encodeURIComponent(fnName), 'callback=' + encodeURIComponent(cb)];
-        if (params && typeof params === 'object') {
-          Object.keys(params).forEach(k => {
-            if (params[k] === undefined || params[k] === null) return;
-            q.push(encodeURIComponent(k) + '=' + encodeURIComponent(String(params[k])));
-          });
-        }
-        if (extraQuery && typeof extraQuery === 'object') {
-          Object.keys(extraQuery).forEach(k => {
-            if (extraQuery[k] === undefined || extraQuery[k] === null) return;
-            q.push(encodeURIComponent(k) + '=' + encodeURIComponent(String(extraQuery[k])));
-          });
-        }
-        const src = endpointUrl + '?' + q.join('&');
-        const s = document.createElement('script');
-        let done = false;
-
-        function cleanup() {
-          if (s && s.parentNode) s.parentNode.removeChild(s);
-          try { delete window[cb]; } catch (e) { window[cb] = undefined; }
-        }
-
-        const timer = setTimeout(() => {
-          if (done) return;
-          done = true;
-          cleanup();
-          bad(new Error('API request timeout for ' + fnName));
-        }, timeoutMs);
-
-        window[cb] = function (payload) {
-          if (done) return;
-          done = true;
-          clearTimeout(timer);
-          cleanup();
-          if (payload && payload.ok) {
-            ok(payload.data);
-          } else {
-            bad(new Error(payload && payload.error ? payload.error : 'Unknown API error'));
-          }
-        };
-
-        s.onerror = function () {
-          if (done) return;
-          done = true;
-          clearTimeout(timer);
-          cleanup();
-          bad(new Error('Failed to load Apps Script endpoint: ' + src));
-        };
-
-        s.async = true;
-        s.src = src;
-        document.head.appendChild(s);
-      });
-    }
-
-    function wait(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    function isRetryableApiError(err) {
-      const msg = String((err && err.message) || err || '').toLowerCase();
-      return msg.includes('failed to load apps script endpoint') || msg.includes('timeout') || msg.includes('network');
-    }
-
-    async function runJsonpWithRetry(name, params) {
-      let lastErr = null;
-      for (let attempt = 1; attempt <= API_MAX_ATTEMPTS; attempt++) {
-        try {
-          const bust = Date.now() + '_' + Math.floor(Math.random() * 10000);
-          const endpointUrl = API_ENDPOINTS[(attempt - 1) % API_ENDPOINTS.length] || WEBAPP_API_URL;
-          const data = await apiJsonp(name, params, { endpointUrl, extraQuery: { _r: attempt, _cb: bust } });
-          setPageLoaderText(DEFAULT_PAGE_LOADER_TEXT);
-          return data;
-        } catch (err) {
-          lastErr = err;
-          if (!isRetryableApiError(err) || attempt >= API_MAX_ATTEMPTS) break;
-          const backoff = API_RETRY_BASE_MS * attempt;
-          await wait(backoff);
-        }
-      }
-      setPageLoaderText(DEFAULT_PAGE_LOADER_TEXT);
-      throw lastErr || new Error('Unknown API failure for ' + name);
-    }
-
-    function getApiCacheKey(name, params) {
-      if (!API_CACHEABLE_METHODS[name]) return null;
-      const p = params && typeof params === 'object' ? params : {};
-      return API_CACHE_PREFIX + name + ':' + JSON.stringify(p);
-    }
-
-    function readApiCache(name, params) {
-      const key = getApiCacheKey(name, params);
-      if (!key) return null;
-      try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== 'object') return null;
-        const at = n(parsed.at);
-        if (!at || (Date.now() - at) > API_CACHE_TTL_MS) return null;
-        return parsed.data;
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function writeApiCache(name, params, data) {
-      const key = getApiCacheKey(name, params);
-      if (!key) return;
-      try {
-        localStorage.setItem(key, JSON.stringify({ at: Date.now(), data }));
-      } catch (e) {
-        // Ignore cache write errors (quota/private mode).
-      }
-    }
-
-    function run(name, params) {
-      return new Promise((ok, bad) => {
-        if (!HAS_GAS_RUNTIME) {
-          const local = localDataFor(name);
-          if (local !== null) { ok(local); return }
-          runJsonpWithRetry(name, params)
-            .then(data => {
-              writeApiCache(name, params, data);
-              ok(data);
-            })
-            .catch(err => {
-              const cached = readApiCache(name, params);
-              if (cached !== null) {
-                console.warn('Using cached API data for', name, err && err.message ? err.message : err);
-                ok(cached);
-                return;
-              }
-              bad(err);
-            });
-          return;
-        }
-        const runner = google.script.run.withSuccessHandler(ok).withFailureHandler(bad);
-        if (params === undefined) {
-          runner[name]();
-          return;
-        }
-        const arg = (params && typeof params === 'object' && params.slug !== undefined) ? params.slug : params;
-        runner[name](arg);
-      });
     }
 
     function normCourses(rows) { return (rows || []).map(r => ({ type: 'course', id: String(r.slug || '').trim(), title: String(r.title || ''), subtitle: String(r.subtitle || ''), category: String(r.category || ''), language: String(r.language || ''), price: n(r.price_inr), badge: String(r.badge || ''), students: String(r.students || ''), img: String(r.thumbnail_url || ''), link: String(r.payment_link || ''), redirect_url: String(r.redirect_url || '') })).filter(x => x.id) }
@@ -5211,16 +5154,13 @@
       if (S.siteConfig.footer_copyright && D.footerCopyright) {
         D.footerCopyright.innerHTML = S.siteConfig.footer_copyright;
       }
-    }
 
-    function shade(hex, pct) {
-      const v = hex.replace('#', '');
-      if (v.length !== 6) return hex;
-      const num = parseInt(v, 16);
-      const r = Math.max(0, Math.min(255, (num >> 16) + pct));
-      const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + pct));
-      const b2 = Math.max(0, Math.min(255, (num & 0x0000FF) + pct));
-      return '#' + ((1 << 24) + (r << 16) + (g << 8) + b2).toString(16).slice(1);
+      const gallerySection = document.getElementById('gallery');
+      if (gallerySection) {
+        const raw = S.siteConfig.gallery_enabled;
+        const enabled = !(raw === false || raw === 0 || raw === '0' || raw === 'false');
+        gallerySection.style.display = enabled ? '' : 'none';
+      }
     }
 
     function adjustBrandLogoCard() {
@@ -5240,113 +5180,12 @@
       card.style.height = targetH + 'px';
     }
 
-    function keep(item) {
-      if (!S.q) return true;
-      const h = [item.title, item.category, item.subtitle, item.language].map(x => String(x || '').toLowerCase()).join(' ');
-      return h.includes(S.q);
-    }
-
-    function card(item, type) {
-      const a = document.createElement('article');
-      a.className = 'card';
-      a.tabIndex = 0;
-      a.setAttribute('role', 'button');
-      a.dataset.type = type;
-      a.dataset.id = item.id;
-
-      const media = document.createElement('div');
-      media.className = 'media' + (type === 'digital' ? ' digital' : '');
-      if (item.img) {
-        const img = document.createElement('img');
-        img.src = item.img;
-        img.alt = item.title || 'Card image';
-        img.loading = 'lazy';
-        media.appendChild(img);
-      } else {
-        const fb = document.createElement('div');
-        fb.className = 'fallback';
-        fb.textContent = item.title || 'Item';
-        media.appendChild(fb);
-      }
-
-      const body = document.createElement('div');
-      body.className = 'body';
-      const title = document.createElement('h3');
-      title.className = 'title';
-      title.textContent = item.title || 'Untitled';
-      const sub = document.createElement('p');
-      sub.className = 'sub';
-      sub.textContent = item.subtitle || item.category || item.language || 'Explore details';
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-      const badge = document.createElement('span');
-      badge.className = 'badge bdef';
-      badge.textContent = type.toUpperCase();
-      const price = document.createElement('span');
-      price.className = 'price';
-      price.textContent = money(item.price);
-
-      if ((type === 'course' || type === 'digital') && item.badge) {
-        badge.textContent = item.badge;
-      }
-      if (type === 'webinar') {
-        const p = past(item);
-        badge.className = 'badge ' + (p ? 'bpast' : 'bup');
-        badge.textContent = p ? 'Event Ended' : 'Upcoming';
-        price.textContent = item.isFree ? 'Free' : money(item.price);
-        sub.textContent = item.subtitle || (item.startAt ? fmtDate(item.startAt, item.tz) : 'Live session');
-      }
-      if (type === 'membership') {
-        badge.className = 'badge ' + (item.recommended ? 'bup' : 'bdef');
-        badge.textContent = item.recommended ? 'Recommended' : 'Plan';
-        sub.textContent = item.period || 'Membership access';
-      }
-
-      meta.appendChild(badge);
-      meta.appendChild(price);
-      body.appendChild(title);
-      body.appendChild(sub);
-      body.appendChild(meta);
-      a.appendChild(media);
-      a.appendChild(body);
-      return a;
-    }
-
-    function render() {
-      const c = S.courses.filter(keep), d = S.digital.filter(keep), p = S.plans.filter(keep), wf = S.webinars.filter(keep), up = wf.filter(x => !past(x)), pa = wf.filter(past), w = S.tab === 'past' ? pa : up;
-      renderGrid(D.cGrid, c, 'course', 'No courses found.');
-      renderGrid(D.dGrid, d, 'digital', 'No digital products found.');
-      renderGrid(D.pGrid, p, 'membership', 'No membership plans found.');
-      renderGrid(D.wGrid, w, 'webinar', 'No webinars in this tab.');
-      D.cCount.textContent = `${c.length} items`; D.dCount.textContent = `${d.length} items`; D.pCount.textContent = `${p.length} plans`; D.wCount.textContent = `${up.length} upcoming`;
-    }
-
-    function renderGrid(target, items, type, emptyText) {
-      clearEl(target);
-      if (!items.length) {
-        const p = el('p', 'empty', emptyText);
-        target.appendChild(p);
-        return;
-      }
-      items.forEach(item => target.appendChild(card(item, type)));
-    }
-
-    function by(type, id) { if (type === 'course') return S.courses.find(x => x.id === id) || null; if (type === 'digital') return S.digital.find(x => x.id === id) || null; if (type === 'webinar') return S.webinars.find(x => x.id === id) || null; if (type === 'membership') return S.plans.find(x => x.id === id) || null; return null }
-
     function openDetails(type, id) {
       const i = by(type, id); if (!i) return; mc = { type, id };
       if (type === 'membership') { setModalLoading(); openModal(); renderMembershipDetails(i); return; }
       if (type === 'digital') { openDigitalDetails(i.id); return; }
       if (type === 'webinar') { openWebinarDetails(i.id); return; }
       if (type === 'course') { openCourseDetails(i.id); return; }
-    }
-
-    function clearEl(el) { while (el.firstChild) el.removeChild(el.firstChild) }
-    function el(tag, className, text) {
-      const n = document.createElement(tag);
-      if (className) n.className = className;
-      if (text !== undefined && text !== null) n.textContent = text;
-      return n;
     }
 
     function setModalLoading() {
@@ -5388,17 +5227,6 @@
       const items = parseBullets(text);
       if (!items.length) return null;
       return buildFaqAccordion(items);
-    }
-
-    function cleanDisplayText(value) {
-      const text = String(value || '');
-      if (!/[ÃƒÃ‚Ã¢]/.test(text)) return text;
-      try {
-        const bytes = Uint8Array.from(Array.from(text).map(ch => ch.charCodeAt(0) & 255));
-        return new TextDecoder('utf-8').decode(bytes);
-      } catch (e) {
-        return text;
-      }
     }
 
     function renderChips(text) {
@@ -5498,274 +5326,6 @@
       container.appendChild(section);
     }
 
-    function getFeaturedReviewImageUrl(item) {
-      if (!item || typeof item !== 'object') return '';
-      const keys = ['image_url', 'image', 'img', 'photo_url', 'photo', 'review_image_url', 'review_image', 'thumbnail_url', 'thumbnail', 'banner_url'];
-      for (let i = 0; i < keys.length; i++) {
-        const url = String(item[keys[i]] || '').trim();
-        if (url) return url;
-      }
-      return '';
-    }
-
-    function createFeaturedReviewCard(item) {
-      const card = el('div', 'featured-card');
-      const media = el('div', 'featured-media');
-      const fallback = el('div', 'fallback', String(item.title || item.name || 'Review'));
-      const imageUrl = getFeaturedReviewImageUrl(item);
-
-      if (imageUrl) {
-        const img = el('img');
-        img.alt = String(item.title || item.name || 'Review image');
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        img.addEventListener('error', () => {
-          clearEl(media);
-          media.appendChild(fallback);
-        });
-        img.src = imageUrl;
-        media.appendChild(img);
-      } else {
-        media.appendChild(fallback);
-      }
-
-      card.appendChild(media);
-      const txt = el('div', 'featured-copy');
-      if (item.title) txt.appendChild(el('h4', '', String(item.title)));
-      if (item.review_text) txt.appendChild(el('p', 'section-body', String(item.review_text)));
-      if (item.name) txt.appendChild(el('div', 'section-body reviewer', String(item.name)));
-      if (!txt.children.length) {
-        txt.appendChild(el('p', 'section-body', 'Review details coming soon.'));
-      }
-      card.appendChild(txt);
-      return card;
-    }
-
-    function preloadFeaturedImages(list) {
-      (list || []).forEach(item => {
-        const url = getFeaturedReviewImageUrl(item);
-        if (!url) return;
-        const img = new Image();
-        img.src = url;
-      });
-    }
-
-    function renderFeaturedReviews(list, target, atIndex) {
-      clearEl(target);
-      if (!list || !list.length) {
-        target.appendChild(el('p', 'section-body', 'No featured reviews yet.'));
-        return;
-      }
-      const total = list.length;
-      const baseIndex = Number.isFinite(atIndex) ? atIndex : featuredIdx;
-      const idx = ((baseIndex % total) + total) % total;
-      target.appendChild(createFeaturedReviewCard(list[idx]));
-      target.dataset.featuredIndex = String(idx);
-    }
-
-    function animateFeaturedRight(target, list, nextIdx) {
-      // Keep API stable, but render a single review card (no dual-card slide track).
-      renderFeaturedReviews(list, target, nextIdx);
-    }
-
-    function startFeaturedRotation() {
-      if (featuredTimer) clearInterval(featuredTimer);
-      featuredTimer = setInterval(() => {
-        if (!S.featuredReviews.length) return;
-        const total = S.featuredReviews.length;
-        featuredIdx = (featuredIdx + 1) % total;
-        animateFeaturedRight(D.featured, S.featuredReviews, featuredIdx);
-        if (galleryFeaturedSlot) {
-          animateFeaturedRight(galleryFeaturedSlot, S.featuredReviews, featuredIdx);
-        }
-      }, 3000);
-    }
-
-    function renderShortReviews(list) {
-      clearEl(D.shortReviews);
-      const items = list && list.length ? list : [];
-      if (items.length === 0) return;
-
-      items.forEach((item, idx) => {
-        const card = el('div', 'short-card');
-        if (idx === 0) card.classList.add('active');
-
-        const reviewText = el('p');
-        if (item.review_text) reviewText.textContent = '"' + cleanDisplayText(item.review_text) + '"';
-        card.appendChild(reviewText);
-
-        if (item.name) {
-          const name = el('strong');
-          name.textContent = '- ' + cleanDisplayText(item.name);
-          card.appendChild(name);
-        }
-
-        D.shortReviews.appendChild(card);
-      });
-
-      // Cycle through reviews with smooth slide-up animation
-      let currentIdx = 0;
-      setInterval(() => {
-        const cards = D.shortReviews.querySelectorAll('.short-card');
-        if (cards.length === 0) return;
-        
-        // Add exit animation to current active card
-        cards[currentIdx].classList.add('exit');
-        cards[currentIdx].classList.remove('active');
-        
-        // After animation completes, move to next review
-        setTimeout(() => {
-          cards[currentIdx].classList.remove('exit');
-          currentIdx = (currentIdx + 1) % cards.length;
-          
-          // Add active class to next card (triggers slideUpIn animation)
-          cards[currentIdx].classList.add('active');
-        }, 600); // Match animation duration
-      }, 5000);
-
-      D.reviewsCount.textContent = `${items.length} reviews`;
-    }
-
-    const galleryCards = [];
-    const galleryIntervals = [];
-
-    function renderGallery(images) {
-      clearEl(D.gGrid);
-      galleryCards.length = 0;
-      galleryIntervals.forEach(interval => clearInterval(interval));
-      galleryIntervals.length = 0;
-
-      if (!images || images.length === 0) {
-        D.gCount.textContent = '0 images';
-        return;
-      }
-      const isMobileGallery = window.matchMedia('(max-width:600px)').matches;
-      const slotCount = isMobileGallery ? 4 : 6;
-      galleryIsMobile = isMobileGallery;
-
-      // Helper function to get next unique image index not currently displayed
-      function getNextUniqueImage(currentIndex, cardIdx) {
-        const usedIndices = galleryCards
-          .map((c, i) => i !== cardIdx ? c.currentIndex : -1)
-          .filter(i => i !== -1);
-
-        let nextIndex = (currentIndex + 1) % images.length;
-        let attempts = 0;
-        const maxAttempts = images.length;
-
-        // Find next index not in use
-        while (usedIndices.includes(nextIndex) && attempts < maxAttempts) {
-          nextIndex = (nextIndex + 1) % images.length;
-          attempts++;
-        }
-
-        return nextIndex;
-      }
-
-      // Create gallery cards with unique initial indices
-      for (let i = 0; i < slotCount; i++) {
-        const item = el('div', 'gallery-item');
-        const image = el('img');
-        image.alt = 'Gallery image';
-        image.loading = i < 3 ? 'eager' : 'lazy';
-        item.appendChild(image);
-        D.gGrid.appendChild(item);
-        // Ensure unique initial indices - only use modulo if not enough images
-        const initialIndex = i < images.length ? i : i % images.length;
-        galleryCards.push({ item, image, currentIndex: initialIndex });
-      }
-
-      // Initialize images
-      galleryCards.forEach((card, idx) => {
-        const imgData = images[card.currentIndex];
-        const url = String(imgData?.image_url || imgData?.url || '').trim();
-        if (url) card.image.src = url;
-      });
-
-      // Rotate images every 4 seconds (staggered start)
-      galleryCards.forEach((card, idx) => {
-        const interval = setInterval(() => {
-          // Get next unique image index
-          card.currentIndex = getNextUniqueImage(card.currentIndex, idx);
-          const imgData = images[card.currentIndex];
-          const url = String(imgData?.image_url || imgData?.url || '').trim();
-          if (url) {
-            card.image.classList.add('fade');
-            setTimeout(() => {
-              card.image.src = url;
-              card.image.classList.remove('fade');
-            }, 250);
-          }
-        }, 4000 + (idx * 600));
-        galleryIntervals.push(interval);
-      });
-
-      D.gCount.textContent = `${images.length} images`;
-    }
-
-    function renderFAQ(faqItems) {
-      if (!D.faqGrid) return;
-      clearEl(D.faqGrid);
-      if (!faqItems || !faqItems.length) {
-        D.faqGrid.appendChild(el('p', 'empty', 'No FAQs available yet.'));
-        return;
-      }
-      faqItems.forEach(item => {
-        const details = el('details', 'faq-item');
-        const summary = el('summary', '', cleanDisplayText(item.question || 'Question'));
-        const answer = el('div', 'faq-answer', cleanDisplayText(item.answer || ''));
-        details.appendChild(summary);
-        details.appendChild(answer);
-        D.faqGrid.appendChild(details);
-      });
-    }
-
-    function whoIconSvg(index) {
-      const icons = [
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m5 10.5 7 3.5 7-3.5"/><path d="M8 14v3.5c0 .8 1.8 1.5 4 1.5s4-.7 4-1.5V14"/></svg>',
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>',
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="13" rx="2"/><path d="M8 21h8"/></svg>',
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12v12H4z"/><path d="m10 12 3-3"/><path d="m10 9h3v3"/></svg>',
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="9" r="2.5"/><circle cx="16" cy="9" r="2.5"/><path d="M3 19c.8-2.2 2.7-3.5 5-3.5s4.2 1.3 5 3.5"/><path d="M11 19c.6-1.8 2.1-2.8 4-2.8s3.4 1 4 2.8"/></svg>',
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 4 7v4a4 4 0 1 1-8 0v-4l4-7Z"/><path d="M12 21v-3"/></svg>'
-      ];
-      return icons[index % icons.length];
-    }
-
-    function renderWhoFor(whoItems) {
-      if (!D.whoGrid) return;
-      clearEl(D.whoGrid);
-      if (!whoItems || !whoItems.length) {
-        D.whoGrid.appendChild(el('p', 'empty', 'Information coming soon.'));
-        return;
-      }
-      whoItems.forEach((item, idx) => {
-        const card = el('div', 'who-card');
-        const inner = el('div', 'who-card-inner');
-        
-        // Front side - shows icon and title
-        const front = el('div', 'who-card-front');
-        const iconDiv = el('div', 'who-card-icon');
-        iconDiv.innerHTML = whoIconSvg(idx);
-        front.appendChild(iconDiv);
-        const title = el('h4', 'who-card-title', cleanDisplayText(item.title || 'Category'));
-        front.appendChild(title);
-        
-        // Back side - shows description
-        const back = el('div', 'who-card-back');
-        const backTitle = el('h4', 'who-card-title', cleanDisplayText(item.title || 'Category'));
-        back.appendChild(backTitle);
-        const desc = el('p', 'who-card-desc', cleanDisplayText(item.description || ''));
-        desc.style.display = 'block';
-        back.appendChild(desc);
-        
-        inner.appendChild(front);
-        inner.appendChild(back);
-        card.appendChild(inner);
-        D.whoGrid.appendChild(card);
-      });
-    }
-
     function updateSectionToggleState(section, button) {
       if (!section || !button) return;
       const collapsed = section.classList.contains('is-collapsed');
@@ -5790,663 +5350,18 @@
       });
     }
 
-    function renderBookingModal(data) {
-      clearEl(D.mContent);
-      D.mTitle.textContent = 'Book a Call';
-
-      const card = el('div', 'booking-card');
-
-      const embed = el('div', 'booking-embed');
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://admin.aibunty.com/u2/76687/-free-seminar-to-mint?isEmbeded=1';
-      iframe.style.border = 'none';
-      iframe.style.width = '100%';
-      iframe.style.height = '600px';
-      iframe.title = 'Book a Call';
-      iframe.loading = 'lazy';
-      embed.appendChild(iframe);
-      card.appendChild(embed);
-
-      const actions = el('div', 'booking-actions');
-      const closeBtn = el('button', 'btn b2', 'Close');
-      closeBtn.addEventListener('click', closeModal);
-      actions.appendChild(closeBtn);
-      card.appendChild(actions);
-
-      D.mContent.appendChild(card);
-    }
-
-    function renderBookingForm(container, source, triggerBtn) {
-      clearEl(container);
-      const form = el('form', 'booking-form');
-
-      const nameField = bookingField('Name', 'text');
-      const emailField = bookingField('Email', 'email');
-      const phoneField = bookingField('Phone', 'tel');
-      const notesField = bookingField('Notes (optional)', 'textarea');
-
-      form.appendChild(nameField.wrap);
-      form.appendChild(emailField.wrap);
-      form.appendChild(phoneField.wrap);
-      form.appendChild(notesField.wrap);
-
-      const errorBox = el('div', 'section-body');
-      const submitBtn = el('button', 'btn b1', 'Confirm Booking');
-      submitBtn.type = 'submit';
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        errorBox.textContent = '';
-        submitBookingConfirmation({
-          name: nameField.input.value,
-          email: emailField.input.value,
-          phone: phoneField.input.value,
-          notes: notesField.input.value,
-          source: source
-        }, submitBtn, errorBox);
-      });
-
-      form.appendChild(submitBtn);
-      form.appendChild(errorBox);
-      container.appendChild(form);
-
-      if (triggerBtn) {
-        triggerBtn.disabled = true;
-      }
-    }
-
-    function bookingField(label, type) {
-      const wrap = el('div', 'booking-field');
-      const lbl = el('label', '', label);
-      let input;
-      if (type === 'textarea') {
-        input = document.createElement('textarea');
-        input.rows = 3;
-      } else {
-        input = document.createElement('input');
-        input.type = type;
-      }
-      if (type !== 'textarea') input.required = label.indexOf('optional') === -1;
-      wrap.appendChild(lbl);
-      wrap.appendChild(input);
-      return { wrap, input };
-    }
-
-    function setBookingSubmitLoading(btn, isLoading) {
-      btn.disabled = isLoading;
-      if (isLoading) {
-        btn.dataset.prev = btn.textContent;
-        btn.textContent = '';
-        btn.appendChild(el('span', 'spinner'));
-      } else {
-        const prev = btn.dataset.prev || 'Confirm Booking';
-        clearEl(btn);
-        btn.textContent = prev;
-      }
-    }
-
-    async function submitBookingConfirmation(payload, btn, errorBox) {
-      const name = String(payload.name || '').trim();
-      const email = String(payload.email || '').trim();
-      const phone = String(payload.phone || '').trim();
-      if (!name || !email || !phone) {
-        errorBox.textContent = 'Please fill out name, email, and phone.';
-        return;
-      }
-      setBookingSubmitLoading(btn, true);
-      try {
-        await run('saveBookingConfirmation', payload);
-        renderBookingSuccess();
-      } catch (e) {
-        errorBox.textContent = 'Unable to confirm booking. Please try again.';
-      } finally {
-        setBookingSubmitLoading(btn, false);
-      }
-    }
-
-    function renderBookingSuccess() {
-      clearEl(D.mContent);
-      const wrap = el('div', 'booking-success');
-      wrap.appendChild(el('div', 'success-icon', 'Ã¢Å“â€œ'));
-      wrap.appendChild(el('h3', '', 'Booked Successfully!'));
-      wrap.appendChild(el('p', 'section-body', 'We have received your booking confirmation. Our team will contact you shortly.'));
-      const closeBtn = el('button', 'btn b1', 'Close');
-      closeBtn.addEventListener('click', closeModal);
-      wrap.appendChild(closeBtn);
-      D.mContent.appendChild(wrap);
-    }
-
-    async function openBookingModal() {
-      setBookingModalLoading();
-      openModal();
-      try {
-        // Check if booking page was preloaded
-        if (DETAILS_CACHE['booking_page']) {
-          renderBookingModal(DETAILS_CACHE['booking_page']);
-          return;
-        }
-        const data = await run('getBookingPage');
-        if (data) {
-          DETAILS_CACHE['booking_page'] = data;
-        }
-        renderBookingModal(data || {});
-      } catch (e) {
-        clearEl(D.mContent);
-        D.mTitle.textContent = 'Book a Call';
-        D.mContent.appendChild(el('p', 'section-body', 'Booking unavailable.'));
-      }
-    }
-
-    function renderCourseDetails(payload) {
-      const course = payload && payload.course ? payload.course : null;
-      const blocks = payload && payload.blocks ? payload.blocks : [];
-      const forYouCards = payload && payload.forYouCards ? payload.forYouCards : [];
-      const featuredReviews = payload && payload.featuredReviews ? payload.featuredReviews : [];
-      const shortReviews = payload && payload.shortReviews ? payload.shortReviews : [];
-      if (!course) { showErr('Course details not found.'); return; }
-
-      D.mTitle.textContent = course.title || 'Course';
-      clearEl(D.mContent);
-
-      const layout = el('div', 'mlay');
-      const mediaWrap = el('div', 'mmedia');
-      if (course.thumbnail_url) {
-        const img = el('img');
-        img.src = String(course.thumbnail_url);
-        img.alt = course.title ? String(course.title) : 'Course image';
-        img.loading = 'lazy';
-        mediaWrap.appendChild(img);
-      } else {
-        mediaWrap.appendChild(el('div', 'fallback', course.title || 'Course'));
-      }
-
-      const content = el('div', 'mcontent');
-      if (course.subtitle) content.appendChild(el('p', '', course.subtitle));
-      if (course.badge) content.appendChild(el('div', 'section-body', 'Badge: ' + course.badge));
-      if (course.language) content.appendChild(el('div', 'section-body', 'Language: ' + course.language));
-      if (course.students) content.appendChild(el('div', 'section-body', 'Students: ' + course.students));
-      if (course.price_inr !== undefined) content.appendChild(el('span', 'price', money(course.price_inr)));
-
-      const headBtn = el('button', 'btn b1', 'Enroll Now');
-      if (course.payment_link || course.redirect_url) {
-        headBtn.addEventListener('click', () => handleCourseOrProductPurchase(course));
-      } else {
-        headBtn.disabled = true;
-      }
-      content.appendChild(headBtn);
-
-      layout.appendChild(mediaWrap);
-      layout.appendChild(content);
-      D.mContent.appendChild(layout);
-
-      const byType = (type) => blocks.filter(b => String(b.block_type || '').trim() === type);
-      addBlockSection(D.mContent, 'ABOUT', byType('about'), 'text');
-      addBlockSection(D.mContent, 'HIGHLIGHTS', byType('highlights'), 'bullets');
-      addBlockSection(D.mContent, 'LEARN', byType('learn'), 'bullets');
-      addForYouCards(D.mContent, forYouCards);
-      addBlockSection(D.mContent, 'NOT FOR', byType('not_for'), 'bullets');
-      addBlockSection(D.mContent, 'FAQ', byType('faq'), 'faq');
-
-      if (featuredReviews.length) {
-        const section = el('div', 'section-card');
-        section.appendChild(el('h4', 'section-title', 'Featured Reviews'));
-        const wrap = el('div');
-        featuredReviews.forEach(r => {
-          const card = el('div', 'featured-card');
-          if (r.image_url) {
-            const img = el('img');
-            img.src = String(r.image_url);
-            img.alt = String(r.title || 'Review');
-            img.loading = 'lazy';
-            card.appendChild(img);
-          }
-          const txt = el('div');
-          if (r.title) txt.appendChild(el('h4', '', String(r.title)));
-          if (r.review_text) txt.appendChild(el('p', 'section-body', String(r.review_text)));
-          if (r.name) txt.appendChild(el('div', 'section-body', String(r.name)));
-          card.appendChild(txt);
-          wrap.appendChild(card);
-        });
-        section.appendChild(wrap);
-        D.mContent.appendChild(section);
-      }
-
-      if (shortReviews.length) {
-        const section = el('div', 'section-card');
-        section.appendChild(el('h4', 'section-title', 'Short Reviews'));
-        shortReviews.forEach(r => {
-          const card = el('div', 'short-card');
-          if (r.review_text) card.appendChild(el('div', 'section-body', String(r.review_text)));
-          if (r.name) card.appendChild(el('div', 'section-body', String(r.name)));
-          section.appendChild(card);
-        });
-        D.mContent.appendChild(section);
-      }
-
-      const ctaWrap = el('div', 'mcta');
-      const btn = el('button', 'btn b1', 'Enroll Now');
-      if (!course.payment_link && !course.redirect_url) {
-        btn.disabled = true;
-      } else {
-        btn.addEventListener('click', () => handleCourseOrProductPurchase(course));
-      }
-      ctaWrap.appendChild(btn);
-      D.mContent.appendChild(ctaWrap);
-    }
-
-    function renderDigitalDetails(payload) {
-      const product = payload && payload.product ? payload.product : null;
-      const sections = payload && payload.sections ? payload.sections : [];
-      if (!product) { showErr('Product details not found.'); return; }
-
-      D.mTitle.textContent = product.title || 'Digital Product';
-      clearEl(D.mContent);
-
-      const layout = el('div', 'mlay');
-      const mediaWrap = el('div', 'mmedia digital');
-      if (product.thumbnail_url) {
-        const img = el('img');
-        img.src = String(product.thumbnail_url);
-        img.alt = product.title ? String(product.title) : 'Product image';
-        img.loading = 'lazy';
-        mediaWrap.appendChild(img);
-      } else {
-        mediaWrap.appendChild(el('div', 'fallback', product.title || 'Product'));
-      }
-
-      const content = el('div', 'mcontent');
-      if (product.subtitle) content.appendChild(el('p', '', product.subtitle));
-      if (product.badge) content.appendChild(el('div', 'section-body', 'Badge: ' + product.badge));
-      if (product.language) content.appendChild(el('div', 'section-body', 'Language: ' + product.language));
-      if (product.price_inr !== undefined) content.appendChild(el('span', 'price', money(product.price_inr)));
-
-      const btnRow = el('div', 'acts');
-      const buy = el('button', 'btn b1', 'Buy Now');
-      if (product.payment_link || product.redirect_url) {
-        buy.addEventListener('click', () => handleCourseOrProductPurchase(product));
-      } else {
-        buy.disabled = true;
-      }
-      btnRow.appendChild(buy);
-
-      if (product.preview_url) {
-        const preview = el('button', 'btn b2', 'Preview');
-        preview.addEventListener('click', () => window.open(String(product.preview_url), '_blank', 'noopener'));
-        btnRow.appendChild(preview);
-      }
-      content.appendChild(btnRow);
-
-      layout.appendChild(mediaWrap);
-      layout.appendChild(content);
-      D.mContent.appendChild(layout);
-
-      const byType = (type) => sections.filter(s => String(s.section_type || '').trim() === type);
-
-      const overview = byType('overview');
-      if (overview.length) {
-        const section = el('div', 'section-card');
-        section.appendChild(el('h4', 'section-title', 'Overview'));
-        overview.forEach(s => {
-          if (s.heading) section.appendChild(el('div', '', String(s.heading)));
-          if (s.body) section.appendChild(el('p', 'section-body', String(s.body)));
-          const chips = renderChips(s.file_includes);
-          if (chips) section.appendChild(chips);
-          if (s.image_url) {
-            const img = el('img', 'section-media');
-            img.src = String(s.image_url);
-            img.alt = String(s.heading || 'Overview image');
-            img.loading = 'lazy';
-            section.appendChild(img);
-          }
-        });
-        D.mContent.appendChild(section);
-      }
-
-      const outcomes = byType('outcomes');
-      if (outcomes.length) {
-        const section = el('div', 'section-card');
-        section.appendChild(el('h4', 'section-title', 'Outcomes'));
-        outcomes.forEach(s => {
-          const list = renderBulletsList(s.bullets);
-          if (list) section.appendChild(list);
-        });
-        D.mContent.appendChild(section);
-      }
-
-      const faq = byType('faq');
-      if (faq.length) {
-        const section = el('div', 'section-card');
-        section.appendChild(el('h4', 'section-title', 'FAQ'));
-        faq.forEach(s => {
-          const acc = renderFaqAccordion(s.bullets);
-          if (acc) section.appendChild(acc);
-        });
-        D.mContent.appendChild(section);
-      }
-
-      const ctaWrap = el('div', 'mcta');
-      const btn = el('button', 'btn b1', 'Buy Now');
-      if (!product.payment_link && !product.redirect_url) {
-        btn.disabled = true;
-      } else {
-        btn.addEventListener('click', () => handleCourseOrProductPurchase(product));
-      }
-      ctaWrap.appendChild(btn);
-      D.mContent.appendChild(ctaWrap);
-    }
-
-    function renderWebinarDetails(payload) {
-      const webinar = payload && payload.webinar ? payload.webinar : null;
-      const blocks = payload && payload.blocks ? payload.blocks : [];
-      const keyPoints = payload && payload.keyPoints ? payload.keyPoints : [];
-      if (!webinar) { showErr('Webinar details not found.'); return; }
-
-      D.mTitle.textContent = webinar.title || 'Webinar';
-      clearEl(D.mContent);
-
-      const layout = el('div', 'mlay');
-      const mediaWrap = el('div', 'mmedia');
-      if (webinar.banner_url) {
-        const img = el('img');
-        img.src = String(webinar.banner_url);
-        img.alt = webinar.title ? String(webinar.title) : 'Webinar banner';
-        img.loading = 'lazy';
-        mediaWrap.appendChild(img);
-      } else {
-        mediaWrap.appendChild(el('div', 'fallback', webinar.title || 'Webinar'));
-      }
-
-      const content = el('div', 'mcontent');
-      if (webinar.subtitle) content.appendChild(el('p', '', webinar.subtitle));
-      if (webinar.host_image_url) {
-        const hostRow = el('div', 'host-row');
-        const hostCircle = el('img', 'host-circle');
-        hostCircle.src = String(webinar.host_image_url);
-        hostCircle.alt = 'Host';
-        hostCircle.loading = 'lazy';
-        hostRow.appendChild(hostCircle);
-        if (webinar.host_name) hostRow.appendChild(el('strong', '', webinar.host_name));
-        content.appendChild(hostRow);
-      }
-      if (webinar.platform) content.appendChild(el('div', 'section-body', 'Platform: ' + webinar.platform));
-      if (webinar.start_datetime_local) {
-        const d = parseDate(webinar.start_datetime_local);
-        if (d) content.appendChild(el('div', 'section-body', 'Starts: ' + fmtDate(d, webinar.timezone)));
-      }
-      if (webinar.end_datetime_local) {
-        const d = parseDate(webinar.end_datetime_local);
-        if (d) content.appendChild(el('div', 'section-body', 'Ends: ' + fmtDate(d, webinar.timezone)));
-      }
-
-      const cta = el('button', 'btn b1', webinar.primary_cta_text || 'Register');
-      const endAt = parseDate(webinar.end_datetime_local);
-      if (endAt && Date.now() > endAt.getTime()) {
-        cta.textContent = 'Event Ended';
-        cta.disabled = true;
-      } else if (webinar.payment_link) {
-        cta.addEventListener('click', () => openPaymentModal('Register', String(webinar.payment_link)));
-      } else {
-        cta.disabled = true;
-      }
-      content.appendChild(cta);
-
-      const clock = el('div', 'countdown');
-      content.appendChild(clock);
-      startCountdown(endAt, clock);
-
-      layout.appendChild(mediaWrap);
-      layout.appendChild(content);
-      D.mContent.appendChild(layout);
-
-      const byType = (type) => blocks.filter(b => String(b.block_type || '').trim() === type);
-      addBlockSection(D.mContent, 'OVERVIEW', byType('overview'), 'text');
-      addBlockSection(D.mContent, 'WHO FOR', byType('who_for'), 'bullets');
-      if (keyPoints.length) {
-        const section = el('div', 'section-card');
-        section.appendChild(el('h4', 'section-title', 'Key Points'));
-        const grid = el('div', 'for-you-grid');
-        keyPoints.forEach(card => {
-          const c = el('div', 'for-you-card');
-          if (card.title) c.appendChild(el('h4', '', String(card.title)));
-          if (card.body) c.appendChild(el('p', 'section-body', String(card.body)));
-          if (card.icon_url) {
-            const img = el('img', 'section-media');
-            img.src = String(card.icon_url);
-            img.alt = String(card.title || 'Key point');
-            img.loading = 'lazy';
-            c.appendChild(img);
-          }
-          grid.appendChild(c);
-        });
-        section.appendChild(grid);
-        D.mContent.appendChild(section);
-      }
-      addBlockSection(D.mContent, 'FAQ', byType('faq'), 'faq');
-    }
-
-    function renderMembershipBenefitSection(title, bulletText) {
-      if (!bulletText || !String(bulletText).trim()) return null;
-      const section = el('div', 'section-card');
-      section.appendChild(el('h4', 'section-title', title));
-      const items = parseBullets(bulletText);
-      if (items.length) {
-        const ul = el('ul', 'list');
-        items.forEach(t => ul.appendChild(el('li', '', t)));
-        section.appendChild(ul);
-      }
-      return section;
-    }
-
-    function renderMembershipDetails(plan) {
-      D.mTitle.textContent = plan.title || 'Membership';
-      clearEl(D.mContent);
-      const layout = el('div', 'mlay');
-      const mediaWrap = el('div', 'mmedia');
-      if (plan.img) {
-        const img = el('img');
-        img.src = String(plan.img);
-        img.alt = plan.title ? String(plan.title) : 'Membership image';
-        img.loading = 'lazy';
-        mediaWrap.appendChild(img);
-      } else {
-        mediaWrap.appendChild(el('div', 'fallback', plan.title || 'Membership'));
-      }
-      const content = el('div', 'mcontent');
-      if (plan.period) content.appendChild(el('p', '', plan.period));
-      content.appendChild(el('span', 'price', money(plan.price)));
-      const btn = el('button', 'btn b1', 'Buy Now');
-      if (plan.link) {
-        btn.addEventListener('click', () => openPaymentModal('Join Now', String(plan.link)));
-      } else {
-        btn.disabled = true;
-      }
-      content.appendChild(btn);
-      layout.appendChild(mediaWrap);
-      layout.appendChild(content);
-      D.mContent.appendChild(layout);
-      if (plan.features) {
-        const sec = renderMembershipBenefitSection('What You Get Inside', plan.features);
-        if (sec) D.mContent.appendChild(sec);
-      }
-      if (plan.target_audience) {
-        const sec = renderMembershipBenefitSection('Who Is This For', plan.target_audience);
-        if (sec) D.mContent.appendChild(sec);
-      }
-      if (plan.benefits) {
-        const sec = renderMembershipBenefitSection('Key Benefits', plan.benefits);
-        if (sec) D.mContent.appendChild(sec);
-      }
-      if (plan.description && !plan.features && !plan.benefits) {
-        const section = el('div', 'section-card');
-        section.appendChild(el('h4', 'section-title', 'About This Plan'));
-        section.appendChild(el('p', 'section-body', plan.description));
-        D.mContent.appendChild(section);
-      }
-    }
-
-    async function openCourseDetails(slug) {
-      mc = { type: 'course', id: slug };
-      setModalLoading();
-      openModal();
-      try {
-        const cacheKey = 'course_' + slug;
-        if (DETAILS_CACHE[cacheKey]) {
-          renderCourseDetails(DETAILS_CACHE[cacheKey]);
-          return;
-        }
-        const details = await run('getCourseDetails', { slug });
-        DETAILS_CACHE[cacheKey] = details;
-        renderCourseDetails(details);
-      } catch (e) {
-        showErr('Unable to load course details: ' + errText(e));
-      }
-    }
-
-    async function openDigitalDetails(slug) {
-      mc = { type: 'digital', id: slug };
-      setModalLoading();
-      openModal();
-      try {
-        const cacheKey = 'digital_' + slug;
-        if (DETAILS_CACHE[cacheKey]) {
-          renderDigitalDetails(DETAILS_CACHE[cacheKey]);
-          return;
-        }
-        const details = await run('getDigitalProductDetails', { slug });
-        DETAILS_CACHE[cacheKey] = details;
-        renderDigitalDetails(details);
-      } catch (e) {
-        showErr('Unable to load product details: ' + errText(e));
-      }
-    }
-
-    async function openWebinarDetails(slug) {
-      mc = { type: 'webinar', id: slug };
-      setModalLoading();
-      openModal();
-      try {
-        const cacheKey = 'webinar_' + slug;
-        if (DETAILS_CACHE[cacheKey]) {
-          renderWebinarDetails(DETAILS_CACHE[cacheKey]);
-          return;
-        }
-        const details = await run('getWebinarDetails', { slug });
-        DETAILS_CACHE[cacheKey] = details;
-        renderWebinarDetails(details);
-      } catch (e) {
-        showErr('Unable to load webinar details: ' + errText(e));
-      }
-    }
-
-    function setF() { mf = Array.from(D.modal.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')).filter(e => !e.disabled) }
-    function openModal() {
-      // Auto-close mobile menu when modal opens
-      if (D.nav && D.nav.classList.contains('open')) {
-        D.nav.classList.remove('open');
-        D.menu.classList.remove('active');
-        D.menu.setAttribute('aria-expanded', 'false');
-        D.navBackdrop.classList.remove('show');
-      }
-      // Show loading overlay
-      if (D.loadingOverlay) {
-        D.loadingOverlay.classList.add('show');
-        D.loadingOverlay.setAttribute('aria-hidden', 'false');
-      }
-      prev = document.activeElement;
-      D.ov.classList.add('on');
-      D.ov.setAttribute('aria-hidden', 'false');
-      document.body.classList.add('no');
-      setF();
-      D.modal.focus();
-      document.addEventListener('keydown', onModalKey);
-      // Simulate content load - hide loading overlay after 0.8s
-      setTimeout(() => {
-        if (D.loadingOverlay) {
-          D.loadingOverlay.classList.remove('show');
-          D.loadingOverlay.setAttribute('aria-hidden', 'true');
-        }
-      }, 800);
-    }
-
     function handleCourseOrProductPurchase(item) {
       if (!item) return;
-      // If redirect_url exists, redirect directly
-      if (item.redirect_url && item.redirect_url.trim()) {
+      // Only digital products use direct redirects.
+      if (String(item.type || '') === 'digital' && item.redirect_url && item.redirect_url.trim()) {
         window.location.href = item.redirect_url;
         return;
       }
-      // Otherwise, open payment modal with payment_link
+      // Courses use embedded payment form links.
       if (item.payment_link) {
         openPaymentModal('Buy Now', String(item.payment_link));
       }
     }
-    function openPaymentModal(title, url) {
-      // Auto-close mobile menu when payment modal opens
-      if (D.nav && D.nav.classList.contains('open')) {
-        D.nav.classList.remove('open');
-        D.menu.classList.remove('active');
-        D.menu.setAttribute('aria-expanded', 'false');
-        D.navBackdrop.classList.remove('show');
-      }
-      // Show loading overlay
-      if (D.loadingOverlay) {
-        D.loadingText.textContent = 'Processing Your Payment';
-        D.loadingOverlay.classList.add('show');
-        D.loadingOverlay.setAttribute('aria-hidden', 'false');
-      }
-      const overlay = qs('.payment-overlay');
-      const heading = overlay.querySelector('.payment-header h3');
-      const iframeContainer = overlay.querySelector('.payment-body');
-      heading.textContent = title;
-      clearEl(iframeContainer);
-      const iframe = document.createElement('iframe');
-      iframe.src = url;
-      iframe.title = title;
-      iframe.loading = 'lazy';
-      iframe.allow = 'payment';
-      iframeContainer.appendChild(iframe);
-      overlay.classList.add('on');
-      document.body.classList.add('no');
-      // Hide loading overlay after iframe loads
-      iframe.onload = () => {
-        if (D.loadingOverlay) {
-          D.loadingOverlay.classList.remove('show');
-          D.loadingOverlay.setAttribute('aria-hidden', 'true');
-        }
-      };
-      // Also hide after 1.2s timeout as fallback
-      setTimeout(() => {
-        if (D.loadingOverlay) {
-          D.loadingOverlay.classList.remove('show');
-          D.loadingOverlay.setAttribute('aria-hidden', 'true');
-        }
-      }, 1200);
-    }
-
-    function closePaymentModal() {
-      const overlay = qs('.payment-overlay');
-      overlay.classList.remove('on');
-      document.body.classList.remove('no');
-      if (D.loadingOverlay) {
-        D.loadingOverlay.classList.remove('show');
-        D.loadingOverlay.setAttribute('aria-hidden', 'true');
-      }
-    }
-    function closeModal() {
-      D.ov.classList.remove('on');
-      D.ov.setAttribute('aria-hidden', 'true');
-      mc = null;
-      document.body.classList.remove('no');
-      document.removeEventListener('keydown', onModalKey);
-      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
-      if (D.loadingOverlay) {
-        D.loadingOverlay.classList.remove('show');
-        D.loadingOverlay.setAttribute('aria-hidden', 'true');
-      }
-      if (prev && prev.focus) prev.focus();
-    }
-    function onModalKey(e) { if (e.key === 'Escape') { e.preventDefault(); closeModal(); return } if (e.key !== 'Tab' || !D.ov.classList.contains('on')) return; setF(); if (!mf.length) return; const f = mf[0], l = mf[mf.length - 1]; if (e.shiftKey && document.activeElement === f) { e.preventDefault(); l.focus() } else if (!e.shiftKey && document.activeElement === l) { e.preventDefault(); f.focus() } }
-
     function openTermsModal() {
       D.termsOverlay.classList.add('on');
       D.termsOverlay.setAttribute('aria-hidden', 'false');
@@ -6482,41 +5397,6 @@
         if (D.termsOverlay.classList.contains('on')) { e.preventDefault(); closeTermsModal(); return }
         if (D.privacyOverlay.classList.contains('on')) { e.preventDefault(); closePrivacyModal(); return }
       }
-    }
-
-    function loadCart() { try { const raw = localStorage.getItem(K); S.cart = raw ? JSON.parse(raw) : []; if (!Array.isArray(S.cart)) S.cart = [] } catch (e) { S.cart = [] } }
-    function saveCart() { localStorage.setItem(K, JSON.stringify(S.cart)); renderCart() }
-    function cnt() { return S.cart.reduce((s, i) => s + n(i.qty), 0) }
-    function total() { return S.cart.reduce((s, i) => s + n(i.qty) * n(i.price), 0) }
-    function addCart(i) { if (!i || !i.id) return; const e = S.cart.find(x => x.id === i.id && x.type === i.type); if (e) e.qty += 1; else S.cart.push({ id: i.id, type: i.type, title: i.title, price: i.price, img: i.img, link: i.link, qty: 1 }); saveCart(); openCart() }
-    function adj(id, type, d) { const i = S.cart.find(x => x.id === id && x.type === type); if (!i) return; i.qty += d; if (i.qty <= 0) S.cart = S.cart.filter(x => !(x.id === id && x.type === type)); saveCart() }
-    function del(id, type) { S.cart = S.cart.filter(x => !(x.id === id && x.type === type)); saveCart() }
-    function renderCart() {
-      if (D.cartCount) D.cartCount.textContent = String(cnt());
-      D.cartItems.innerHTML = S.cart.length ? S.cart.map(i => `<div class="item">${i.img ? `<img class="thumb" src="${esc(i.img)}" alt="${esc(i.title)}">` : `<div class="thumb fallback">${esc(i.type.toUpperCase())}</div>`}<div><h4>${esc(i.title)}</h4><div class="muted">${esc(money(i.price))}</div><div class="qty"><button class="q" data-a="dec" data-id="${esc(i.id)}" data-type="${esc(i.type)}" aria-label="Decrease">-</button><span class="ql">${esc(String(i.qty))}</span><button class="q" data-a="inc" data-id="${esc(i.id)}" data-type="${esc(i.type)}" aria-label="Increase">+</button><button class="btn bd" data-a="rm" data-id="${esc(i.id)}" data-type="${esc(i.type)}">Remove</button></div></div></div>`).join('') : `<p class="empty">Your cart is empty.</p>`;
-      D.cartTotal.textContent = money(total());
-      D.cartNote.textContent = S.cart.length > 1 ? 'Pay items one by one (demo). First item link will be opened.' : '';
-    }
-    function openCart() {
-      // Auto-close mobile menu when cart opens
-      if (D.nav && D.nav.classList.contains('open')) {
-        D.nav.classList.remove('open');
-        D.menu.classList.remove('active');
-        D.menu.setAttribute('aria-expanded', 'false');
-        D.navBackdrop.classList.remove('show');
-      }
-      D.drawer.classList.add('on');
-      D.db.classList.add('on');
-      D.drawer.setAttribute('aria-hidden', 'false');
-      document.body.classList.add('no')
-    }
-    function closeCart() { D.drawer.classList.remove('on'); D.db.classList.remove('on'); D.drawer.setAttribute('aria-hidden', 'true'); document.body.classList.remove('no') }
-    function checkout() {
-      if (!S.cart.length) { alert('Your cart is empty.'); return }
-      const p = S.cart.filter(i => i.link);
-      if (!p.length) { alert('No payment link available for cart items.'); return }
-      if (p.length > 1) alert('Pay items one by one (demo). Opening first item link.');
-      window.open(p[0].link, '_blank', 'noopener');
     }
 
     function clickCard(t) {
@@ -6639,40 +5519,6 @@
       // Search removed from UI
     }
 
-    function startCountdown(endAt, container) {
-      if (countdownTimer) clearInterval(countdownTimer);
-      clearEl(container);
-      if (!endAt) { return }
-      function tick() {
-        const now = Date.now();
-        const diff = endAt.getTime() - now;
-        clearEl(container);
-        if (diff <= 0) {
-          container.appendChild(el('div', 'section-body', 'Event Ended'));
-          return;
-        }
-        const s = Math.floor(diff / 1000);
-        const d = Math.floor(s / 86400);
-        const h = Math.floor((s % 86400) / 3600);
-        const m = Math.floor((s % 3600) / 60);
-        const ss = s % 60;
-        const parts = [
-          { label: 'Days', value: d },
-          { label: 'Hours', value: h },
-          { label: 'Mins', value: m },
-          { label: 'Secs', value: ss }
-        ];
-        parts.forEach(p => {
-          const box = el('div', 'countbox');
-          box.appendChild(el('div', '', String(p.value)));
-          box.appendChild(el('div', 'muted', p.label));
-          container.appendChild(box);
-        });
-      }
-      tick();
-      countdownTimer = setInterval(tick, 1000);
-    }
-
     function initReveal() {
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -6784,8 +5630,8 @@
         D.pageLoader.classList.remove('hide');
       }
       try {
-        if (!HAS_GAS_RUNTIME && !LOCAL_DATA && !WEBAPP_API_URL) {
-          showErr('Apps Script runtime unavailable and WEBAPP_API_URL is missing.');
+        if (!LOCAL_DATA) {
+          console.info('Using PHP API base:', PHP_API_BASE);
         }
         const gs = await run('getGlobalSettings');
         S.settings = gs || {};
@@ -6813,15 +5659,31 @@
           run('getFAQ'),
           run('getWhoFor')
         ]);
+        const [academySections, academyBefore, academyAfter, academyRoadmap, academyCommunity] = await Promise.all([
+          runOptional('getAcademySections', []),
+          runOptional('getAcademyBefore', []),
+          runOptional('getAcademyAfter', []),
+          runOptional('getAcademyRoadmap', []),
+          runOptional('getAcademyCommunityPosts', [])
+        ]);
         S.courses = normCourses(c); S.digital = normDigital(d); S.webinars = normWebinars(w); S.plans = normPlans(p);
         S.gallery = g || []; S.shortReviews = sr || []; S.featuredReviews = fr || [];
         S.faq = faq || getDefaultFAQ(); S.whoFor = who || getDefaultWhoFor();
-        if (HAS_GAS_RUNTIME || LOCAL_DATA) clearErr();
+        S.academySections = academySections && academySections.length ? academySections : getDefaultAcademySections();
+        S.academyBefore = academyBefore && academyBefore.length ? academyBefore : getDefaultAcademyBefore();
+        S.academyAfter = academyAfter && academyAfter.length ? academyAfter : getDefaultAcademyAfter();
+        S.academyRoadmap = academyRoadmap && academyRoadmap.length ? academyRoadmap : getDefaultAcademyRoadmap();
+        S.academyCommunity = academyCommunity && academyCommunity.length ? academyCommunity : getDefaultAcademyCommunityPosts();
+        clearErr();
         preloadFeaturedImages(S.featuredReviews);
         render();
         renderGallery(S.gallery);
         renderFAQ(S.faq);
         renderWhoFor(S.whoFor);
+        renderAcademyBeforeAfter(S.academyBefore, S.academyAfter);
+        renderAcademyFeatures(S.academySections);
+        renderAcademyRoadmap(S.academyRoadmap);
+        renderAcademyCommunity(S.academyCommunity);
         renderFeaturedReviews(S.featuredReviews, D.featured);
         renderShortReviews(S.shortReviews);
         startFeaturedRotation();

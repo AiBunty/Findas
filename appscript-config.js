@@ -2,6 +2,9 @@
 // This file is the master source of truth for production Apps Script URLs.
 // Deploy scripts must not overwrite these values unless explicitly requested.
 window.FINDAS_CONFIG = {
+  // Primary PHP API base used by index.html.
+  PHP_API_BASE: '/api',
+
   // Content API used by index.html (Code.gs / JSONP endpoint).
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbySQGmEoW1zwK048wxXCY4cBWSxd8U4sjXsDL6hPymg2Df5cCkBEwYkv8B65SK4-y6MkA/exec',
 
@@ -16,6 +19,7 @@ window.FINDAS_CONFIG = {
 // Backward-compatible globals used in existing pages.
 window.FINDAS_WEBAPP_URL = window.FINDAS_WEBAPP_URL || window.FINDAS_CONFIG.WEBAPP_URL;
 window.FINDAS_WEBAPP_BACKUP_URL = window.FINDAS_WEBAPP_BACKUP_URL || window.FINDAS_CONFIG.WEBAPP_BACKUP_URL;
+window.FINDAS_PHP_API_BASE = window.FINDAS_PHP_API_BASE || window.FINDAS_CONFIG.PHP_API_BASE;
 window.FINDAS_POLLS_DEPLOYMENT_URL = window.FINDAS_POLLS_DEPLOYMENT_URL || window.FINDAS_CONFIG.POLLS_DEPLOYMENT_URL;
 window.FINDAS_POLLS_API_KEY = window.FINDAS_POLLS_API_KEY || window.FINDAS_CONFIG.POLLS_API_KEY;
 

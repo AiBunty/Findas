@@ -1,0 +1,89 @@
+CREATE DATABASE IF NOT EXISTS findas_db;
+USE findas_db;
+
+CREATE TABLE IF NOT EXISTS hero_section (
+  id INT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  subtitle TEXT,
+  button_text_1 VARCHAR(120),
+  button_text_2 VARCHAR(120),
+  video_url VARCHAR(500),
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT IGNORE INTO hero_section (id, title, subtitle, button_text_1, button_text_2, video_url)
+VALUES (1, 'Build Wealth.', 'Findas Academy community intro', 'Join Findas Academy', 'Book Free Call', '');
+
+CREATE TABLE IF NOT EXISTS courses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  subtitle TEXT,
+  slug VARCHAR(160) UNIQUE,
+  thumbnail_url VARCHAR(500),
+  price_inr DECIMAL(10,2) DEFAULT 0,
+  is_active TINYINT(1) DEFAULT 1,
+  `order` INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS webinars (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  subtitle TEXT,
+  slug VARCHAR(160) UNIQUE,
+  banner_url VARCHAR(500),
+  start_datetime_local DATETIME NULL,
+  end_datetime_local DATETIME NULL,
+  is_active TINYINT(1) DEFAULT 1,
+  `order` INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS digital_products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  subtitle TEXT,
+  slug VARCHAR(160) UNIQUE,
+  thumbnail_url VARCHAR(500),
+  price_inr DECIMAL(10,2) DEFAULT 0,
+  is_active TINYINT(1) DEFAULT 1,
+  `order` INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS membership_plans (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  price_inr DECIMAL(10,2) DEFAULT 0,
+  features TEXT,
+  is_active TINYINT(1) DEFAULT 1,
+  `order` INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS academy_sections (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  icon_emoji VARCHAR(20),
+  is_active TINYINT(1) DEFAULT 1,
+  `order` INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS academy_community_posts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  post_type VARCHAR(120),
+  content TEXT,
+  author VARCHAR(120),
+  is_active TINYINT(1) DEFAULT 1,
+  `order` INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

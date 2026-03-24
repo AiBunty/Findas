@@ -224,6 +224,46 @@ function getWhoFor() {
   }
 }
 
+function getAcademySections() {
+  try {
+    return sortByOrder_(filterActive_(getSheetData_('academy_sections')));
+  } catch (error) {
+    return [];
+  }
+}
+
+function getAcademyBefore() {
+  try {
+    return sortByOrder_(filterActive_(getSheetData_('before_after_before')));
+  } catch (error) {
+    return [];
+  }
+}
+
+function getAcademyAfter() {
+  try {
+    return sortByOrder_(filterActive_(getSheetData_('before_after_after')));
+  } catch (error) {
+    return [];
+  }
+}
+
+function getAcademyRoadmap() {
+  try {
+    return sortByOrder_(filterActive_(getSheetData_('academy_roadmap')));
+  } catch (error) {
+    return [];
+  }
+}
+
+function getAcademyCommunityPosts() {
+  try {
+    return sortByOrder_(filterActive_(getSheetData_('academy_community_posts')));
+  } catch (error) {
+    return [];
+  }
+}
+
 function getSiteConfig() {
   try {
     const rows = getSheetData_('site_config');
@@ -285,6 +325,16 @@ function handleApiRequest_(params) {
       data = getFAQ();
     } else if (fn === 'getWhoFor') {
       data = getWhoFor();
+    } else if (fn === 'getAcademySections') {
+      data = getAcademySections();
+    } else if (fn === 'getAcademyBefore') {
+      data = getAcademyBefore();
+    } else if (fn === 'getAcademyAfter') {
+      data = getAcademyAfter();
+    } else if (fn === 'getAcademyRoadmap') {
+      data = getAcademyRoadmap();
+    } else if (fn === 'getAcademyCommunityPosts') {
+      data = getAcademyCommunityPosts();
     } else if (fn === 'getSiteConfig') {
       data = getSiteConfig();
     } else {
