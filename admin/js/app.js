@@ -2418,6 +2418,23 @@ async function renderSimplifiedCollectionSection(section) {
       }
 
       invalidateCache(cfg.endpoint);
+      
+      // Auto-sync child records for courses, webinars, digital products
+      const parentSlug = String(payload[slugField] || '').trim();
+      if (parentSlug && ['courses', 'webinars', 'digital-products'].includes(section)) {
+        const structuredValues = {
+          description: description,
+          whatLearn: field1,
+          whoFor: field2,
+          outcome: field3,
+          goDeeper: ''
+        };
+        try {
+          await syncSimpleStructuredContent(section, parentSlug, structuredValues);
+        } catch (syncErr) {
+          console.warn('Child record sync failed but parent saved:', syncErr);
+        }
+      }
       // Refresh the section after a short delay to show message
       setTimeout(() => renderSimplifiedCollectionSection(section), 800);
     } catch (error) {
@@ -2441,17 +2458,42 @@ async function renderSimplifiedCollectionSection(section) {
       formData.set('id', String(id));
       formData.set('title', String(record.title || record.plan_id || ''));
       formData.set('description', String(record.subtitle || record.description || ''));
-      formData.set('field1', String(record.features || ''));
-      formData.set('field2', String(record.target_audience || ''));
-      formData.set('field3', String(record.benefits || ''));
+      
+      // Auto-migrate: try to load from child records if available
+      let field1Val = String(record.features || '');
+      let field2Val = String(record.target_audience || '');
+      let field3Val = String(record.benefits || '');
+      
+      // For courses, webinars, digital products: reverse hydrate from child records
+      const slug = String(record.slug || '').trim();
+      if (slug && ['courses', 'webinars', 'digital-products'].includes(section)) {
+        try {
+          let childData = null;
+          if (section === 'courses') {
+            childData = await reverseHydrateCoursesContent(slug);
+          } else if (section === 'webinars') {
+            childData = await reverseHydrateWebinarsContent(slug);
+          } else if (section === 'digital-products') {
+            childData = await reverseHydrateDigitalContent(slug);
+          }
+          
+          if (childData) {
+            field1Val = String(childData.whatLearn || field1Val);
+            field2Val = String(childData.whoFor || field2Val);
+            field3Val = String(childData.outcome || field3Val);
+          }
+        } catch (err) {
+          // Fall back to parent fields if child read fails
+          console.warn('Could not load child data for', slug, err);
+        }
+      }
 
-      // Update form values
       form.elements.id.value = String(id);
       form.elements.title.value = String(record.title || record.plan_id || '');
       form.elements.description.value = String(record.subtitle || record.description || '');
-      form.elements.field1.value = String(record.features || '');
-      form.elements.field2.value = String(record.target_audience || '');
-      form.elements.field3.value = String(record.benefits || '');
+      form.elements.field1.value = field1Val;
+      form.elements.field2.value = field2Val;
+      form.elements.field3.value = field3Val;
 
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.textContent = '💾 Update';
