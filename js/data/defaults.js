@@ -22,12 +22,12 @@ function getDefaultWhoFor() {
 
 function getDefaultAcademySections() {
   return [
-    { title: 'Book of the Month', description: 'Powerful books on success, wealth, mindset, and growth with actionable insights.' },
-    { title: 'Weekly Learning', description: 'Focused weekly videos on wealth creation, investing, insurance, and financial planning.' },
-    { title: 'Daily Dose', description: 'Two-minute daily insights with one action step to improve thinking and momentum.' },
-    { title: 'Monthly Challenges', description: 'Budgeting, habits, gratitude, and investing challenges that build consistency.' },
-    { title: 'Ask for Help', description: 'A supportive place to ask questions and receive practical clarity from the community.' },
-    { title: 'Start Here and Say Hello', description: 'Introduce yourself, share goals, and build meaningful connections from day one.' }
+    { id: 1, title: 'Book of the Month', description: 'Powerful books on success, wealth, mindset, and growth with actionable insights every week.', icon_emoji: '📚', is_active: 1, order: 1 },
+    { id: 2, title: 'Weekly Learning Videos', description: 'Focused 15-30 min videos on wealth creation, investing, insurance, and financial planning.', icon_emoji: '🎬', is_active: 1, order: 2 },
+    { id: 3, title: 'Daily Dose of Insights', description: 'Two-minute daily insights with one action step to improve thinking and build momentum.', icon_emoji: '💡', is_active: 1, order: 3 },
+    { id: 4, title: 'Monthly Challenges', description: 'Budgeting, habits, gratitude, and investing challenges that build financial discipline.', icon_emoji: '🏆', is_active: 1, order: 4 },
+    { id: 5, title: 'Live Q&A Sessions', description: 'Monthly live session where members ask questions and get advice directly from experts.', icon_emoji: '🎯', is_active: 1, order: 5 },
+    { id: 6, title: 'Community Forum', description: 'Safe space to ask questions, share wins, and learn from thousands of members.', icon_emoji: '👥', is_active: 1, order: 6 }
   ];
 }
 
@@ -63,9 +63,12 @@ function getDefaultAcademyRoadmap() {
 
 function getDefaultAcademyCommunityPosts() {
   return [
-    { post_type: 'Daily Dose', content: 'Two-minute insight: track every rupee for the next 7 days to improve awareness.', author: 'Findas Team' },
-    { post_type: 'Weekly Learning', content: 'New video: Building your first long-term investment system without overwhelm.', author: 'Samir Machawe' },
-    { post_type: 'Community Discussion', content: 'Members are sharing wins from the budgeting challenge and what changed this week.', author: 'Community' }
+    { id: 1, post_type: 'Daily Dose', content: '💡 Two-minute insight: track every rupee for the next 7 days to improve awareness.', author: 'Findas Team', created_at: '2026-03-25 09:00:00', is_active: 1 },
+    { id: 2, post_type: 'Weekly Learning', content: '🎬 New video: Building your first long-term investment system without overwhelm.', author: 'Samir Machawe', created_at: '2026-03-24 14:30:00', is_active: 1 },
+    { id: 3, post_type: 'Success Story', content: '🎯 Members are sharing wins from the budgeting challenge - 47 people saved ₹50K+ this month!', author: 'Community', created_at: '2026-03-23 11:00:00', is_active: 1 },
+    { id: 4, post_type: 'Ask for Help', content: '❓ "How do I start investing with just ₹5,000?" - Answered by 12 community members with practical steps.', author: 'Rajesh K.', created_at: '2026-03-22 16:45:00', is_active: 1 },
+    { id: 5, post_type: 'Book of the Month', content: '📚 Atomic Habits by James Clear - Discussion: How to build one small financial habit daily?', author: 'Priya S.', created_at: '2026-03-21 10:15:00', is_active: 1 },
+    { id: 6, post_type: 'Challenge', content: '🏆 New Monthly Challenge: "Emergency Fund Sprint" - Build or complete your 6-month fund!', author: 'Findas Team', created_at: '2026-03-20 08:00:00', is_active: 1 }
   ];
 }
 

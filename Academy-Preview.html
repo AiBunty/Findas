@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academy Sections & Community Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background: #f5f7fa;
+      color: #333;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    h1 { text-align: center; font-size: 2.2rem; margin: 40px 0 10px; color: #1f3f6a; }
+    .subtitle { text-align: center; color: #666; font-size: 1rem; margin-bottom: 40px; }
+    
+    section { 
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      margin: 30px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    section h2 { 
+      font-size: 1.6rem;
+      margin-bottom: 30px;
+      color: #1f3f6a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    /* Academy Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
+    }
+    .feature-card {
+      background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+      border: 1px solid #d9e6fb;
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(31, 63, 106, 0.12);
+      border-color: #1f4d87;
+    }
+    .feature-icon {
+      font-size: 2.2rem;
+      margin-bottom: 12px;
+    }
+    .feature-card h3 {
+      font-size: 1.1rem;
+      color: #1f3f6a;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+    .feature-card p {
+      color: #4a6487;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+    
+    /* Community Posts Grid */
+    .community-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin-top: 20px;
+    }
+    .post-card {
+      background: linear-gradient(135deg, #ffffff 0%, #fbfdff 100%);
+      border: 1px solid #e1eaf7;
+      border-radius: 10px;
+      padding: 18px;
+      transition: all 0.3s ease;
+    }
+    .post-card:hover {
+      border-color: #1f4d87;
+      box-shadow: 0 6px 12px rgba(31, 63, 106, 0.1);
+    }
+    .post-badge {
+      display: inline-block;
+      background: #1f4d87;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .post-badge.daily { background: #2196F3; }
+    .post-badge.weekly { background: #4CAF50; }
+    .post-badge.success { background: #FF9800; }
+    .post-badge.help { background: #9C27B0; }
+    .post-badge.book { background: #E91E63; }
+    .post-badge.challenge { background: #00BCD4; }
+    
+    .post-content {
+      color: #213652;
+      line-height: 1.6;
+      font-size: 0.95rem;
+      margin: 12px 0;
+    }
+    .post-author {
+      color: #4a6487;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e1eaf7;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin: 30px 0;
+    }
+    .stat-box {
+      background: linear-gradient(135deg, #edf4ff 0%, #d9e6fb 100%);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .stat-number { font-size: 1.8rem; font-weight: 800; color: #1f4d87; }
+    .stat-label { color: #4a6487; font-size: 0.9rem; margin-top: 6px; }
+    
+    .note {
+      background: #fff3e0;
+      border-left: 4px solid #FF9800;
+      padding: 16px;
+      border-radius: 4px;
+      margin: 20px 0;
+      color: #7a4b00;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎓 Academy Sections & Community Preview</h1>
+    <p class="subtitle">How your Academy features will look on the Findas Academy home page</p>
+
+    <!-- Academy Features Section -->
+    <section>
+      <h2><span>✨</span>Academy Learning Features</h2>
+      <p style="color: #4a6487; margin-bottom: 20px;">Six core learning modules that members can access and explore. These flip cards display and create engagement:</p>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📚</div>
+          <h3>Book of the Month</h3>
+          <p>Powerful books on success, wealth, mindset, and growth with actionable insights every week.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">🎬</div>
+          <h3>Weekly Learning Videos</h3>
+          <p>Focused 15-30 min videos on wealth creation, investing, insurance, and financial planning.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">💡</div>
+          <h3>Daily Dose of Insights</h3>
+          <p>Two-minute daily insights with one action step to improve thinking and build momentum.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">🏆</div>
+          <h3>Monthly Challenges</h3>
+          <p>Budgeting, habits, gratitude, and investing challenges that build financial discipline.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Live Q&A Sessions</h3>
+          <p>Monthly live session where members ask questions and get advice directly from experts.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">👥</div>
+          <h3>Community Forum</h3>
+          <p>Safe space to ask questions, share wins, and learn from thousands of members.</p>
+        </div>
+      </div>
+      
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-number">6</div>
+          <div class="stat-label">Learning Modules</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">∞</div>
+          <div class="stat-label">Resources Available</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">24/7</div>
+          <div class="stat-label">Access Lifetime</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Community Posts Section -->
+    <section>
+      <h2><span>💬</span>Live Academy Community Feed</h2>
+      <p style="color: #4a6487; margin-bottom: 20px;">Recent posts and discussions from your active community members. These cards build social proof and show engagement:</p>
+      
+      <div class="community-grid">
+        <div class="post-card">
+          <div class="post-badge daily">Daily Dose</div>
+          <p class="post-content">💡 Two-minute insight: track every rupee for the next 7 days to improve awareness.</p>
+          <div class="post-author">✏️ Findas Team</div>
+        </div>
+
+        <div class="post-card">
+          <div class="post-badge weekly">Weekly Learning</div>
+          <p class="post-content">🎬 New video: Building your first long-term investment system without overwhelm.</p>
+          <div class="post-author">✏️ Samir Machawe</div>
+        </div>
+
+        <div class="post-card">
+          <div class="post-badge success">Success Story</div>
+          <p class="post-content">🎯 Members are sharing wins from the budgeting challenge - 47 people saved ₹50K+ this month!</p>
+          <div class="post-author">✏️ Community</div>
+        </div>
+
+        <div class="post-card">
+          <div class="post-badge help">Ask for Help</div>
+          <p class="post-content">❓ "How do I start investing with just ₹5,000?" - Answered by 12 community members with practical steps.</p>
+          <div class="post-author">✏️ Rajesh K.</div>
+        </div>
+
+        <div class="post-card">
+          <div class="post-badge book">Book of the Month</div>
+          <p class="post-content">📚 Atomic Habits by James Clear - Discussion: How to build one small financial habit daily?</p>
+          <div class="post-author">✏️ Priya S.</div>
+        </div>
+
+        <div class="post-card">
+          <div class="post-badge challenge">Challenge</div>
+          <p class="post-content">🏆 New Monthly Challenge: "Emergency Fund Sprint" - Build or complete your 6-month fund!</p>
+          <div class="post-author">✏️ Findas Team</div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>💡 Tip:</strong> You can add up to 20 community posts. Edit them in the Admin Panel under "Academy Community" tab. Add more posts as your community grows, and they will automatically rotate on the home page.
+      </div>
+    </section>
+
+    <!-- Admin Instructions -->
+    <section>
+      <h2><span>📋</span>How to Manage These Sections in Admin</h2>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+        <div>
+          <h3 style="color: #1f4d87; margin-bottom: 12px;">📚 Academy Sections Tab</h3>
+          <ol style="line-height: 1.8; color: #4a6487;">
+            <li>Click "Academy Sections" in the admin sidebar</li>
+            <li>View the 6 core learning features currently shown</li>
+            <li>Edit title, description, emoji icon, and order</li>
+            <li>Activate/deactivate features anytime</li>
+            <li>These will flip-reveal on hover for visitors</li>
+          </ol>
+        </div>
+        
+        <div>
+          <h3 style="color: #1f4d87; margin-bottom: 12px;">💬 Academy Community Tab</h3>
+          <ol style="line-height: 1.8; color: #4a6487;">
+            <li>Click "Academy Community" in the admin sidebar</li>
+            <li>View the 6 recent community posts shown above</li>
+            <li>Add new posts with type, content, and author name</li>
+            <li>Posts auto-create with today's date</li>
+            <li>Visitors see your most active community on the homepage</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="note" style="margin-top: 30px;">
+        <strong>✅ Status:</strong> Both tabs are fully functional and populated with professional dummy data. Your home page will now show a vibrant academy community and learning features that build trust and encourage signups.
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>
