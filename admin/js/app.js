@@ -378,6 +378,55 @@ async function createRows(endpoint, rows) {
   }
 }
 
+function cleanSectionLabel(value) {
+  return String(value || '')
+    .replace(/\s*\(one per line\)\s*$/i, '')
+    .trim();
+}
+
+function resolveSectionHeading(inputValue, fallbackValue) {
+  const input = String(inputValue || '').trim();
+  if (input) return input;
+  return cleanSectionLabel(fallbackValue || '');
+}
+
+function defaultSimpleHeading(section, key) {
+  const cfg = simplifiedSectionConfigs[section];
+  if (!cfg || !cfg.labels) return '';
+  return cleanSectionLabel(cfg.labels[key] || '');
+}
+
+function linePairsToFaqBullets(value) {
+  const lines = String(value || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const pairs = [];
+  for (let i = 0; i < lines.length; i += 2) {
+    const q = lines[i] || '';
+    const a = lines[i + 1] || '';
+    if (!q && !a) continue;
+    pairs.push(`${q}::${a}`);
+  }
+  return pairs.join('|');
+}
+
+function faqBulletsToLinePairs(value) {
+  const rows = normalizeListValueForEditor(value)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const lines = [];
+  rows.forEach((row) => {
+    const parts = String(row).split('::');
+    const q = String(parts[0] || '').trim();
+    const a = String(parts.slice(1).join('::') || '').trim();
+    if (q) lines.push(q);
+    if (a) lines.push(a);
+  });
+  return lines.join('\n');
+}
+
 async function syncSimpleCoursesContent(slug, values) {
   const endpoint = '/api/admin/course-page-blocks';
   const res = await api(endpoint);
@@ -387,19 +436,54 @@ async function syncSimpleCoursesContent(slug, values) {
 
   const output = [];
   if (String(values.description || '').trim()) {
-    output.push({ course_slug: slug, block_type: 'about', title: 'About', body: String(values.description || '').trim(), is_active: 1, order: 1 });
+    output.push({
+      course_slug: slug,
+      block_type: 'about',
+      title: resolveSectionHeading(values.descriptionLabel, defaultSimpleHeading('courses', 'description')),
+      body: String(values.description || '').trim(),
+      is_active: 1,
+      order: 1
+    });
   }
   if (String(values.whatLearn || '').trim()) {
-    output.push({ course_slug: slug, block_type: 'learn', title: 'What You Will Learn', bullets: normalizeListValueForStorage(values.whatLearn), is_active: 1, order: 2 });
+    output.push({
+      course_slug: slug,
+      block_type: 'learn',
+      title: resolveSectionHeading(values.field1Label, defaultSimpleHeading('courses', 'field1')),
+      bullets: normalizeListValueForStorage(values.whatLearn),
+      is_active: 1,
+      order: 2
+    });
   }
   if (String(values.whoFor || '').trim()) {
-    output.push({ course_slug: slug, block_type: 'highlights', title: 'Who This Course Is For', bullets: normalizeListValueForStorage(values.whoFor), is_active: 1, order: 3 });
+    output.push({
+      course_slug: slug,
+      block_type: 'highlights',
+      title: resolveSectionHeading(values.field2Label, defaultSimpleHeading('courses', 'field2')),
+      bullets: normalizeListValueForStorage(values.whoFor),
+      is_active: 1,
+      order: 3
+    });
   }
   if (String(values.outcome || '').trim()) {
-    output.push({ course_slug: slug, block_type: 'not_for', title: 'Outcome', bullets: normalizeListValueForStorage(values.outcome), is_active: 1, order: 4 });
+    output.push({
+      course_slug: slug,
+      block_type: 'not_for',
+      title: resolveSectionHeading(values.field3Label, defaultSimpleHeading('courses', 'field3')),
+      bullets: normalizeListValueForStorage(values.outcome),
+      is_active: 1,
+      order: 4
+    });
   }
   if (String(values.goDeeper || '').trim()) {
-    output.push({ course_slug: slug, block_type: 'faq', title: 'Go Deeper', bullets: normalizeListValueForStorage(values.goDeeper), is_active: 1, order: 5 });
+    output.push({
+      course_slug: slug,
+      block_type: 'faq',
+      title: resolveSectionHeading(values.faqLabel, defaultSimpleHeading('courses', 'faq')),
+      bullets: linePairsToFaqBullets(values.goDeeper),
+      is_active: 1,
+      order: 5
+    });
   }
 
   await createRows(endpoint, output);
@@ -417,19 +501,38 @@ async function syncSimpleWebinarsContent(slug, values) {
   await deleteRowsByFilter(blocksEndpoint, blocks, (r) => String(r.webinar_slug || '').trim() === slug && managed.has(String(r.block_type || '').trim()));
   await deleteRowsByFilter(cardsEndpoint, cards, (r) => String(r.webinar_slug || '').trim() === slug);
 
-  const mergedOverview = [String(values.description || '').trim(), String(values.outcome || '').trim(), String(values.goDeeper || '').trim()]
-    .filter(Boolean)
-    .join('\n\n');
+  const mergedOverview = String(values.description || '').trim();
 
   const outBlocks = [];
   if (mergedOverview) {
-    outBlocks.push({ webinar_slug: slug, block_type: 'overview', title: 'Overview', body: mergedOverview, is_active: 1, order: 1 });
+    outBlocks.push({
+      webinar_slug: slug,
+      block_type: 'overview',
+      title: resolveSectionHeading(values.descriptionLabel, defaultSimpleHeading('webinars', 'description')),
+      body: mergedOverview,
+      is_active: 1,
+      order: 1
+    });
   }
   if (String(values.whoFor || '').trim()) {
-    outBlocks.push({ webinar_slug: slug, block_type: 'who_for', title: 'Who This Webinar Is For', bullets: normalizeListValueForStorage(values.whoFor), is_active: 1, order: 2 });
+    outBlocks.push({
+      webinar_slug: slug,
+      block_type: 'who_for',
+      title: resolveSectionHeading(values.field2Label, defaultSimpleHeading('webinars', 'field2')),
+      bullets: normalizeListValueForStorage(values.whoFor),
+      is_active: 1,
+      order: 2
+    });
   }
   if (String(values.goDeeper || '').trim()) {
-    outBlocks.push({ webinar_slug: slug, block_type: 'faq', title: 'Go Deeper', bullets: normalizeListValueForStorage(values.goDeeper), is_active: 1, order: 3 });
+    outBlocks.push({
+      webinar_slug: slug,
+      block_type: 'faq',
+      title: resolveSectionHeading(values.faqLabel, defaultSimpleHeading('webinars', 'faq')),
+      bullets: linePairsToFaqBullets(values.goDeeper),
+      is_active: 1,
+      order: 3
+    });
   }
   await createRows(blocksEndpoint, outBlocks);
 
@@ -457,13 +560,34 @@ async function syncSimpleDigitalContent(slug, values) {
 
   const output = [];
   if (overviewBody) {
-    output.push({ product_slug: slug, section_type: 'overview', heading: 'Overview', body: overviewBody, is_active: 1, order: 1 });
+    output.push({
+      product_slug: slug,
+      section_type: 'overview',
+      heading: resolveSectionHeading(values.descriptionLabel, defaultSimpleHeading('digital-products', 'description')),
+      body: overviewBody,
+      is_active: 1,
+      order: 1
+    });
   }
   if (outcomesBullets.trim()) {
-    output.push({ product_slug: slug, section_type: 'outcomes', heading: 'Outcomes', bullets: normalizeListValueForStorage(outcomesBullets), is_active: 1, order: 2 });
+    output.push({
+      product_slug: slug,
+      section_type: 'outcomes',
+      heading: resolveSectionHeading(values.field3Label, defaultSimpleHeading('digital-products', 'field3')),
+      bullets: normalizeListValueForStorage(outcomesBullets),
+      is_active: 1,
+      order: 2
+    });
   }
   if (String(values.goDeeper || '').trim()) {
-    output.push({ product_slug: slug, section_type: 'faq', heading: 'Go Deeper', bullets: normalizeListValueForStorage(values.goDeeper), is_active: 1, order: 3 });
+    output.push({
+      product_slug: slug,
+      section_type: 'faq',
+      heading: resolveSectionHeading(values.faqLabel, defaultSimpleHeading('digital-products', 'faq')),
+      bullets: linePairsToFaqBullets(values.goDeeper),
+      is_active: 1,
+      order: 3
+    });
   }
 
   await createRows(endpoint, output);
@@ -491,21 +615,50 @@ async function reverseHydrateCoursesContent(slug) {
     const res = await api('/api/admin/course-page-blocks');
     const blocks = Array.isArray(res.data) ? res.data : [];
     const relevant = blocks.filter((b) => String(b.course_slug || '').trim() === slug);
-    const result = { description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '' };
+    const result = {
+      description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '',
+      descriptionLabel: defaultSimpleHeading('courses', 'description'),
+      field1Label: defaultSimpleHeading('courses', 'field1'),
+      field2Label: defaultSimpleHeading('courses', 'field2'),
+      field3Label: defaultSimpleHeading('courses', 'field3'),
+      faqLabel: defaultSimpleHeading('courses', 'faq')
+    };
     
     relevant.forEach((block) => {
       const type = String(block.block_type || '').trim();
-      if (type === 'about') result.description = String(block.body || '').trim();
-      if (type === 'learn') result.whatLearn = normalizeListValueForEditor(block.bullets || '');
-      if (type === 'highlights') result.whoFor = normalizeListValueForEditor(block.bullets || '');
-      if (type === 'not_for') result.outcome = normalizeListValueForEditor(block.bullets || '');
-      if (type === 'faq') result.goDeeper = normalizeListValueForEditor(block.bullets || '');
+      if (type === 'about') {
+        result.description = String(block.body || '').trim();
+        result.descriptionLabel = resolveSectionHeading(block.title, result.descriptionLabel);
+      }
+      if (type === 'learn') {
+        result.whatLearn = normalizeListValueForEditor(block.bullets || '');
+        result.field1Label = resolveSectionHeading(block.title, result.field1Label);
+      }
+      if (type === 'highlights') {
+        result.whoFor = normalizeListValueForEditor(block.bullets || '');
+        result.field2Label = resolveSectionHeading(block.title, result.field2Label);
+      }
+      if (type === 'not_for') {
+        result.outcome = normalizeListValueForEditor(block.bullets || '');
+        result.field3Label = resolveSectionHeading(block.title, result.field3Label);
+      }
+      if (type === 'faq') {
+        result.goDeeper = faqBulletsToLinePairs(block.bullets || '');
+        result.faqLabel = resolveSectionHeading(block.title, result.faqLabel);
+      }
     });
     
     return result;
   } catch (err) {
     console.warn('reverseHydrateCoursesContent error:', err);
-    return { description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '' };
+    return {
+      description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '',
+      descriptionLabel: defaultSimpleHeading('courses', 'description'),
+      field1Label: defaultSimpleHeading('courses', 'field1'),
+      field2Label: defaultSimpleHeading('courses', 'field2'),
+      field3Label: defaultSimpleHeading('courses', 'field3'),
+      faqLabel: defaultSimpleHeading('courses', 'faq')
+    };
   }
 }
 
@@ -521,16 +674,30 @@ async function reverseHydrateWebinarsContent(slug) {
     const relevantBlocks = blocks.filter((b) => String(b.webinar_slug || '').trim() === slug);
     const relevantCards = cards.filter((c) => String(c.webinar_slug || '').trim() === slug);
     
-    const result = { description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '' };
+    const result = {
+      description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '',
+      descriptionLabel: defaultSimpleHeading('webinars', 'description'),
+      field1Label: defaultSimpleHeading('webinars', 'field1'),
+      field2Label: defaultSimpleHeading('webinars', 'field2'),
+      field3Label: defaultSimpleHeading('webinars', 'field3'),
+      faqLabel: defaultSimpleHeading('webinars', 'faq')
+    };
     
     relevantBlocks.forEach((block) => {
       const type = String(block.block_type || '').trim();
       if (type === 'overview') {
         const bodyText = String(block.body || '').trim();
         if (bodyText) result.description = bodyText;
+        result.descriptionLabel = resolveSectionHeading(block.title, result.descriptionLabel);
       }
-      if (type === 'who_for') result.whoFor = normalizeListValueForEditor(block.bullets || '');
-      if (type === 'faq') result.goDeeper = normalizeListValueForEditor(block.bullets || '');
+      if (type === 'who_for') {
+        result.whoFor = normalizeListValueForEditor(block.bullets || '');
+        result.field2Label = resolveSectionHeading(block.title, result.field2Label);
+      }
+      if (type === 'faq') {
+        result.goDeeper = faqBulletsToLinePairs(block.bullets || '');
+        result.faqLabel = resolveSectionHeading(block.title, result.faqLabel);
+      }
     });
     
     const cardLines = relevantCards
@@ -543,7 +710,14 @@ async function reverseHydrateWebinarsContent(slug) {
     return result;
   } catch (err) {
     console.warn('reverseHydrateWebinarsContent error:', err);
-    return { description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '' };
+    return {
+      description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '',
+      descriptionLabel: defaultSimpleHeading('webinars', 'description'),
+      field1Label: defaultSimpleHeading('webinars', 'field1'),
+      field2Label: defaultSimpleHeading('webinars', 'field2'),
+      field3Label: defaultSimpleHeading('webinars', 'field3'),
+      faqLabel: defaultSimpleHeading('webinars', 'faq')
+    };
   }
 }
 
@@ -552,26 +726,45 @@ async function reverseHydrateDigitalContent(slug) {
     const res = await api('/api/admin/digital-product-details');
     const details = Array.isArray(res.data) ? res.data : [];
     const relevant = details.filter((d) => String(d.product_slug || '').trim() === slug);
-    const result = { description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '' };
+    const result = {
+      description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '',
+      descriptionLabel: defaultSimpleHeading('digital-products', 'description'),
+      field1Label: defaultSimpleHeading('digital-products', 'field1'),
+      field2Label: defaultSimpleHeading('digital-products', 'field2'),
+      field3Label: defaultSimpleHeading('digital-products', 'field3'),
+      faqLabel: defaultSimpleHeading('digital-products', 'faq')
+    };
     
     relevant.forEach((section) => {
       const type = String(section.section_type || '').trim();
       if (type === 'overview') {
         const bodyText = String(section.body || '').trim();
         if (bodyText) result.description = bodyText;
+        result.descriptionLabel = resolveSectionHeading(section.heading, result.descriptionLabel);
       }
       if (type === 'outcomes') {
         const bulletsText = normalizeListValueForEditor(section.bullets || '');
         if (bulletsText && !result.whatLearn) result.whatLearn = bulletsText;
         else if (bulletsText) result.outcome = bulletsText;
+        result.field3Label = resolveSectionHeading(section.heading, result.field3Label);
       }
-      if (type === 'faq') result.goDeeper = normalizeListValueForEditor(section.bullets || '');
+      if (type === 'faq') {
+        result.goDeeper = faqBulletsToLinePairs(section.bullets || '');
+        result.faqLabel = resolveSectionHeading(section.heading, result.faqLabel);
+      }
     });
     
     return result;
   } catch (err) {
     console.warn('reverseHydrateDigitalContent error:', err);
-    return { description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '' };
+    return {
+      description: '', whatLearn: '', whoFor: '', outcome: '', goDeeper: '',
+      descriptionLabel: defaultSimpleHeading('digital-products', 'description'),
+      field1Label: defaultSimpleHeading('digital-products', 'field1'),
+      field2Label: defaultSimpleHeading('digital-products', 'field2'),
+      field3Label: defaultSimpleHeading('digital-products', 'field3'),
+      faqLabel: defaultSimpleHeading('digital-products', 'faq')
+    };
   }
 }
 
@@ -820,9 +1013,13 @@ const simplifiedSectionConfigs = {
       description: 'What is this course about?',
       field1: 'What You Will Learn (one per line)',
       field2: 'Who This Course Is For (one per line)',
-      field3: 'Key Outcomes (one per line)'
+      field3: 'Key Outcomes (one per line)',
+      faq: 'FAQ'
     },
-    slugField: 'slug'
+    slugField: 'slug',
+    imageField: 'thumbnail_url',
+    imageLabel: 'Thumbnail Image URL',
+    imageHint: 'Recommended: 1200 x 800 px (3:2)'
   },
   webinars: {
     title: '🎥 Create Webinar',
@@ -834,9 +1031,13 @@ const simplifiedSectionConfigs = {
       description: 'Webinar Overview',
       field1: 'Key Takeaways (one per line)',
       field2: 'Who Should Attend (one per line)',
-      field3: 'What You\'ll Know After (one per line)'
+      field3: 'What You\'ll Know After (one per line)',
+      faq: 'Additional Resources'
     },
-    slugField: 'slug'
+    slugField: 'slug',
+    imageField: 'banner_url',
+    imageLabel: 'Banner Image URL',
+    imageHint: 'Recommended: 1600 x 900 px (16:9)'
   },
   'digital-products': {
     title: '🎁 Create Digital Product',
@@ -848,9 +1049,13 @@ const simplifiedSectionConfigs = {
       description: 'Product Overview',
       field1: 'What\'s Included (one per line)',
       field2: 'Perfect For (one per line)',
-      field3: 'Expected Outcomes (one per line)'
+      field3: 'Expected Outcomes (one per line)',
+      faq: 'FAQ & Support'
     },
-    slugField: 'slug'
+    slugField: 'slug',
+    imageField: 'thumbnail_url',
+    imageLabel: 'Thumbnail Image URL',
+    imageHint: 'Recommended: 1200 x 800 px (3:2)'
   },
   membership: {
     title: '⭐ Create Membership Plan',
@@ -862,9 +1067,13 @@ const simplifiedSectionConfigs = {
       description: 'Plan Description',
       field1: 'What\'s Included (one per line)',
       field2: 'Best For (one per line)',
-      field3: 'Key Benefits (one per line)'
+      field3: 'Key Benefits (one per line)',
+      faq: 'Support & Access'
     },
-    slugField: 'plan_id'
+    slugField: 'plan_id',
+    imageField: 'image_url',
+    imageLabel: 'Plan Image URL',
+    imageHint: 'Recommended: 1200 x 800 px (3:2)'
   }
 };
 
@@ -883,6 +1092,13 @@ function renderSimplifiedForm(section, record = null) {
   let field1Value = record ? (record.features || '') : '';
   let field2Value = record ? (record.target_audience || '') : '';
   let field3Value = record ? (record.benefits || '') : '';
+  let goDeeperValue = record ? String(record.goDeeper || '') : '';
+
+  const descriptionLabelValue = record && record.descriptionLabel ? String(record.descriptionLabel) : cleanSectionLabel(cfg.labels.description);
+  const field1LabelValue = record && record.field1Label ? String(record.field1Label) : cleanSectionLabel(cfg.labels.field1);
+  const field2LabelValue = record && record.field2Label ? String(record.field2Label) : cleanSectionLabel(cfg.labels.field2);
+  const field3LabelValue = record && record.field3Label ? String(record.field3Label) : cleanSectionLabel(cfg.labels.field3);
+  const faqLabelValue = record && record.faqLabel ? String(record.faqLabel) : cleanSectionLabel(cfg.labels.faq || 'FAQ');
   
   return `
     <div class="simplified-section" style="border-left: 6px solid ${cfg.color}; background: ${cfg.bgColor}; padding: 24px; border-radius: 4px; max-width: 700px;">
@@ -895,13 +1111,30 @@ function renderSimplifiedForm(section, record = null) {
         <!-- Title Field -->
         <label class="simplified-field">
           <span style="font-weight: 600; color: #333;">${escapeHtml(cfg.labels.title)}</span>
-          <input type="text" name="title" placeholder="Enter ${escapeHtml(cfg.labels.title).toLowerCase()}" 
+          <input type="text" name="title" id="${formId}-title" placeholder="Enter ${escapeHtml(cfg.labels.title).toLowerCase()}" 
                  value="${escapeHtml(titleValue)}" required 
                  style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
         </label>
-        
+
+        <!-- Slug Field -->
+        <label class="simplified-field" style="margin-top: 16px;">
+          <span style="font-weight: 600; color: #555;">🔖 Slug <small style="font-weight:400; color:#888;">(used in Reviews &amp; page links — auto-filled, editable)</small></span>
+          <input type="text" name="${cfg.slugField}" id="${formId}-slug"
+                 placeholder="auto-filled-from-title"
+                 value="${escapeHtml(String(record ? (record[cfg.slugField] || record.slug || '') : ''))}"
+                 style="width: 100%; padding: 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px; font-family: monospace; background: #fafafa;">
+          <small style="color: #999;">Lowercase, hyphens only. Changing an existing slug will break review links.</small>
+        </label>
+
         <!-- Description Field -->
         <label class="simplified-field" style="margin-top: 20px;">
+          <span style="font-weight: 600; color: #333;">Section heading on website</span>
+          <input type="text" name="description_label" placeholder="Section heading"
+                 value="${escapeHtml(descriptionLabelValue)}"
+                 style="width: 100%; padding: 8px 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          <small style="color: #999;">Used as this section header in modal.</small>
+        </label>
+        <label class="simplified-field" style="margin-top: 12px;">
           <span style="font-weight: 600; color: #333;">${escapeHtml(cfg.labels.description)}</span>
           <textarea name="description" placeholder="Write a compelling description..." rows="4" 
                     style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px; font-family: inherit;">${escapeHtml(descValue)}</textarea>
@@ -909,6 +1142,13 @@ function renderSimplifiedForm(section, record = null) {
         
         <!-- Field 1 -->
         <label class="simplified-field" style="margin-top: 20px;">
+          <span style="font-weight: 600; color: #333;">Section heading on website</span>
+          <input type="text" name="field1_label" placeholder="Section heading"
+                 value="${escapeHtml(field1LabelValue)}"
+                 style="width: 100%; padding: 8px 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          <small style="color: #999;">Used as this section header in modal.</small>
+        </label>
+        <label class="simplified-field" style="margin-top: 12px;">
           <span style="font-weight: 600; color: #555;">${escapeHtml(cfg.labels.field1)}</span>
           <textarea name="field1" placeholder="Line 1\nLine 2\nLine 3\nLine 4" rows="4"
                     style="width: 100%; padding: 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px; font-family: monospace;">${escapeHtml(field1Value)}</textarea>
@@ -917,6 +1157,13 @@ function renderSimplifiedForm(section, record = null) {
         
         <!-- Field 2 -->
         <label class="simplified-field" style="margin-top: 20px;">
+          <span style="font-weight: 600; color: #333;">Section heading on website</span>
+          <input type="text" name="field2_label" placeholder="Section heading"
+                 value="${escapeHtml(field2LabelValue)}"
+                 style="width: 100%; padding: 8px 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          <small style="color: #999;">Used as this section header in modal.</small>
+        </label>
+        <label class="simplified-field" style="margin-top: 12px;">
           <span style="font-weight: 600; color: #555;">${escapeHtml(cfg.labels.field2)}</span>
           <textarea name="field2" placeholder="Line 1\nLine 2\nLine 3\nLine 4" rows="4"
                     style="width: 100%; padding: 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px; font-family: monospace;">${escapeHtml(field2Value)}</textarea>
@@ -925,16 +1172,86 @@ function renderSimplifiedForm(section, record = null) {
         
         <!-- Field 3 -->
         <label class="simplified-field" style="margin-top: 20px;">
+          <span style="font-weight: 600; color: #333;">Section heading on website</span>
+          <input type="text" name="field3_label" placeholder="Section heading"
+                 value="${escapeHtml(field3LabelValue)}"
+                 style="width: 100%; padding: 8px 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          <small style="color: #999;">Used as this section header in modal.</small>
+        </label>
+        <label class="simplified-field" style="margin-top: 12px;">
           <span style="font-weight: 600; color: #555;">${escapeHtml(cfg.labels.field3)}</span>
           <textarea name="field3" placeholder="Line 1\nLine 2\nLine 3\nLine 4" rows="4"
                     style="width: 100%; padding: 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px; font-family: monospace;">${escapeHtml(field3Value)}</textarea>
           <small style="color: #999;">Separate each item with a new line</small>
         </label>
-        
+
+        <!-- FAQ Field -->
+        <label class="simplified-field" style="margin-top: 20px;">
+          <span style="font-weight: 600; color: #333;">Section heading on website</span>
+          <input type="text" name="faq_label" placeholder="Section heading"
+                 value="${escapeHtml(faqLabelValue)}"
+                 style="width: 100%; padding: 8px 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          <small style="color: #999;">Used as this section header in modal.</small>
+        </label>
+        <label class="simplified-field" style="margin-top: 12px;">
+          <span style="font-weight: 600; color: #555;">${escapeHtml(cfg.labels.faq || 'FAQ')}</span>
+          <textarea name="goDeeper" placeholder="Question line 1\nAnswer line 1\nQuestion line 2\nAnswer line 2" rows="6"
+                    style="width: 100%; padding: 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px; font-family: monospace;">${escapeHtml(goDeeperValue)}</textarea>
+          <small style="color: #999;">Enter FAQ in line pairs: line 1 question, line 2 answer, line 3 question, line 4 answer.</small>
+        </label>
+
+        <!-- Image URL -->
+        <label class="simplified-field" style="margin-top: 20px;">
+          <span style="font-weight: 600; color: #333;">🖼️ ${escapeHtml(cfg.imageLabel)}</span>
+          <input type="url" name="${cfg.imageField}" placeholder="https://... (direct image URL)"
+                 value="${escapeHtml(String(record ? (record[cfg.imageField] || '') : ''))}"
+                 style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          <small style="color: #999;">Paste a direct image link (jpg/png/webp). ${escapeHtml(cfg.imageHint || 'Recommended: 1200 x 800 px (3:2)')}.</small>
+        </label>
+
+        <!-- Pricing & Payment Link -->
+        <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 16px; align-items: start;">
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">💰 Price (INR)</span>
+            <input type="number" name="price_inr" step="0.01" min="0" placeholder="e.g. 1999"
+                   value="${escapeHtml(String(record ? (record.price_inr ?? '') : ''))}"
+                   style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+            <small style="color: #999;">Leave blank if free</small>
+          </label>
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">🔗 Payment / Enrollment Form Link</span>
+            <input type="url" name="payment_link" placeholder="https://forms... or https://razorpay..."
+                   value="${escapeHtml(String(record ? (record.payment_link || '') : ''))}"
+                   style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+            <small style="color: #999;">Embedded form URL or payment gateway redirect</small>
+          </label>
+        </div>
+
+        ${section === 'webinars' ? `
+        <!-- Webinar Dates -->
+        <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;">
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">📅 Start Date &amp; Time</span>
+            <input type="datetime-local" name="start_datetime_local"
+                   value="${escapeHtml(String(record ? (record.start_datetime_local || '') : ''))}"
+                   style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          </label>
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">📅 End Date &amp; Time</span>
+            <input type="datetime-local" name="end_datetime_local"
+                   value="${escapeHtml(String(record ? (record.end_datetime_local || '') : ''))}"
+                   style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          </label>
+        </div>
+        ` : ''}
+
         <!-- Actions -->
         <div style="margin-top: 24px; display: flex; gap: 12px;">
           <button type="submit" style="background: ${cfg.color}; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 1em;">
             ${isEdit ? '💾 Update' : '✚ Create'}
+          </button>
+          <button type="button" id="${formId}-preview-btn" style="background: #ffffff; color: ${cfg.color}; padding: 12px 24px; border: 1px solid ${cfg.color}; border-radius: 4px; cursor: pointer; font-weight: 600;">
+            Preview
           </button>
           <button type="reset" style="background: #f0f0f0; color: #333; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
             Clear
@@ -945,6 +1262,182 @@ function renderSimplifiedForm(section, record = null) {
       </form>
     </div>
   `;
+}
+
+function setupSimplifiedSlugAutoFill(formId, slugField, color) {
+  const titleInput = document.getElementById(`${formId}-title`);
+  const slugInput = document.getElementById(`${formId}-slug`);
+  if (!titleInput || !slugInput) return;
+  let userEditedSlug = slugInput.value.trim() !== '';
+  slugInput.addEventListener('input', () => { userEditedSlug = true; });
+  titleInput.addEventListener('input', () => {
+    if (!userEditedSlug) {
+      slugInput.value = toSlug(titleInput.value);
+    }
+  });
+  // If editing (has value), ensure flag is set
+  if (slugInput.value.trim() !== '') userEditedSlug = true;
+}
+
+function splitInputLines(value) {
+  return String(value || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function formatLocalDateTimeLabel(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return 'Not set';
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+  return date.toLocaleString();
+}
+
+function getWebinarTimingStatus(endDateRaw) {
+  const raw = String(endDateRaw || '').trim();
+  if (!raw) return { label: 'Draft', klass: 'is-draft' };
+  const endDate = new Date(raw);
+  if (Number.isNaN(endDate.getTime())) return { label: 'Scheduled', klass: 'is-upcoming' };
+  return endDate.getTime() < Date.now()
+    ? { label: 'Past', klass: 'is-past' }
+    : { label: 'Upcoming', klass: 'is-upcoming' };
+}
+
+function buildSimplifiedModalPreviewHtml(section, form, cfg) {
+  if (!form || !cfg) return '<p class="preview-empty">Fill the form to see a preview.</p>';
+
+  const getValue = (name) => String(form.elements[name] && form.elements[name].value || '').trim();
+  const title = getValue('title') || 'Untitled';
+  const slug = getValue(cfg.slugField) || toSlug(title) || 'missing-slug';
+  const description = getValue('description');
+  const imageUrl = getValue(cfg.imageField);
+  const priceRaw = getValue('price_inr');
+  const paymentLink = getValue('payment_link');
+  const field1 = splitInputLines(getValue('field1'));
+  const field2 = splitInputLines(getValue('field2'));
+  const field3 = splitInputLines(getValue('field3'));
+
+  const safeTitle = escapeHtml(title);
+  const safeSlug = escapeHtml(slug);
+  const safeDescription = description ? nl2brSafe(description) : 'Add a description to preview.';
+  const ctaDisabled = paymentLink ? '' : 'disabled';
+  const ctaHref = paymentLink ? escapeHtml(paymentLink) : '#';
+
+  const priceNumber = Number(priceRaw);
+  const hasPrice = priceRaw !== '' && Number.isFinite(priceNumber) && priceNumber > 0;
+  const priceLabel = hasPrice ? `INR ${priceNumber.toLocaleString('en-IN')}` : 'Free';
+
+  const listBlock = (titleText, items) => {
+    if (!items.length) {
+      return `
+        <section class="simplified-preview-list-card">
+          <h4>${escapeHtml(titleText)}</h4>
+          <p class="preview-empty">No points added.</p>
+        </section>
+      `;
+    }
+    return `
+      <section class="simplified-preview-list-card">
+        <h4>${escapeHtml(titleText)}</h4>
+        <ul>
+          ${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+        </ul>
+      </section>
+    `;
+  };
+
+  const webinarMeta = section === 'webinars'
+    ? (() => {
+        const startValue = getValue('start_datetime_local');
+        const endValue = getValue('end_datetime_local');
+        const timingStatus = getWebinarTimingStatus(endValue);
+        return `
+          <div class="simplified-preview-meta-row">
+            <span><strong>Start:</strong> ${escapeHtml(formatLocalDateTimeLabel(startValue))}</span>
+            <span><strong>End:</strong> ${escapeHtml(formatLocalDateTimeLabel(endValue))}</span>
+            <span class="simplified-preview-status ${timingStatus.klass}">${escapeHtml(timingStatus.label)}</span>
+          </div>
+        `;
+      })()
+    : '';
+
+  const mediaBlock = imageUrl
+    ? `
+      <div class="simplified-preview-media-wrap">
+        <img src="${escapeHtml(imageUrl)}" alt="${safeTitle}" loading="lazy" class="simplified-preview-hero-image">
+      </div>
+    `
+    : '<div class="simplified-preview-media-wrap is-empty">Add an image URL to preview cover image.</div>';
+
+  return `
+    <article class="simplified-preview-card" style="--accent-color: ${cfg.color};">
+      ${mediaBlock}
+      <div class="simplified-preview-body-content">
+        <div class="simplified-preview-headline-row">
+          <h2>${safeTitle}</h2>
+          <span class="simplified-preview-price">${escapeHtml(priceLabel)}</span>
+        </div>
+        <div class="simplified-preview-slug-row">
+          <span class="simplified-preview-slug">${safeSlug}</span>
+          <a href="${ctaHref}" target="_blank" rel="noopener noreferrer" class="simplified-preview-cta ${ctaDisabled}">Open Payment / Form</a>
+        </div>
+        ${webinarMeta}
+        <p class="simplified-preview-description">${safeDescription}</p>
+        <div class="simplified-preview-list-grid">
+          ${listBlock(cfg.labels.field1, field1)}
+          ${listBlock(cfg.labels.field2, field2)}
+          ${listBlock(cfg.labels.field3, field3)}
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function setupSimplifiedPreviewModal(section, form, cfg) {
+  const modal = document.getElementById(`simplified-preview-modal-${section}`);
+  const previewBtn = document.getElementById(`simplified-form-${section}-preview-btn`);
+  if (!modal || !previewBtn || !form) return () => {};
+
+  const previewBodyId = `simplified-preview-body-${section}`;
+  const previewBody = document.getElementById(previewBodyId);
+  if (!previewBody) return () => {};
+
+  const refreshPreview = () => {
+    previewBody.innerHTML = buildSimplifiedModalPreviewHtml(section, form, cfg);
+  };
+
+  form.addEventListener('input', refreshPreview);
+  form.addEventListener('change', refreshPreview);
+  refreshPreview();
+
+  const closeModal = () => {
+    modal.classList.remove('open');
+    document.body.classList.remove('no-scroll');
+    modal.setAttribute('aria-hidden', 'true');
+  };
+
+  previewBtn.addEventListener('click', () => {
+    refreshPreview();
+    modal.classList.add('open');
+    document.body.classList.add('no-scroll');
+    modal.setAttribute('aria-hidden', 'false');
+  });
+
+  modal.addEventListener('click', (event) => {
+    const closeTrigger = event.target.closest('[data-simplified-preview-close]');
+    if (closeTrigger || event.target === modal) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal.classList.contains('open')) {
+      closeModal();
+    }
+  });
+
+  return refreshPreview;
 }
 
 const sectionConfigs = {
@@ -978,7 +1471,51 @@ const sectionConfigs = {
       { name: 'phone', label: 'Phone', type: 'text' },
       { name: 'email', label: 'Email', type: 'text' },
       { name: 'address', label: 'Address', type: 'textarea' },
-      { name: 'gallery_enabled', label: 'Show Gallery Section On Website', type: 'checkbox' }
+      { name: 'gallery_enabled', label: 'Show Gallery Section On Website', type: 'checkbox' },
+      { name: 'footer_brand_name', label: 'Footer Brand Name', type: 'text' },
+      { name: 'footer_about_text', label: 'Footer About Text', type: 'textarea' },
+      { name: 'footer_quick_links_title', label: 'Quick Links Title', type: 'text' },
+      { name: 'footer_quick_link_1', label: 'Quick Link 1 Label', type: 'text' },
+      { name: 'footer_quick_link_2', label: 'Quick Link 2 Label', type: 'text' },
+      { name: 'footer_quick_link_3', label: 'Quick Link 3 Label', type: 'text' },
+      { name: 'footer_quick_link_4', label: 'Quick Link 4 Label', type: 'text' },
+      { name: 'footer_quick_link_5', label: 'Quick Link 5 Label', type: 'text' },
+      { name: 'footer_quick_link_6', label: 'Quick Link 6 Label', type: 'text' },
+      { name: 'footer_contact_title', label: 'Contact Column Title', type: 'text' },
+      { name: 'footer_phone', label: 'Footer Phone', type: 'text' },
+      { name: 'footer_address', label: 'Footer Address', type: 'textarea' },
+      { name: 'footer_social_title', label: 'Social Column Title', type: 'text' },
+      { name: 'footer_social_instagram', label: 'Instagram URL', type: 'text' },
+      { name: 'footer_social_facebook', label: 'Facebook URL', type: 'text' },
+      { name: 'footer_social_youtube', label: 'YouTube URL', type: 'text' },
+      { name: 'footer_social_twitter', label: 'Twitter/X URL', type: 'text' },
+      { name: 'footer_social_whatsapp', label: 'WhatsApp URL', type: 'text' },
+      { name: 'footer_copyright', label: 'Footer Copyright (HTML allowed)', type: 'textarea' }
+    ]
+  },
+  'site-config': {
+    kind: 'singleton',
+    endpoint: '/api/admin/site-config',
+    fields: [
+      { name: 'footer_brand_name', label: 'Footer Brand Name', type: 'text' },
+      { name: 'footer_about_text', label: 'Footer About Text', type: 'textarea' },
+      { name: 'footer_quick_links_title', label: 'Quick Links Title', type: 'text' },
+      { name: 'footer_quick_link_1', label: 'Quick Link 1 Label', type: 'text' },
+      { name: 'footer_quick_link_2', label: 'Quick Link 2 Label', type: 'text' },
+      { name: 'footer_quick_link_3', label: 'Quick Link 3 Label', type: 'text' },
+      { name: 'footer_quick_link_4', label: 'Quick Link 4 Label', type: 'text' },
+      { name: 'footer_quick_link_5', label: 'Quick Link 5 Label', type: 'text' },
+      { name: 'footer_quick_link_6', label: 'Quick Link 6 Label', type: 'text' },
+      { name: 'footer_contact_title', label: 'Contact Column Title', type: 'text' },
+      { name: 'footer_phone', label: 'Footer Phone', type: 'text' },
+      { name: 'footer_address', label: 'Footer Address', type: 'textarea' },
+      { name: 'footer_social_title', label: 'Social Column Title', type: 'text' },
+      { name: 'footer_social_instagram', label: 'Instagram URL', type: 'text' },
+      { name: 'footer_social_facebook', label: 'Facebook URL', type: 'text' },
+      { name: 'footer_social_youtube', label: 'YouTube URL', type: 'text' },
+      { name: 'footer_social_twitter', label: 'Twitter/X URL', type: 'text' },
+      { name: 'footer_social_whatsapp', label: 'WhatsApp URL', type: 'text' },
+      { name: 'footer_copyright', label: 'Footer Copyright (HTML allowed)', type: 'textarea' }
     ]
   },
   courses: {
@@ -1120,6 +1657,7 @@ const sectionConfigs = {
   'short-reviews': {
     kind: 'collection',
     endpoint: '/api/admin/short-reviews',
+    hiddenColumns: ['course_slug', 'webinar_slug'],
     fields: [
       { name: 'slug', label: 'Select Existing Slugs (multi-select)', type: 'slug-multiselect', required: true, helperText: 'Only existing slugs are allowed. Use Ctrl/Cmd + click for multiple.' },
       { name: 'review_text', label: 'Review Text', type: 'textarea', required: true },
@@ -1131,6 +1669,7 @@ const sectionConfigs = {
   'featured-reviews': {
     kind: 'collection',
     endpoint: '/api/admin/featured-reviews',
+    hiddenColumns: ['course_slug', 'webinar_slug'],
     fields: [
       { name: 'slug', label: 'Select Existing Slugs (multi-select)', type: 'slug-multiselect', required: true, helperText: 'Only existing slugs are allowed. Use Ctrl/Cmd + click for multiple.' },
       { name: 'title', label: 'Title', type: 'text' },
@@ -1276,6 +1815,8 @@ function toInputValue(type, value) {
 }
 
 function renderField(field, value = '') {
+  const helperText = field.helperText || getImageFieldHint(field);
+
   if (field.type === 'checkbox') {
     const checked = toInputValue('checkbox', value) ? 'checked' : '';
     const disabled = !canWrite() ? 'disabled' : '';
@@ -1302,6 +1843,7 @@ function renderField(field, value = '') {
       <label class="field">
         <span>${field.label}</span>
         <textarea name="${field.name}" ${placeholder ? `placeholder="${escapeHtml(placeholder)}"` : ''} ${field.required ? 'required' : ''} ${!canWrite() ? 'disabled' : ''}>${escapeHtml(textValue)}</textarea>
+        ${helperText ? `<small>${escapeHtml(helperText)}</small>` : ''}
       </label>
     `;
   }
@@ -1320,6 +1862,7 @@ function renderField(field, value = '') {
         ${field.required ? 'required' : ''}
         ${!canWrite() ? 'disabled' : ''}
       >
+      ${helperText ? `<small>${escapeHtml(helperText)}</small>` : ''}
     </label>
   `;
 }
@@ -1335,6 +1878,20 @@ function getDefaultPlaceholder(field) {
   if (type === 'password') return `Enter ${label.toLowerCase()}`;
   if (type === 'textarea') return `Write ${label.toLowerCase()} here`;
   return `Enter ${label.toLowerCase()}`;
+}
+
+function getImageFieldHint(field = {}) {
+  const fieldName = String(field.name || '').toLowerCase();
+  const fieldLabel = String(field.label || '').toLowerCase();
+  const haystack = `${fieldName} ${fieldLabel}`;
+  if (!/(image|thumbnail|banner|logo|avatar|photo)/.test(haystack)) return '';
+  if (fieldName.includes('banner')) return 'Recommended image size: 1600 x 900 px (16:9)';
+  if (fieldName.includes('thumbnail')) return 'Recommended image size: 1200 x 800 px (3:2)';
+  if (fieldName.includes('host') || fieldName.includes('founder') || fieldName.includes('avatar') || fieldName.includes('photo')) {
+    return 'Recommended image size: 800 x 800 px (1:1)';
+  }
+  if (fieldName.includes('logo')) return 'Recommended image size: 800 x 800 px (1:1)';
+  return 'Recommended image size: 1200 x 800 px (3:2)';
 }
 
 function collectFormData(form, fields) {
@@ -1375,12 +1932,13 @@ function collectFormData(form, fields) {
   return payload;
 }
 
-function renderRowsTable(rows, editable = true, includeToggle = false) {
+function renderRowsTable(rows, editable = true, includeToggle = false, hiddenColumns = []) {
   if (!rows.length) {
     return '<p>No records yet.</p>';
   }
 
-  const headers = Object.keys(rows[0]);
+  const hiddenSet = new Set((Array.isArray(hiddenColumns) ? hiddenColumns : []).map((h) => String(h || '').trim()).filter(Boolean));
+  const headers = Object.keys(rows[0]).filter((h) => !hiddenSet.has(h));
   const actionHeader = editable ? '<th>Actions</th>' : '';
   const bodyRows = rows.map(r => {
     const tds = headers.map(h => `<td>${escapeHtml(r[h])}</td>`).join('');
@@ -2015,7 +2573,7 @@ async function renderCollectionSection(cfg) {
       </div>
     </form>
     <h3>Records</h3>
-    ${renderRowsTable(rows, canWrite(), cfg.fields.some((f) => f.name === 'is_active'))}
+    ${renderRowsTable(rows, canWrite(), cfg.fields.some((f) => f.name === 'is_active'), cfg.hiddenColumns || [])}
     ${integratedGroups.length ? '<h3>Integrated Modal Content</h3><div id="integratedChildrenRoot" class="table-wrap"><p class="form-status">Select a record from above to manage modal blocks under the same section.</p></div>' : ''}
   `;
 
@@ -2340,6 +2898,15 @@ async function renderSimplifiedCollectionSection(section) {
         ${recordsListHtml()}
       </div>
     </div>
+    <div id="simplified-preview-modal-${section}" class="simplified-preview-modal" aria-hidden="true">
+      <div class="simplified-preview-dialog" role="dialog" aria-modal="true" aria-label="Preview Before Save">
+        <div class="simplified-preview-header">
+          <h3>Preview Before Save</h3>
+          <button type="button" class="ghost-btn" data-simplified-preview-close>Close</button>
+        </div>
+        <div id="simplified-preview-body-${section}" class="preview-body"></div>
+      </div>
+    </div>
   `;
 
   const form = document.getElementById(`simplified-form-${section}`);
@@ -2347,6 +2914,10 @@ async function renderSimplifiedCollectionSection(section) {
   const statusEl = document.getElementById(`simplified-form-${section}-status`);
 
   if (!form) return;
+
+  // Wire up slug auto-fill from title
+  setupSimplifiedSlugAutoFill(`simplified-form-${section}`, simplifiedConfig.slugField, simplifiedConfig.color);
+  const refreshSimplifiedPreview = setupSimplifiedPreviewModal(section, form, simplifiedConfig);
 
   // Form submission handler
   form.addEventListener('submit', async (e) => {
@@ -2368,6 +2939,12 @@ async function renderSimplifiedCollectionSection(section) {
       const field1 = String(formData.get('field1') || '').trim();
       const field2 = String(formData.get('field2') || '').trim();
       const field3 = String(formData.get('field3') || '').trim();
+      const goDeeper = String(formData.get('goDeeper') || '').trim();
+      const descriptionLabel = String(formData.get('description_label') || '').trim();
+      const field1Label = String(formData.get('field1_label') || '').trim();
+      const field2Label = String(formData.get('field2_label') || '').trim();
+      const field3Label = String(formData.get('field3_label') || '').trim();
+      const faqLabel = String(formData.get('faq_label') || '').trim();
 
       if (!title) {
         statusEl.textContent = 'Title is required.';
@@ -2376,10 +2953,11 @@ async function renderSimplifiedCollectionSection(section) {
       }
 
       const slugField = simplifiedConfig.slugField;
-      const baseSlug = toSlug(title);
+      const enteredSlug = String(formData.get(slugField) || '').trim();
+      const baseSlug = enteredSlug || toSlug(title);
       let finalSlug = baseSlug;
 
-      // Check for slug conflicts when creating new record
+      // Check for slug conflicts only when creating a new record
       if (!id) {
         let counter = 1;
         while (rows.some(r => String(r[slugField] || '').trim() === finalSlug)) {
@@ -2390,15 +2968,41 @@ async function renderSimplifiedCollectionSection(section) {
 
       const payload = {
         title,
-        subtitle: description,
         [slugField]: finalSlug,
         is_active: 1
       };
+
+      // Image/thumbnail field
+      const imageVal = String(formData.get(simplifiedConfig.imageField) || '').trim();
+      if (imageVal) payload[simplifiedConfig.imageField] = imageVal;
+
+      // membership table uses 'description'; all others use 'subtitle'
+      if (section === 'membership') {
+        payload.description = description;
+      } else {
+        payload.subtitle = description;
+      }
 
       // Save field values as features/target_audience/benefits for now
       if (field1) payload.features = normalizeListValueForStorage(field1);
       if (field2) payload.target_audience = normalizeListValueForStorage(field2);
       if (field3) payload.benefits = normalizeListValueForStorage(field3);
+
+      // Pricing
+      const rawPrice = formData.get('price_inr');
+      if (rawPrice !== null && String(rawPrice).trim() !== '') payload.price_inr = parseFloat(rawPrice);
+
+      // Payment / enrollment link
+      const paymentLink = String(formData.get('payment_link') || '').trim();
+      if (paymentLink) payload.payment_link = paymentLink;
+
+      // Webinar-specific date fields
+      if (section === 'webinars') {
+        const startDate = String(formData.get('start_datetime_local') || '').trim();
+        const endDate = String(formData.get('end_datetime_local') || '').trim();
+        if (startDate) payload.start_datetime_local = startDate;
+        if (endDate) payload.end_datetime_local = endDate;
+      }
 
       const cfg = sectionConfigs[section];
       if (id) {
@@ -2427,7 +3031,12 @@ async function renderSimplifiedCollectionSection(section) {
           whatLearn: field1,
           whoFor: field2,
           outcome: field3,
-          goDeeper: ''
+          goDeeper: goDeeper,
+          descriptionLabel,
+          field1Label,
+          field2Label,
+          field3Label,
+          faqLabel
         };
         try {
           await syncSimpleStructuredContent(section, parentSlug, structuredValues);
@@ -2463,6 +3072,13 @@ async function renderSimplifiedCollectionSection(section) {
       let field1Val = String(record.features || '');
       let field2Val = String(record.target_audience || '');
       let field3Val = String(record.benefits || '');
+      let descriptionVal = String(record.subtitle || record.description || '');
+      let goDeeperVal = '';
+      let descriptionLabelVal = cleanSectionLabel(simplifiedConfig.labels.description);
+      let field1LabelVal = cleanSectionLabel(simplifiedConfig.labels.field1);
+      let field2LabelVal = cleanSectionLabel(simplifiedConfig.labels.field2);
+      let field3LabelVal = cleanSectionLabel(simplifiedConfig.labels.field3);
+      let faqLabelVal = cleanSectionLabel(simplifiedConfig.labels.faq || 'FAQ');
       
       // For courses, webinars, digital products: reverse hydrate from child records
       const slug = String(record.slug || '').trim();
@@ -2478,9 +3094,16 @@ async function renderSimplifiedCollectionSection(section) {
           }
           
           if (childData) {
+            descriptionVal = String(childData.description || descriptionVal);
             field1Val = String(childData.whatLearn || field1Val);
             field2Val = String(childData.whoFor || field2Val);
             field3Val = String(childData.outcome || field3Val);
+            goDeeperVal = String(childData.goDeeper || '');
+            descriptionLabelVal = String(childData.descriptionLabel || descriptionLabelVal);
+            field1LabelVal = String(childData.field1Label || field1LabelVal);
+            field2LabelVal = String(childData.field2Label || field2LabelVal);
+            field3LabelVal = String(childData.field3Label || field3LabelVal);
+            faqLabelVal = String(childData.faqLabel || faqLabelVal);
           }
         } catch (err) {
           // Fall back to parent fields if child read fails
@@ -2490,15 +3113,40 @@ async function renderSimplifiedCollectionSection(section) {
 
       form.elements.id.value = String(id);
       form.elements.title.value = String(record.title || record.plan_id || '');
-      form.elements.description.value = String(record.subtitle || record.description || '');
+      form.elements.description.value = descriptionVal;
       form.elements.field1.value = field1Val;
       form.elements.field2.value = field2Val;
       form.elements.field3.value = field3Val;
+      if (form.elements.goDeeper) form.elements.goDeeper.value = goDeeperVal;
+      if (form.elements.description_label) form.elements.description_label.value = descriptionLabelVal;
+      if (form.elements.field1_label) form.elements.field1_label.value = field1LabelVal;
+      if (form.elements.field2_label) form.elements.field2_label.value = field2LabelVal;
+      if (form.elements.field3_label) form.elements.field3_label.value = field3LabelVal;
+      if (form.elements.faq_label) form.elements.faq_label.value = faqLabelVal;
+
+      // Slug
+      const slugEl = form.elements[simplifiedConfig.slugField];
+      if (slugEl) slugEl.value = String(record[simplifiedConfig.slugField] || record.slug || '');
+
+      // Image/thumbnail
+      const imageEl = form.elements[simplifiedConfig.imageField];
+      if (imageEl) imageEl.value = String(record[simplifiedConfig.imageField] || '');
+
+      // Pricing & payment link
+      if (form.elements.price_inr) form.elements.price_inr.value = String(record.price_inr ?? '');
+      if (form.elements.payment_link) form.elements.payment_link.value = String(record.payment_link || '');
+
+      // Webinar dates
+      if (section === 'webinars') {
+        if (form.elements.start_datetime_local) form.elements.start_datetime_local.value = String(record.start_datetime_local || '');
+        if (form.elements.end_datetime_local) form.elements.end_datetime_local.value = String(record.end_datetime_local || '');
+      }
 
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.textContent = '💾 Update';
       statusEl.textContent = `Editing #${id}`;
       statusEl.style.color = '#666';
+      refreshSimplifiedPreview();
       return;
     }
 

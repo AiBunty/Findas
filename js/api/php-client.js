@@ -48,12 +48,22 @@ async function runPhpApi(name, params) {
         phpSingleton('hero'),
         phpSingleton('about'),
         phpSingleton('contact'),
-        phpSingleton('site-assets')
+        phpSingleton('site-assets'),
+        phpSingleton('site-config')
       ]);
       const hero = out[0] || {};
       const about = out[1] || {};
       const contact = out[2] || {};
       const assets = out[3] || {};
+      const siteConfig = out[4] || {};
+      const footerValue = (key) => {
+        const fromContact = contact[key];
+        if (fromContact !== undefined && fromContact !== null && String(fromContact).trim() !== '') {
+          return fromContact;
+        }
+        const fromSiteConfig = siteConfig[key];
+        return fromSiteConfig !== undefined && fromSiteConfig !== null ? fromSiteConfig : '';
+      };
       return {
         hero_title: hero.title || '',
         hero_subtitle: hero.subtitle || '',
@@ -70,8 +80,25 @@ async function runPhpApi(name, params) {
         loading_logo_url: assets.loading_logo_url || '',
         favicon_url: assets.favicon_url || '',
         gallery_enabled: contact.gallery_enabled,
-        footer_phone: contact.phone || '',
-        footer_address: contact.address || ''
+        footer_brand_name: footerValue('footer_brand_name'),
+        footer_about_text: footerValue('footer_about_text'),
+        footer_quick_links_title: footerValue('footer_quick_links_title'),
+        footer_quick_link_1: footerValue('footer_quick_link_1'),
+        footer_quick_link_2: footerValue('footer_quick_link_2'),
+        footer_quick_link_3: footerValue('footer_quick_link_3'),
+        footer_quick_link_4: footerValue('footer_quick_link_4'),
+        footer_quick_link_5: footerValue('footer_quick_link_5'),
+        footer_quick_link_6: footerValue('footer_quick_link_6'),
+        footer_contact_title: footerValue('footer_contact_title'),
+        footer_phone: footerValue('footer_phone') || contact.phone || '',
+        footer_address: footerValue('footer_address') || contact.address || '',
+        footer_social_title: footerValue('footer_social_title'),
+        footer_social_instagram: footerValue('footer_social_instagram'),
+        footer_social_facebook: footerValue('footer_social_facebook'),
+        footer_social_youtube: footerValue('footer_social_youtube'),
+        footer_social_twitter: footerValue('footer_social_twitter'),
+        footer_social_whatsapp: footerValue('footer_social_whatsapp'),
+        footer_copyright: footerValue('footer_copyright')
       };
     }
     case 'getCourses':

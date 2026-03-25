@@ -127,7 +127,40 @@ function renderShortReviews(list) {
 const galleryCards = [];
 const galleryIntervals = [];
 
+function isGalleryEnabledFromConfig() {
+  const cfg = (typeof S !== 'undefined' && S && S.siteConfig) ? S.siteConfig : null;
+  const raw = cfg ? cfg.gallery_enabled : undefined;
+  return !(raw === false || raw === 0 || raw === '0' || raw === 'false');
+}
+
+function syncGalleryVisibility(enabled) {
+  const gallerySection = document.getElementById('gallery');
+  if (gallerySection) {
+    gallerySection.style.display = enabled ? '' : 'none';
+  }
+
+  document.querySelectorAll('a[href="#gallery"]').forEach((link) => {
+    const listItem = link.closest('li');
+    if (listItem) {
+      listItem.style.display = enabled ? '' : 'none';
+    } else {
+      link.style.display = enabled ? '' : 'none';
+    }
+  });
+}
+
 function renderGallery(images) {
+  const enabled = isGalleryEnabledFromConfig();
+  syncGalleryVisibility(enabled);
+
+  if (!enabled) {
+    clearEl(D.gGrid);
+    galleryCards.length = 0;
+    galleryIntervals.forEach(interval => clearInterval(interval));
+    galleryIntervals.length = 0;
+    return;
+  }
+
   clearEl(D.gGrid);
   galleryCards.length = 0;
   galleryIntervals.forEach(interval => clearInterval(interval));
@@ -269,13 +302,13 @@ function renderAcademyBeforeAfter(beforeItems, afterItems) {
   (beforeItems || []).forEach(item => {
     const text = cleanDisplayText(item.challenge || item.title || item.text || '');
     if (!text) return;
-    D.academyBeforeList.appendChild(el('li', '', text));
+    D.academyBeforeList.appendChild(el('li', 'academy-list-item before-item', text));
   });
 
   (afterItems || []).forEach(item => {
     const text = cleanDisplayText(item.benefit || item.title || item.text || '');
     if (!text) return;
-    D.academyAfterList.appendChild(el('li', '', text));
+    D.academyAfterList.appendChild(el('li', 'academy-list-item after-item', text));
   });
 }
 
@@ -283,11 +316,36 @@ function renderAcademyFeatures(items) {
   if (!D.academyFeaturesGrid) return;
   clearEl(D.academyFeaturesGrid);
 
-  (items || []).forEach((item, idx) => {
-    const card = el('article', 'academy-feature-card');
-    card.appendChild(el('div', 'academy-feature-icon', String(item.icon_emoji || (idx + 1))));
-    card.appendChild(el('h3', '', cleanDisplayText(item.title || 'Feature')));
-    card.appendChild(el('p', 'section-body', cleanDisplayText(item.description || item.details || '')));
+  D.academyFeaturesGrid.classList.remove('grid');
+  D.academyFeaturesGrid.classList.add('who-grid');
+
+  if (!items || !items.length) {
+    D.academyFeaturesGrid.appendChild(el('p', 'empty', 'Information coming soon.'));
+    return;
+  }
+
+  items.forEach((item, idx) => {
+    const card = el('div', 'who-card');
+    const inner = el('div', 'who-card-inner');
+
+    const titleText = cleanDisplayText(item.title || 'Feature');
+    const descText = cleanDisplayText(item.description || item.details || '');
+
+    const front = el('div', 'who-card-front');
+    const iconDiv = el('div', 'who-card-icon');
+    iconDiv.innerHTML = whoIconSvg(idx);
+    front.appendChild(iconDiv);
+    front.appendChild(el('h4', 'who-card-title', titleText));
+
+    const back = el('div', 'who-card-back');
+    back.appendChild(el('h4', 'who-card-title', titleText));
+    const desc = el('p', 'who-card-desc', descText);
+    desc.style.display = 'block';
+    back.appendChild(desc);
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    card.appendChild(inner);
     D.academyFeaturesGrid.appendChild(card);
   });
 }
@@ -297,7 +355,7 @@ function renderAcademyRoadmap(items) {
   clearEl(D.academyRoadmapGrid);
 
   (items || []).forEach((item, idx) => {
-    const card = el('article', 'academy-feature-card');
+    const card = el('article', 'academy-feature-card academy-roadmap-card');
     card.appendChild(el('div', 'academy-feature-icon', String(item.stage_num || (idx + 1))));
     card.appendChild(el('h3', '', cleanDisplayText(item.stage_name || item.title || 'Stage')));
     card.appendChild(el('p', 'section-body', cleanDisplayText(item.description || '')));
@@ -310,7 +368,7 @@ function renderAcademyCommunity(items) {
   clearEl(D.academyCommunityGrid);
 
   (items || []).forEach(item => {
-    const card = el('article', 'academy-feature-card');
+    const card = el('article', 'academy-feature-card academy-community-card');
     card.appendChild(el('span', 'badge bdef', cleanDisplayText(item.post_type || 'Community')));
     card.appendChild(el('p', 'section-body', cleanDisplayText(item.content || '')));
     card.appendChild(el('strong', '', cleanDisplayText(item.author || 'Findas Community')));

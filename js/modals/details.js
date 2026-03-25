@@ -1,3 +1,11 @@
+function addDynBlockSection(container, blocks, mode, defaultHeader) {
+  if (!blocks || !blocks.length) return;
+  const first = blocks[0] || {};
+  const header = String(first.title || first.heading || '').trim() || defaultHeader;
+  const strippedBlocks = blocks.map((b) => Object.assign({}, b, { title: '' }));
+  addBlockSection(container, header, strippedBlocks, mode);
+}
+
 function renderCourseDetails(payload) {
   const course = payload && payload.course ? payload.course : null;
   const blocks = payload && payload.blocks ? payload.blocks : [];
@@ -41,12 +49,12 @@ function renderCourseDetails(payload) {
   D.mContent.appendChild(layout);
 
   const byType = (type) => blocks.filter(b => String(b.block_type || '').trim() === type);
-  addBlockSection(D.mContent, 'ABOUT', byType('about'), 'text');
-  addBlockSection(D.mContent, 'HIGHLIGHTS', byType('highlights'), 'bullets');
-  addBlockSection(D.mContent, 'LEARN', byType('learn'), 'bullets');
+  addDynBlockSection(D.mContent, byType('about'), 'text', 'Course Description');
+  addDynBlockSection(D.mContent, byType('highlights'), 'bullets', 'Who This Course Is For');
+  addDynBlockSection(D.mContent, byType('learn'), 'bullets', 'What You Will Learn');
   addForYouCards(D.mContent, forYouCards);
-  addBlockSection(D.mContent, 'NOT FOR', byType('not_for'), 'bullets');
-  addBlockSection(D.mContent, 'FAQ', byType('faq'), 'faq');
+  addDynBlockSection(D.mContent, byType('not_for'), 'bullets', 'Key Outcomes');
+  addDynBlockSection(D.mContent, byType('faq'), 'faq', 'FAQ');
 
   if (featuredReviews.length) {
     const section = el('div', 'section-card');
@@ -142,48 +150,9 @@ function renderDigitalDetails(payload) {
   D.mContent.appendChild(layout);
 
   const byType = (type) => sections.filter(s => String(s.section_type || '').trim() === type);
-
-  const overview = byType('overview');
-  if (overview.length) {
-    const section = el('div', 'section-card');
-    section.appendChild(el('h4', 'section-title', 'Overview'));
-    overview.forEach(s => {
-      if (s.heading) section.appendChild(el('div', '', String(s.heading)));
-      if (s.body) section.appendChild(el('p', 'section-body', String(s.body)));
-      const chips = renderChips(s.file_includes);
-      if (chips) section.appendChild(chips);
-      if (s.image_url) {
-        const img = el('img', 'section-media');
-        img.src = String(s.image_url);
-        img.alt = String(s.heading || 'Overview image');
-        img.loading = 'lazy';
-        section.appendChild(img);
-      }
-    });
-    D.mContent.appendChild(section);
-  }
-
-  const outcomes = byType('outcomes');
-  if (outcomes.length) {
-    const section = el('div', 'section-card');
-    section.appendChild(el('h4', 'section-title', 'Outcomes'));
-    outcomes.forEach(s => {
-      const list = renderBulletsList(s.bullets);
-      if (list) section.appendChild(list);
-    });
-    D.mContent.appendChild(section);
-  }
-
-  const faq = byType('faq');
-  if (faq.length) {
-    const section = el('div', 'section-card');
-    section.appendChild(el('h4', 'section-title', 'FAQ'));
-    faq.forEach(s => {
-      const acc = renderFaqAccordion(s.bullets);
-      if (acc) section.appendChild(acc);
-    });
-    D.mContent.appendChild(section);
-  }
+  addDynBlockSection(D.mContent, byType('overview'), 'text', 'Product Overview');
+  addDynBlockSection(D.mContent, byType('outcomes'), 'bullets', 'Expected Outcomes');
+  addDynBlockSection(D.mContent, byType('faq'), 'faq', 'FAQ & Support');
 
   const ctaWrap = el('div', 'mcta');
   const btn = el('button', 'btn b1', 'Buy Now');
@@ -239,13 +208,13 @@ function renderWebinarDetails(payload) {
     if (d) content.appendChild(el('div', 'section-body', 'Ends: ' + fmtDate(d, webinar.timezone)));
   }
 
-  const cta = el('button', 'btn b1', webinar.primary_cta_text || 'Register');
+  const cta = el('button', 'btn b1', webinar.primary_cta_text || 'Enroll Now');
   const endAt = parseDate(webinar.end_datetime_local);
   if (endAt && Date.now() > endAt.getTime()) {
     cta.textContent = 'Event Ended';
     cta.disabled = true;
   } else if (webinar.payment_link) {
-    cta.addEventListener('click', () => openPaymentModal('Register', String(webinar.payment_link)));
+    cta.addEventListener('click', () => openPaymentModal('Enroll Now', String(webinar.payment_link)));
   } else {
     cta.disabled = true;
   }
@@ -260,8 +229,8 @@ function renderWebinarDetails(payload) {
   D.mContent.appendChild(layout);
 
   const byType = (type) => blocks.filter(b => String(b.block_type || '').trim() === type);
-  addBlockSection(D.mContent, 'OVERVIEW', byType('overview'), 'text');
-  addBlockSection(D.mContent, 'WHO FOR', byType('who_for'), 'bullets');
+  addDynBlockSection(D.mContent, byType('overview'), 'text', 'Webinar Overview');
+  addDynBlockSection(D.mContent, byType('who_for'), 'bullets', 'Who Should Attend');
   if (keyPoints.length) {
     const section = el('div', 'section-card');
     section.appendChild(el('h4', 'section-title', 'Key Points'));
@@ -282,18 +251,52 @@ function renderWebinarDetails(payload) {
     section.appendChild(grid);
     D.mContent.appendChild(section);
   }
-  addBlockSection(D.mContent, 'FAQ', byType('faq'), 'faq');
+  addDynBlockSection(D.mContent, byType('faq'), 'faq', 'Additional Resources');
 }
 
-function renderMembershipBenefitSection(title, bulletText) {
+function renderMembershipBenefitSection(title, bulletText, mode = 'list') {
   if (!bulletText || !String(bulletText).trim()) return null;
   const section = el('div', 'section-card');
   section.appendChild(el('h4', 'section-title', title));
   const items = parseBullets(bulletText);
   if (items.length) {
-    const ul = el('ul', 'list');
-    items.forEach(t => ul.appendChild(el('li', '', t)));
-    section.appendChild(ul);
+    if (mode === 'flip-cards') {
+      const grid = el('div', 'who-grid');
+      items.forEach((t) => {
+        const text = String(t || '').trim();
+        const frontLabel = text.length > 48 ? `${text.slice(0, 45)}...` : text;
+
+        const card = el('div', 'who-card');
+        const inner = el('div', 'who-card-inner');
+
+        const front = el('div', 'who-card-front');
+        front.appendChild(el('h4', 'who-card-title', frontLabel || 'Details'));
+
+        const back = el('div', 'who-card-back');
+        back.appendChild(el('h4', 'who-card-title', frontLabel || 'Details'));
+        const desc = el('p', 'who-card-desc', text || '');
+        desc.style.display = 'block';
+        back.appendChild(desc);
+
+        inner.appendChild(front);
+        inner.appendChild(back);
+        card.appendChild(inner);
+        grid.appendChild(card);
+      });
+      section.appendChild(grid);
+    } else if (mode === 'cards') {
+      const grid = el('div', 'for-you-grid');
+      items.forEach((t) => {
+        const card = el('div', 'for-you-card');
+        card.appendChild(el('h4', '', t));
+        grid.appendChild(card);
+      });
+      section.appendChild(grid);
+    } else {
+      const ul = el('ul', 'list');
+      items.forEach(t => ul.appendChild(el('li', '', t)));
+      section.appendChild(ul);
+    }
   }
   return section;
 }
@@ -315,9 +318,9 @@ function renderMembershipDetails(plan) {
   const content = el('div', 'mcontent');
   if (plan.period) content.appendChild(el('p', '', plan.period));
   content.appendChild(el('span', 'price', money(plan.price)));
-  const btn = el('button', 'btn b1', 'Buy Now');
+  const btn = el('button', 'btn b1', 'Enroll Now');
   if (plan.link) {
-    btn.addEventListener('click', () => openPaymentModal('Join Now', String(plan.link)));
+    btn.addEventListener('click', () => openPaymentModal('Enroll Now', String(plan.link)));
   } else {
     btn.disabled = true;
   }
@@ -326,11 +329,11 @@ function renderMembershipDetails(plan) {
   layout.appendChild(content);
   D.mContent.appendChild(layout);
   if (plan.features) {
-    const sec = renderMembershipBenefitSection('What You Get Inside', plan.features);
+    const sec = renderMembershipBenefitSection('What\'s Included', plan.features, 'flip-cards');
     if (sec) D.mContent.appendChild(sec);
   }
   if (plan.target_audience) {
-    const sec = renderMembershipBenefitSection('Who Is This For', plan.target_audience);
+    const sec = renderMembershipBenefitSection('Best For', plan.target_audience, 'flip-cards');
     if (sec) D.mContent.appendChild(sec);
   }
   if (plan.benefits) {

@@ -671,6 +671,25 @@ function ensure_modal_content_schema() {
         ensure_column_if_missing('membership_plans', 'payment_link', 'VARCHAR(500) NULL AFTER `image_url`');
 
         ensure_column_if_missing('contact_section', 'gallery_enabled', 'TINYINT(1) DEFAULT 1 AFTER `address`');
+        ensure_column_if_missing('contact_section', 'footer_brand_name', 'VARCHAR(255) NULL AFTER `gallery_enabled`');
+        ensure_column_if_missing('contact_section', 'footer_about_text', 'TEXT NULL AFTER `footer_brand_name`');
+        ensure_column_if_missing('contact_section', 'footer_quick_links_title', 'VARCHAR(255) NULL AFTER `footer_about_text`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_1', 'VARCHAR(255) NULL AFTER `footer_quick_links_title`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_2', 'VARCHAR(255) NULL AFTER `footer_quick_link_1`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_3', 'VARCHAR(255) NULL AFTER `footer_quick_link_2`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_4', 'VARCHAR(255) NULL AFTER `footer_quick_link_3`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_5', 'VARCHAR(255) NULL AFTER `footer_quick_link_4`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_6', 'VARCHAR(255) NULL AFTER `footer_quick_link_5`');
+        ensure_column_if_missing('contact_section', 'footer_contact_title', 'VARCHAR(255) NULL AFTER `footer_quick_link_6`');
+        ensure_column_if_missing('contact_section', 'footer_phone', 'VARCHAR(255) NULL AFTER `footer_contact_title`');
+        ensure_column_if_missing('contact_section', 'footer_address', 'TEXT NULL AFTER `footer_phone`');
+        ensure_column_if_missing('contact_section', 'footer_social_title', 'VARCHAR(255) NULL AFTER `footer_address`');
+        ensure_column_if_missing('contact_section', 'footer_social_instagram', 'VARCHAR(500) NULL AFTER `footer_social_title`');
+        ensure_column_if_missing('contact_section', 'footer_social_facebook', 'VARCHAR(500) NULL AFTER `footer_social_instagram`');
+        ensure_column_if_missing('contact_section', 'footer_social_youtube', 'VARCHAR(500) NULL AFTER `footer_social_facebook`');
+        ensure_column_if_missing('contact_section', 'footer_social_twitter', 'VARCHAR(500) NULL AFTER `footer_social_youtube`');
+        ensure_column_if_missing('contact_section', 'footer_social_whatsapp', 'VARCHAR(500) NULL AFTER `footer_social_twitter`');
+        ensure_column_if_missing('contact_section', 'footer_copyright', 'TEXT NULL AFTER `footer_social_whatsapp`');
 
         $db->query("CREATE TABLE IF NOT EXISTS site_assets (
             id INT PRIMARY KEY,
@@ -681,6 +700,34 @@ function ensure_modal_content_schema() {
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         $db->query("INSERT IGNORE INTO site_assets (id) VALUES (1)");
+
+        $db->query("CREATE TABLE IF NOT EXISTS site_config (
+            id INT PRIMARY KEY,
+            footer_brand_name VARCHAR(255) NULL,
+            footer_about_text TEXT NULL,
+            footer_quick_links_title VARCHAR(255) NULL,
+            footer_quick_link_1 VARCHAR(255) NULL,
+            footer_quick_link_2 VARCHAR(255) NULL,
+            footer_quick_link_3 VARCHAR(255) NULL,
+            footer_quick_link_4 VARCHAR(255) NULL,
+            footer_quick_link_5 VARCHAR(255) NULL,
+            footer_quick_link_6 VARCHAR(255) NULL,
+            footer_contact_title VARCHAR(255) NULL,
+            footer_phone VARCHAR(255) NULL,
+            footer_address TEXT NULL,
+            footer_social_title VARCHAR(255) NULL,
+            footer_social_instagram VARCHAR(500) NULL,
+            footer_social_facebook VARCHAR(500) NULL,
+            footer_social_youtube VARCHAR(500) NULL,
+            footer_social_twitter VARCHAR(500) NULL,
+            footer_social_whatsapp VARCHAR(500) NULL,
+            footer_copyright TEXT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $db->query("INSERT IGNORE INTO site_config (id) VALUES (1)");
+
+        ensure_column_if_missing('site_config', 'footer_social_twitter', 'VARCHAR(500) NULL AFTER `footer_social_youtube`');
+        ensure_column_if_missing('site_config', 'footer_social_whatsapp', 'VARCHAR(500) NULL AFTER `footer_social_twitter`');
 }
 
 function get_site_assets_row() {
@@ -1095,7 +1142,55 @@ $singletonMap = [
     ],
     'contact' => [
         'table' => 'contact_section',
-        'fields' => ['phone', 'email', 'address', 'gallery_enabled']
+        'fields' => [
+            'phone',
+            'email',
+            'address',
+            'gallery_enabled',
+            'footer_brand_name',
+            'footer_about_text',
+            'footer_quick_links_title',
+            'footer_quick_link_1',
+            'footer_quick_link_2',
+            'footer_quick_link_3',
+            'footer_quick_link_4',
+            'footer_quick_link_5',
+            'footer_quick_link_6',
+            'footer_contact_title',
+            'footer_phone',
+            'footer_address',
+            'footer_social_title',
+            'footer_social_instagram',
+            'footer_social_facebook',
+            'footer_social_youtube',
+            'footer_social_twitter',
+            'footer_social_whatsapp',
+            'footer_copyright'
+        ]
+    ],
+    'site-config' => [
+        'table' => 'site_config',
+        'fields' => [
+            'footer_brand_name',
+            'footer_about_text',
+            'footer_quick_links_title',
+            'footer_quick_link_1',
+            'footer_quick_link_2',
+            'footer_quick_link_3',
+            'footer_quick_link_4',
+            'footer_quick_link_5',
+            'footer_quick_link_6',
+            'footer_contact_title',
+            'footer_phone',
+            'footer_address',
+            'footer_social_title',
+            'footer_social_instagram',
+            'footer_social_facebook',
+            'footer_social_youtube',
+            'footer_social_twitter',
+            'footer_social_whatsapp',
+            'footer_copyright'
+        ]
     ]
 ];
 
@@ -1283,7 +1378,7 @@ if (preg_match('#^/(api/)?admin/users/([0-9]+)$#', $path, $m)) {
     send_json(405, ['ok' => false, 'error' => 'Method not allowed']);
 }
 
-if (preg_match('#^/(api/)?admin/(hero|about|contact)$#', $path, $m)) {
+if (preg_match('#^/(api/)?admin/(hero|about|contact|site-config)$#', $path, $m)) {
     $payload = require_auth();
     $section = sanitize_resource_name($m[2]);
     $meta = $singletonMap[$section] ?? null;
@@ -1422,7 +1517,7 @@ if (preg_match('#^/(api/)?webinar-details/([^/]+)$#', $path, $m) && $method === 
     ]);
 }
 
-if (preg_match('#^/(api/)?(hero|about|contact)$#', $path, $m) && $method === 'GET') {
+if (preg_match('#^/(api/)?(hero|about|contact|site-config)$#', $path, $m) && $method === 'GET') {
     $section = sanitize_resource_name($m[2]);
     $meta = $singletonMap[$section] ?? null;
     if (!$meta) {
