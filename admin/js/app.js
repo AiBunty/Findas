@@ -49,7 +49,12 @@ function clearDataCache() {
 function invalidateCache(path) {
   if (!path) return;
   delete state.sectionDataCache[path];
-  if (path === '/api/admin/courses' || path === '/api/admin/webinars' || path === '/api/admin/digital-products') {
+  if (
+    path === '/api/admin/courses' ||
+    path === '/api/admin/webinars' ||
+    path === '/api/admin/digital-products' ||
+    path === '/api/admin/membership'
+  ) {
     state.existingSlugOptions = null;
   }
 }
@@ -181,17 +186,18 @@ async function getExistingSlugOptions() {
     return state.existingSlugOptions;
   }
 
-  const [coursesRes, webinarsRes, digitalRes] = await Promise.all([
+  const [coursesRes, webinarsRes, digitalRes, membershipRes] = await Promise.all([
     api('/api/admin/courses'),
     api('/api/admin/webinars'),
-    api('/api/admin/digital-products')
+    api('/api/admin/digital-products'),
+    api('/api/admin/membership')
   ]);
 
   const seen = new Set();
   const options = [];
-  function pushRows(rows, typeLabel) {
+  function pushRows(rows, typeLabel, slugKey) {
     (Array.isArray(rows) ? rows : []).forEach((row) => {
-      const slug = String(row.slug || '').trim();
+      const slug = String(row[slugKey || 'slug'] || '').trim();
       if (!slug || seen.has(slug)) return;
       seen.add(slug);
       const title = String(row.title || '').trim();
@@ -203,6 +209,7 @@ async function getExistingSlugOptions() {
   pushRows(coursesRes.data, 'Course');
   pushRows(webinarsRes.data, 'Webinar');
   pushRows(digitalRes.data, 'Digital');
+  pushRows(membershipRes.data, 'Membership', 'plan_id');
 
   options.sort((a, b) => a.value.localeCompare(b.value));
   state.existingSlugOptions = options;
@@ -247,11 +254,11 @@ const sectionModeConfigs = {
   },
   'digital-products': {
     content: ['title', 'subtitle'],
-    review: ['slug', 'category', 'language', 'thumbnail_url', 'preview_url', 'redirect_url', 'payment_link', 'price_inr', 'order', 'is_active']
+    review: ['slug', 'category', 'language', 'thumbnail_url', 'redirect_url', 'payment_link', 'price_inr', 'order', 'is_active']
   },
   membership: {
-    content: ['title', 'description', 'features', 'target_audience', 'benefits'],
-    review: ['plan_id', 'image_url', 'payment_link', 'price_inr', 'period', 'recommended', 'order', 'is_active']
+    content: ['title', 'description'],
+    review: ['plan_id', 'image_url', 'payment_link', 'price_inr', 'is_active', 'order']
   },
   'academy-sections': {
     content: ['title', 'description', 'details', 'icon_emoji'],
@@ -1017,6 +1024,7 @@ const simplifiedSectionConfigs = {
       faq: 'FAQ'
     },
     slugField: 'slug',
+    supportsLanguageBadge: true,
     imageField: 'thumbnail_url',
     imageLabel: 'Thumbnail Image URL',
     imageHint: 'Recommended: 1200 x 800 px (3:2)'
@@ -1053,26 +1061,9 @@ const simplifiedSectionConfigs = {
       faq: 'FAQ & Support'
     },
     slugField: 'slug',
+    supportsLanguageBadge: true,
     imageField: 'thumbnail_url',
     imageLabel: 'Thumbnail Image URL',
-    imageHint: 'Recommended: 1200 x 800 px (3:2)'
-  },
-  membership: {
-    title: '⭐ Create Membership Plan',
-    color: '#FF9800',
-    bgColor: '#FFF3E0',
-    endpoint: '/api/admin/membership-plans',
-    labels: {
-      title: 'Plan Name',
-      description: 'Plan Description',
-      field1: 'What\'s Included (one per line)',
-      field2: 'Best For (one per line)',
-      field3: 'Key Benefits (one per line)',
-      faq: 'Support & Access'
-    },
-    slugField: 'plan_id',
-    imageField: 'image_url',
-    imageLabel: 'Plan Image URL',
     imageHint: 'Recommended: 1200 x 800 px (3:2)'
   }
 };
@@ -1087,6 +1078,8 @@ function renderSimplifiedForm(section, record = null) {
   
   const titleValue = record ? (record.title || record.plan_id || '') : '';
   const descValue = record ? (record.subtitle || record.description || '') : '';
+  const languageValue = record ? String(record.language || '') : '';
+  const badgeValue = record ? String(record.badge || '') : '';
   
   // Migrate old data: convert old child records to field1/field2/field3
   let field1Value = record ? (record.features || '') : '';
@@ -1125,6 +1118,23 @@ function renderSimplifiedForm(section, record = null) {
                  style="width: 100%; padding: 10px; font-size: 0.9em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px; font-family: monospace; background: #fafafa;">
           <small style="color: #999;">Lowercase, hyphens only. Changing an existing slug will break review links.</small>
         </label>
+
+        ${cfg.supportsLanguageBadge ? `
+        <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;">
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">🌐 Language</span>
+            <input type="text" name="language" placeholder="e.g. English, Hindi"
+                   value="${escapeHtml(languageValue)}"
+                   style="width: 100%; padding: 10px; font-size: 0.95em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          </label>
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">🏷️ Badge</span>
+            <input type="text" name="badge" placeholder="e.g. Bestseller, New"
+                   value="${escapeHtml(badgeValue)}"
+                   style="width: 100%; padding: 10px; font-size: 0.95em; border: 1px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          </label>
+        </div>
+        ` : ''}
 
         <!-- Description Field -->
         <label class="simplified-field" style="margin-top: 20px;">
@@ -1304,8 +1314,58 @@ function getWebinarTimingStatus(endDateRaw) {
     : { label: 'Upcoming', klass: 'is-upcoming' };
 }
 
+function buildAcademySectionPreviewHtml(form) {
+  const getVal = (n) => String(form.elements[n] && form.elements[n].value || '').trim();
+  const title = getVal('title') || 'Feature Title';
+  const desc = getVal('description') || 'Add a description to see preview.';
+  const emoji = getVal('icon_emoji') || '⭐';
+  
+  return `
+    <div class="academy-preview-card" style="background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%); border: 1px solid #d9e6fb; border-radius: 12px; padding: 24px; transition: all 0.3s ease;">
+      <div style="font-size: 2.2rem; margin-bottom: 12px;">${escapeHtml(emoji)}</div>
+      <h3 style="font-size: 1.1rem; color: #1f3f6a; margin-bottom: 10px; font-weight: 700;">${escapeHtml(title)}</h3>
+      <p style="color: #4a6487; line-height: 1.6; font-size: 0.95rem;">${escapeHtml(desc)}</p>
+    </div>
+  `;
+}
+
+function buildAcademyCommunityPreviewHtml(form) {
+  const getVal = (n) => String(form.elements[n] && form.elements[n].value || '').trim();
+  const postType = getVal('post_type') || 'Community Post';
+  const content = getVal('content') || 'Add post content to see preview.';
+  const author = getVal('author') || 'Community Member';
+  
+  const badgeColors = {
+    'Daily Dose': '#2196F3',
+    'Weekly Learning': '#4CAF50',
+    'Success Story': '#FF9800',
+    'Ask for Help': '#9C27B0',
+    'Book of the Month': '#E91E63',
+    'Challenge': '#00BCD4'
+  };
+  const badgeColor = badgeColors[postType] || '#1f4d87';
+  
+  return `
+    <div class="academy-community-preview-card" style="background: linear-gradient(135deg, #ffffff 0%, #fbfdff 100%); border: 1px solid #e1eaf7; border-radius: 10px; padding: 18px;">
+      <div style="display: inline-block; background: ${badgeColor}; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">${escapeHtml(postType)}</div>
+      <p style="color: #213652; line-height: 1.6; font-size: 0.95rem; margin: 12px 0;">${escapeHtml(content)}</p>
+      <div style="color: #4a6487; font-size: 0.85rem; font-weight: 600; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e1eaf7;">✏️ ${escapeHtml(author)}</div>
+    </div>
+  `;
+}
+
 function buildSimplifiedModalPreviewHtml(section, form, cfg) {
   if (!form || !cfg) return '<p class="preview-empty">Fill the form to see a preview.</p>';
+  
+  // Special handling for academy sections
+  if (section === 'academy-sections') {
+    return buildAcademySectionPreviewHtml(form);
+  }
+  
+  // Special handling for academy community
+  if (section === 'academy-community') {
+    return buildAcademyCommunityPreviewHtml(form);
+  }
 
   const getValue = (name) => String(form.elements[name] && form.elements[name].value || '').trim();
   const title = getValue('title') || 'Untitled';
@@ -1314,6 +1374,8 @@ function buildSimplifiedModalPreviewHtml(section, form, cfg) {
   const imageUrl = getValue(cfg.imageField);
   const priceRaw = getValue('price_inr');
   const paymentLink = getValue('payment_link');
+  const language = getValue('language');
+  const badge = getValue('badge');
   const field1 = splitInputLines(getValue('field1'));
   const field2 = splitInputLines(getValue('field2'));
   const field3 = splitInputLines(getValue('field3'));
@@ -1327,6 +1389,14 @@ function buildSimplifiedModalPreviewHtml(section, form, cfg) {
   const priceNumber = Number(priceRaw);
   const hasPrice = priceRaw !== '' && Number.isFinite(priceNumber) && priceNumber > 0;
   const priceLabel = hasPrice ? `INR ${priceNumber.toLocaleString('en-IN')}` : 'Free';
+  const sectionBadgeDefaults = {
+    courses: 'COURSE',
+    webinars: 'WEBINAR',
+    'digital-products': 'DIGITAL',
+    membership: 'MEMBERSHIP'
+  };
+  const previewBadge = badge || sectionBadgeDefaults[section] || 'ITEM';
+  const previewSub = description || language || 'Explore details';
 
   const listBlock = (titleText, items) => {
     if (!items.length) {
@@ -1377,6 +1447,11 @@ function buildSimplifiedModalPreviewHtml(section, form, cfg) {
         <div class="simplified-preview-headline-row">
           <h2>${safeTitle}</h2>
           <span class="simplified-preview-price">${escapeHtml(priceLabel)}</span>
+        </div>
+        <div class="simplified-preview-meta-row">
+          <span class="simplified-preview-status is-upcoming">${escapeHtml(previewBadge)}</span>
+          <span>${escapeHtml(previewSub)}</span>
+          ${language ? `<span><strong>Language:</strong> ${escapeHtml(language)}</span>` : ''}
         </div>
         <div class="simplified-preview-slug-row">
           <span class="simplified-preview-slug">${safeSlug}</span>
@@ -1476,11 +1551,17 @@ const sectionConfigs = {
       { name: 'footer_about_text', label: 'Footer About Text', type: 'textarea' },
       { name: 'footer_quick_links_title', label: 'Quick Links Title', type: 'text' },
       { name: 'footer_quick_link_1', label: 'Quick Link 1 Label', type: 'text' },
+      { name: 'footer_quick_link_url_1', label: 'Quick Link 1 URL', type: 'text' },
       { name: 'footer_quick_link_2', label: 'Quick Link 2 Label', type: 'text' },
+      { name: 'footer_quick_link_url_2', label: 'Quick Link 2 URL', type: 'text' },
       { name: 'footer_quick_link_3', label: 'Quick Link 3 Label', type: 'text' },
+      { name: 'footer_quick_link_url_3', label: 'Quick Link 3 URL', type: 'text' },
       { name: 'footer_quick_link_4', label: 'Quick Link 4 Label', type: 'text' },
+      { name: 'footer_quick_link_url_4', label: 'Quick Link 4 URL', type: 'text' },
       { name: 'footer_quick_link_5', label: 'Quick Link 5 Label', type: 'text' },
+      { name: 'footer_quick_link_url_5', label: 'Quick Link 5 URL', type: 'text' },
       { name: 'footer_quick_link_6', label: 'Quick Link 6 Label', type: 'text' },
+      { name: 'footer_quick_link_url_6', label: 'Quick Link 6 URL', type: 'text' },
       { name: 'footer_contact_title', label: 'Contact Column Title', type: 'text' },
       { name: 'footer_phone', label: 'Footer Phone', type: 'text' },
       { name: 'footer_address', label: 'Footer Address', type: 'textarea' },
@@ -1501,11 +1582,17 @@ const sectionConfigs = {
       { name: 'footer_about_text', label: 'Footer About Text', type: 'textarea' },
       { name: 'footer_quick_links_title', label: 'Quick Links Title', type: 'text' },
       { name: 'footer_quick_link_1', label: 'Quick Link 1 Label', type: 'text' },
+      { name: 'footer_quick_link_url_1', label: 'Quick Link 1 URL', type: 'text' },
       { name: 'footer_quick_link_2', label: 'Quick Link 2 Label', type: 'text' },
+      { name: 'footer_quick_link_url_2', label: 'Quick Link 2 URL', type: 'text' },
       { name: 'footer_quick_link_3', label: 'Quick Link 3 Label', type: 'text' },
+      { name: 'footer_quick_link_url_3', label: 'Quick Link 3 URL', type: 'text' },
       { name: 'footer_quick_link_4', label: 'Quick Link 4 Label', type: 'text' },
+      { name: 'footer_quick_link_url_4', label: 'Quick Link 4 URL', type: 'text' },
       { name: 'footer_quick_link_5', label: 'Quick Link 5 Label', type: 'text' },
+      { name: 'footer_quick_link_url_5', label: 'Quick Link 5 URL', type: 'text' },
       { name: 'footer_quick_link_6', label: 'Quick Link 6 Label', type: 'text' },
+      { name: 'footer_quick_link_url_6', label: 'Quick Link 6 URL', type: 'text' },
       { name: 'footer_contact_title', label: 'Contact Column Title', type: 'text' },
       { name: 'footer_phone', label: 'Footer Phone', type: 'text' },
       { name: 'footer_address', label: 'Footer Address', type: 'textarea' },
@@ -1687,14 +1774,9 @@ const sectionConfigs = {
       { name: 'plan_id', label: 'Plan ID (Slug)', type: 'text' },
       { name: 'title', label: 'Title', type: 'text', required: true },
       { name: 'description', label: 'Description', type: 'textarea' },
+      { name: 'image_url', label: 'Image Upload URL', type: 'text' },
       { name: 'price_inr', label: 'Price (INR)', type: 'number', step: '0.01' },
-      { name: 'period', label: 'Period', type: 'text' },
-      { name: 'recommended', label: 'Recommended', type: 'checkbox' },
-      { name: 'image_url', label: 'Plan Image URL', type: 'text' },
-      { name: 'payment_link', label: 'Community Embed Form Link', type: 'text' },
-      { name: 'features', label: 'Features', type: 'textarea' },
-      { name: 'target_audience', label: 'Target Audience', type: 'textarea' },
-      { name: 'benefits', label: 'Benefits', type: 'textarea' },
+      { name: 'payment_link', label: 'Buy Link', type: 'text' },
       { name: 'is_active', label: 'Active', type: 'checkbox' },
       { name: 'order', label: 'Order', type: 'number' }
     ]
@@ -1710,27 +1792,31 @@ const sectionConfigs = {
       { name: 'order', label: 'Order', type: 'number' }
     ]
   },
-  'academy-sections': {
-    kind: 'collection',
-    endpoint: '/api/admin/academy-sections',
+  academy: {
+    kind: 'singleton',
+    endpoint: '/api/admin/academy',
     fields: [
-      { name: 'title', label: 'Title', type: 'text', required: true },
-      { name: 'description', label: 'Description', type: 'textarea' },
-      { name: 'icon_emoji', label: 'Icon Emoji', type: 'text' },
-      { name: 'details', label: 'Details', type: 'textarea' },
-      { name: 'is_active', label: 'Active', type: 'checkbox' },
-      { name: 'order', label: 'Order', type: 'number' }
-    ]
-  },
-  'academy-community': {
-    kind: 'collection',
-    endpoint: '/api/admin/academy-community',
-    fields: [
-      { name: 'post_type', label: 'Post Type', type: 'text' },
-      { name: 'content', label: 'Content', type: 'textarea', required: true },
-      { name: 'author', label: 'Author', type: 'text' },
-      { name: 'is_active', label: 'Active', type: 'checkbox' },
-      { name: 'order', label: 'Order', type: 'number' }
+      { name: 'is_enabled', label: '📊 Show Academy Section on Homepage', type: 'checkbox' },
+      { name: 'intro_text', label: 'Introduction Paragraph', type: 'textarea', placeholder: 'About learning from real-world experience...' },
+      { name: 'before_heading', label: '"Before Joining" Section Heading', type: 'text', placeholder: 'What You\'re Missing' },
+      { name: 'before_items', label: '"Before Joining" Items (one per line)', type: 'textarea', placeholder: 'Lacking practical financial knowledge\nUnsure about investment strategy\n...' },
+      { name: 'after_heading', label: '"After Joining" Section Heading', type: 'text', placeholder: 'What You\'ll Gain' },
+      { name: 'after_items', label: '"After Joining" Items (one per line)', type: 'textarea', placeholder: 'Understand real-world financial systems\nBuild proven investment strategies\n...' },
+      { name: 'features_intro', label: '"What You Get Inside" Heading', type: 'text', placeholder: 'Our Learning Framework' },
+      { name: 'features_json', label: 'Learning Features (JSON format)', type: 'textarea', placeholder: '[{"title":"Book of the Month","emoji":"📚","description":"Curated financial literature"}]' },
+      { name: 'products_heading', label: '"Digital Products" Section Heading', type: 'text', placeholder: 'Tools & Resources' },
+      { name: 'products_description', label: 'Digital Products Description', type: 'textarea', placeholder: 'Access to trackers, templates, and habit systems...' },
+      { name: 'community_heading', label: '"Community Sneak Peek" Section Heading', type: 'text', placeholder: 'Join Our Growing Community' },
+      { name: 'community_samples_json', label: 'Community Post Samples (JSON format)', type: 'textarea', placeholder: '[{"type":"Daily Dose","content":"Learn this tip...","author":"Instructor"}]' },
+      { name: 'roadmap_heading', label: '"What Happens After You Join" Heading', type: 'text', placeholder: 'Your 5-Step Learning Path' },
+      { name: 'roadmap_items_json', label: 'Roadmap Steps (JSON format)', type: 'textarea', placeholder: '[{"step":1,"title":"Foundation","description":"Learn the basics"}]' },
+      { name: 'growth_roadmap_heading', label: '"Growth Roadmap" Section Heading', type: 'text', placeholder: 'Your Journey to Financial Mastery' },
+      { name: 'growth_stages_json', label: 'Growth Roadmap Stages (JSON format)', type: 'textarea', placeholder: '[{"stage":"Awareness","description":"Understand your financial position"}]' },
+      { name: 'who_should_join_text', label: '"Who Should Join" Description', type: 'textarea', placeholder: 'This academy is for anyone who...' },
+      { name: 'membership_heading', label: '"Membership & Pricing" Section Heading', type: 'text', placeholder: 'Membership Options' },
+      { name: 'membership_description', label: 'Membership Description', type: 'textarea', placeholder: 'Choose the plan that works best for you...' },
+      { name: 'cta_button_text', label: 'Call-to-Action Button Text', type: 'text', placeholder: 'Join Findas Academy' },
+      { name: 'cta_button_url', label: 'Call-to-Action Button URL', type: 'text', placeholder: 'https://...' }
     ]
   }
 };
@@ -1867,6 +1953,180 @@ function renderField(field, value = '') {
   `;
 }
 
+function getFieldsByName(fields = []) {
+  return fields.reduce((acc, field) => {
+    if (field && field.name) acc[field.name] = field;
+    return acc;
+  }, {});
+}
+
+function renderFieldWithOverrides(field, value = '', overrides = {}) {
+  if (!field) return '';
+  return renderField(Object.assign({}, field, overrides), value);
+}
+
+function renderFooterEditorLayout(fields, values = {}) {
+  const fieldMap = getFieldsByName(fields);
+  const fieldValue = (name) => values ? values[name] : '';
+  const renderNamedField = (name, overrides = {}) => renderFieldWithOverrides(fieldMap[name], fieldValue(name), overrides);
+  const quickLinkDefaults = [
+    '#home',
+    '#courses',
+    '#webinars',
+    '#digital-products',
+    '#membership',
+    'https://example.com/contact'
+  ];
+
+  const contactInfoFields = [
+    renderNamedField('phone', { placeholder: '+91 98765 43210' }),
+    renderNamedField('email', { placeholder: 'hello@yourdomain.com' }),
+    renderNamedField('address', { placeholder: 'City, State, Country' }),
+    renderNamedField('footer_contact_title', { placeholder: 'Contact' }),
+    renderNamedField('gallery_enabled')
+  ].filter(Boolean).join('');
+
+  const brandFields = [
+    renderNamedField('footer_brand_name', { placeholder: 'Findas Academy' }),
+    renderNamedField('footer_about_text', { placeholder: 'Write a short footer description that explains the brand promise.' })
+  ].filter(Boolean).join('');
+
+  const quickLinksTitle = renderNamedField('footer_quick_links_title', { placeholder: 'Quick Links' });
+
+  const quickLinkCards = Array.from({ length: 6 }, (_, idx) => {
+    const index = idx + 1;
+    const label = String(fieldValue(`footer_quick_link_${index}`) || '').trim();
+    const url = String(fieldValue(`footer_quick_link_url_${index}`) || '').trim();
+    const stateClass = label || url ? ' is-configured' : '';
+    return `
+      <article class="footer-link-card${stateClass}">
+        <div class="footer-link-card-head">
+          <span class="footer-link-index">${String(index).padStart(2, '0')}</span>
+          <div>
+            <h4>Quick Link ${index}</h4>
+            <p>Keep the label short and pair it with an internal anchor or a full external URL.</p>
+          </div>
+        </div>
+        <div class="form-grid footer-link-fields">
+          ${renderNamedField(`footer_quick_link_${index}`, {
+            label: 'Link Label',
+            placeholder: index === 1 ? 'Courses' : `Quick Link ${index}`
+          })}
+          ${renderNamedField(`footer_quick_link_url_${index}`, {
+            label: 'Link URL',
+            placeholder: quickLinkDefaults[idx] || '#section-name',
+            helperText: 'Examples: #courses for a page section, or https://example.com/page for an external page.'
+          })}
+        </div>
+      </article>
+    `;
+  }).join('');
+
+
+
+  const socialFields = [
+    renderNamedField('footer_social_title', { placeholder: 'Connect' }),
+    renderNamedField('footer_social_instagram', { placeholder: 'https://instagram.com/yourbrand' }),
+    renderNamedField('footer_social_facebook', { placeholder: 'https://facebook.com/yourbrand' }),
+    renderNamedField('footer_social_youtube', { placeholder: 'https://youtube.com/@yourbrand' }),
+    renderNamedField('footer_social_twitter', { placeholder: 'https://x.com/yourbrand' }),
+    renderNamedField('footer_social_whatsapp', { placeholder: 'https://wa.me/919876543210' })
+  ].filter(Boolean).join('');
+
+  const footerMetaFields = [
+    renderNamedField('footer_copyright', {
+      placeholder: '&copy; 2026 Findas Academy. All rights reserved.',
+      helperText: 'HTML is allowed here for copyright symbols, links, and formatting.'
+    })
+  ].filter(Boolean).join('');
+
+  return `
+    <div class="footer-editor-shell">
+      <section class="footer-editor-intro">
+        <span class="editor-kicker">Footer Editor</span>
+        <h3>Design the footer with paired link controls and mobile-friendly structure</h3>
+        <p>Every quick link now has a clear label field and its matching URL field together, so the setup is faster to scan, easier to edit, and harder to misconfigure.</p>
+      </section>
+
+      <div class="footer-editor-grid">
+        ${contactInfoFields ? `
+          <section class="footer-editor-section">
+            <div class="editor-section-head">
+              <div>
+                <span class="editor-section-kicker">Contact &amp; Visibility</span>
+                <h3>Contact details</h3>
+              </div>
+              <p>Phone and address appear on the website and automatically in the footer contact column. No need to enter them twice.</p>
+            </div>
+            <div class="form-grid footer-form-grid">
+              ${contactInfoFields}
+            </div>
+          </section>
+        ` : ''}
+
+        ${brandFields ? `
+          <section class="footer-editor-section">
+            <div class="editor-section-head">
+              <div>
+                <span class="editor-section-kicker">Column One &mdash; Brand</span>
+                <h3>Brand and intro copy</h3>
+              </div>
+              <p>Set the footer identity and the short paragraph visitors will read first.</p>
+            </div>
+            <div class="form-grid footer-form-grid">
+              ${brandFields}
+            </div>
+          </section>
+        ` : ''}
+
+        <section class="footer-editor-section footer-editor-section--wide">
+          <div class="editor-section-head">
+            <div>
+              <span class="editor-section-kicker">Column Two &mdash; Quick Links</span>
+              <h3>Link labels and destinations</h3>
+            </div>
+            <p>Each card keeps the name and URL together so the footer can be edited confidently even on mobile.</p>
+          </div>
+          ${quickLinksTitle ? `<div class="form-grid footer-form-grid" style="margin-bottom:16px;">${quickLinksTitle}</div>` : ''}
+          <div class="footer-link-grid">
+            ${quickLinkCards}
+          </div>
+        </section>
+
+        ${socialFields ? `
+          <section class="footer-editor-section">
+            <div class="editor-section-head">
+              <div>
+                <span class="editor-section-kicker">Column Four &mdash; Social</span>
+                <h3>Social media links</h3>
+              </div>
+              <p>Add only the platforms you want shown. Empty links stay hidden in the live footer.</p>
+            </div>
+            <div class="form-grid footer-form-grid">
+              ${socialFields}
+            </div>
+          </section>
+        ` : ''}
+
+        ${footerMetaFields ? `
+          <section class="footer-editor-section footer-editor-section--wide">
+            <div class="editor-section-head">
+              <div>
+                <span class="editor-section-kicker">Footer Bottom</span>
+                <h3>Copyright and closing text</h3>
+              </div>
+              <p>Use this for copyright text, legal links, or a short closing line.</p>
+            </div>
+            <div class="form-grid footer-form-grid footer-form-grid--single">
+              ${footerMetaFields}
+            </div>
+          </section>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
 function getDefaultPlaceholder(field) {
   const label = String(field && field.label || '').trim();
   const type = String(field && field.type || 'text').toLowerCase();
@@ -1939,28 +2199,31 @@ function renderRowsTable(rows, editable = true, includeToggle = false, hiddenCol
 
   const hiddenSet = new Set((Array.isArray(hiddenColumns) ? hiddenColumns : []).map((h) => String(h || '').trim()).filter(Boolean));
   const headers = Object.keys(rows[0]).filter((h) => !hiddenSet.has(h));
-  const actionHeader = editable ? '<th>Actions</th>' : '';
-  const bodyRows = rows.map(r => {
-    const tds = headers.map(h => `<td>${escapeHtml(r[h])}</td>`).join('');
-    let actions = '';
-    if (editable) {
-      const toggleBtn = includeToggle
-        ? `<button class="mini-btn" data-act="toggle-active" data-id="${r.id}">${Number(r.is_active) === 1 ? 'Disable' : 'Enable'}</button>`
-        : '';
-      actions = `<td>${toggleBtn} <button class="mini-btn" data-act="edit" data-id="${r.id}">Edit</button> <button class="mini-btn danger" data-act="delete" data-id="${r.id}">Delete</button></td>`;
-    }
-    const rowClass = (includeToggle && Number(r.is_active) !== 1) ? ' class="row-disabled"' : '';
-    return `<tr${rowClass}>${tds}${actions}</tr>`;
+  const showCloneBtn = editable && cloneEnabledSections.has(state.section);
+  const cards = rows.map((r) => {
+    const fields = headers
+      .filter((h) => h !== 'id')
+      .map((h) => `<div class="record-field"><strong>${escapeHtml(h)}</strong><span>${escapeHtml(r[h])}</span></div>`)
+      .join('');
+
+    const toggleBtn = includeToggle
+      ? `<button class="mini-btn" data-act="toggle-active" data-id="${r.id}">${Number(r.is_active) === 1 ? 'Disable' : 'Enable'}</button>`
+      : '';
+    const actions = editable
+      ? `<div class="record-actions">${toggleBtn}${showCloneBtn ? `<button class="mini-btn" data-act="clone" data-id="${r.id}">Clone</button>` : ''}<button class="mini-btn" data-act="edit" data-id="${r.id}">Edit</button><button class="mini-btn danger" data-act="delete" data-id="${r.id}">Delete</button></div>`
+      : '';
+    const inactive = includeToggle && Number(r.is_active) !== 1 ? ' is-inactive' : '';
+
+    return `
+      <article class="record-card${inactive}">
+        <div class="record-head">#${escapeHtml(r.id)}</div>
+        <div class="record-grid">${fields}</div>
+        ${actions}
+      </article>
+    `;
   }).join('');
 
-  return `
-    <div class="table-wrap">
-      <table>
-        <thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}${actionHeader}</tr></thead>
-        <tbody>${bodyRows}</tbody>
-      </table>
-    </div>
-  `;
+  return `<div class="records-stack">${cards}</div>`;
 }
 
 function nl2brSafe(text) {
@@ -2104,6 +2367,235 @@ function wireFormPreview(form, fields, previewBodyId, emptyText) {
   const update = () => {
     const payload = collectFormData(form, fields);
     previewBody.innerHTML = buildPreviewHtml(payload, fields, emptyText);
+  };
+
+  form.addEventListener('input', update);
+  form.addEventListener('change', update);
+  update();
+  return update;
+}
+
+function wireAcademyPreview(form, previewBodyId) {
+  const previewBody = document.getElementById(previewBodyId);
+  if (!previewBody) return () => {};
+
+  const fields = sectionConfigs.academy.fields;
+  
+  const update = () => {
+    const payload = collectFormData(form, fields);
+    previewBody.innerHTML = buildAcademyPreviewHtml(payload);
+  };
+
+  form.addEventListener('input', update);
+  form.addEventListener('change', update);
+  update();
+  return update;
+}
+
+function buildAcademyPreviewHtml(payload) {
+  const isEnabled = payload.is_enabled === 'on' || payload.is_enabled === true;
+  
+  if (!isEnabled) {
+    return `
+      <div style="text-align: center; padding: 40px; background: #f5f5f5; border-radius: 8px;">
+        <p style="font-size: 18px; color: #999; margin: 0;">
+          🔕 Academy section is <strong>DISABLED</strong>
+        </p>
+        <p style="font-size: 14px; color: #aaa; margin: 10px 0 0 0;">
+          Enable the toggle to show this section on your homepage.
+        </p>
+      </div>
+    `;
+  }
+
+  const intro = nl2brSafe(escapeHtml(String(payload.intro_text || '').trim() || 'Add introduction text...'));
+  
+  const beforeHeading = escapeHtml(String(payload.before_heading || '').trim() || 'Before Joining');
+  const beforeItems = String(payload.before_items || '').trim().split('\n').filter(i => i.trim()).slice(0, 5)
+    .map(item => `<li style="margin: 8px 0;">${escapeHtml(item.trim())}</li>`).join('');
+  
+  const afterHeading = escapeHtml(String(payload.after_heading || '').trim() || 'After Joining');
+  const afterItems = String(payload.after_items || '').trim().split('\n').filter(i => i.trim()).slice(0, 5)
+    .map(item => `<li style="margin: 8px 0;">${escapeHtml(item.trim())}</li>`).join('');
+  
+  const featuresIntro = escapeHtml(String(payload.features_intro || '').trim() || 'What You Get Inside');
+  let features = [];
+  try {
+    const featuresJson = String(payload.features_json || '').trim();
+    if (featuresJson && featuresJson !== '[]') {
+      features = JSON.parse(featuresJson);
+    }
+  } catch (_e) {
+    // Invalid JSON, leave empty  
+  }
+  const featuresHtml = features.slice(0, 6).map(f => `
+    <div style="text-align: center; padding: 15px; border: 1px solid #e0e0e0; border-radius: 6px; flex: 1; min-width: 150px;">
+      <div style="font-size: 24px; margin-bottom: 8px;">${escapeHtml(f.emoji || '📚')}</div>
+      <strong style="display: block; margin-bottom: 6px;">${escapeHtml(f.title || 'Feature')}</strong>
+      <small style="color: #666;">${escapeHtml(f.description || '')}</small>
+    </div>
+  `).join('');
+  
+  const roadmapHeading = escapeHtml(String(payload.roadmap_heading || '').trim() || 'Your 5-Step Learning Path');
+  let roadmapItems = [];
+  try {
+    const roadmapJson = String(payload.roadmap_items_json || '').trim();
+    if (roadmapJson && roadmapJson !== '[]') {
+      roadmapItems = JSON.parse(roadmapJson);
+    }
+  } catch (_e) {
+    // Invalid JSON
+  }
+  const roadmapHtml = roadmapItems.slice(0, 5).map((r, i) => `
+    <div style="text-align: center; padding: 15px; border-left: 3px solid #2196F3;">
+      <strong style="display: block; margin-bottom: 4px;">Step ${i + 1}: ${escapeHtml(r.title || 'Step')}</strong>
+      <small style="color: #666;">${escapeHtml(r.description || '')}</small>
+    </div>
+  `).join('');
+  
+  const toggleState = isEnabled ? '✅ <strong>ENABLED</strong>' : '❌ <strong>DISABLED</strong>';
+  
+  return `
+    <div style="background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
+      <div style="margin-bottom: 24px; padding: 16px; background: #e3f2fd; border-left: 4px solid #2196F3; border-radius: 4px;">
+        <p style="margin: 0; color: #1565c0;">
+          <strong>Academy Section Status:</strong> ${toggleState}
+        </p>
+      </div>
+      
+      <section style="margin-bottom: 24px;">
+        <p style="line-height: 1.6; color: #333; font-size: 14px;">${intro}</p>
+      </section>
+
+      <section style="margin-bottom: 24px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div>
+            <h4 style="color: #2196F3; margin-top: 0;">${beforeHeading}</h4>
+            <ul style="padding-left: 20px; color: #666;">${beforeItems || '<li><em>No items</em></li>'}</ul>
+          </div>
+          <div>
+            <h4 style="color: #2196F3; margin-top: 0;">${afterHeading}</h4>
+            <ul style="padding-left: 20px; color: #666;">${afterItems || '<li><em>No items</em></li>'}</ul>
+          </div>
+        </div>
+      </section>
+
+      ${featuresHtml ? `
+      <section style="margin-bottom: 24px;">
+        <h4 style="color: #2196F3; margin-top: 0;">${featuresIntro}</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+          ${featuresHtml}
+        </div>
+      </section>
+      ` : ''}
+
+      ${roadmapHtml ? `
+      <section style="margin-bottom: 24px;">
+        <h4 style="color: #2196F3; margin-top: 0;">${roadmapHeading}</h4>
+        <div style="display: grid; gap: 12px;">
+          ${roadmapHtml}
+        </div>
+      </section>
+      ` : ''}
+
+      <div style="text-align: center; padding: 20px; background: #f0f0f0; border-radius: 6px; margin-top: 24px;">
+        <p style="margin: 0; color: #666; font-size: 12px;">
+          ℹ️ This preview shows how the Academy section will appear on your homepage (when enabled)
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+function hasFooterSocialFields(fields) {
+  return Array.isArray(fields) && fields.some((f) => String(f && f.name || '').startsWith('footer_'));
+}
+
+function buildFooterSocialPreviewHtml(payload) {
+  const quickLinks = [];
+  for (let i = 1; i <= 6; i += 1) {
+    const label = String(payload[`footer_quick_link_${i}`] || '').trim();
+    const url = String(payload[`footer_quick_link_url_${i}`] || '').trim();
+    if (!label && !url) continue;
+    quickLinks.push({ label: label || `Link ${i}`, url: url || '#' });
+  }
+
+  const socialDefs = [
+    { key: 'footer_social_instagram', name: 'Instagram', path: 'M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z' },
+    { key: 'footer_social_facebook', name: 'Facebook', path: 'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z' },
+    { key: 'footer_social_youtube', name: 'YouTube', path: 'M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z' },
+    { key: 'footer_social_twitter', name: 'X', path: 'M18.901 2H22l-6.77 7.737L23.2 22h-6.24l-4.88-6.27L6.4 22H3.3l7.24-8.273L.8 2h6.4l4.41 5.735L18.901 2z' },
+    { key: 'footer_social_whatsapp', name: 'WhatsApp', path: 'M20.52 3.48A11.82 11.82 0 0 0 12.05 0C5.53 0 .23 5.3.23 11.83c0 2.09.55 4.14 1.6 5.95L0 24l6.39-1.67a11.8 11.8 0 0 0 5.65 1.44h.01c6.52 0 11.82-5.3 11.82-11.83 0-3.16-1.23-6.13-3.35-8.46zM12.05 21.7h-.01a9.86 9.86 0 0 1-5.02-1.38l-.36-.22-3.79.99 1.01-3.69-.24-.38a9.9 9.9 0 0 1-1.52-5.2c0-5.48 4.45-9.94 9.93-9.94 2.65 0 5.14 1.03 7.01 2.91a9.86 9.86 0 0 1 2.9 7.03c0 5.48-4.46 9.94-9.91 9.94z' }
+  ];
+
+  const socialEntries = socialDefs.map((d) => {
+    const url = String(payload[d.key] || '').trim();
+    return Object.assign({}, d, { url });
+  }).filter((e) => e.url);
+
+  const brandName = escapeHtml(String(payload.footer_brand_name || '').trim() || 'Findas Academy');
+  const aboutText = nl2brSafe(String(payload.footer_about_text || '').trim() || 'Add footer about text.');
+  const quickTitle = escapeHtml(String(payload.footer_quick_links_title || '').trim() || 'Quick Links');
+  const contactTitle = escapeHtml(String(payload.footer_contact_title || '').trim() || 'Contact');
+  const phone = escapeHtml(String(payload.phone || '').trim() || '\u2014');
+  const address = nl2brSafe(String(payload.address || '').trim() || '\u2014');
+  const socialTitle = escapeHtml(String(payload.footer_social_title || '').trim() || 'Connect');
+  const copyrightText = String(payload.footer_copyright || '').trim() || '&copy; 2026 Findas Academy. All rights reserved.';
+
+  const colHead = (title) => `<div style="font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:#fff;margin:0 0 14px;padding-bottom:10px;position:relative;">${title}<span style="position:absolute;bottom:0;left:0;width:30px;height:3px;border-radius:3px;background:#1F4D87;display:block;"></span></div>`;
+
+  const quickLinksHtml = quickLinks.length
+    ? quickLinks.map((item) => `<li style="list-style:none;"><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" style="color:rgba(255,255,255,.6);text-decoration:none;font-size:.88rem;display:inline-flex;align-items:center;gap:6px;"><span style="opacity:.4;font-size:.8rem;">&#x2192;</span>${escapeHtml(item.label)}</a></li>`).join('')
+    : '<li style="list-style:none;color:rgba(255,255,255,.4);font-size:.85rem;">No quick links configured yet.</li>';
+
+  const socialHtml = socialEntries.length
+    ? socialEntries.map((item) => `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(item.name)}" style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:grid;place-items:center;text-decoration:none;flex-shrink:0;"><svg style="width:18px;height:18px;fill:rgba(255,255,255,.7);" viewBox="0 0 24 24"><path d="${escapeHtml(item.path)}"/></svg></a>`).join('')
+    : '<span style="color:rgba(255,255,255,.4);font-size:.85rem;">No social links configured yet.</span>';
+
+  return `
+    <div style="background:linear-gradient(135deg,#102742 0%,#1f4d87 100%);border-radius:12px;overflow:hidden;font-family:system-ui,sans-serif;color:#eef4ff;">
+      <div style="padding:32px 24px 24px;display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:32px;align-items:start;">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:1.15rem;color:#fff;margin-bottom:10px;">${brandName}</div>
+          <p style="font-size:.88rem;color:rgba(255,255,255,.6);line-height:1.6;margin:0;">${aboutText}</p>
+        </div>
+        <div>
+          ${colHead(quickTitle)}
+          <ul style="padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">${quickLinksHtml}</ul>
+        </div>
+        <div>
+          ${colHead(contactTitle)}
+          <ul style="padding:0;margin:0;list-style:none;display:flex;flex-direction:column;gap:10px;">
+            <li style="display:flex;align-items:flex-start;gap:10px;color:rgba(255,255,255,.6);font-size:.88rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.19 12 19.79 19.79 0 0 1 1.12 3.37A2 2 0 0 1 3.11 1h3a2 2 0 0 1 2 1.72c.128.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span>${phone}</span>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:10px;color:rgba(255,255,255,.6);font-size:.88rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>${address}</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          ${colHead(socialTitle)}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">${socialHtml}</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,.08);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;font-size:.82rem;color:rgba(255,255,255,.5);">
+        <span>${copyrightText}</span>
+        <span style="opacity:.7;">Terms of Service &middot; Privacy Policy</span>
+      </div>
+    </div>
+  `;
+}
+
+function wireFooterSocialPreview(form, fields, previewBodyId) {
+  const previewBody = document.getElementById(previewBodyId);
+  if (!previewBody) return () => {};
+
+  const update = () => {
+    const payload = collectFormData(form, fields);
+    previewBody.innerHTML = buildFooterSocialPreviewHtml(payload);
   };
 
   form.addEventListener('input', update);
@@ -2272,15 +2764,16 @@ async function renderIntegratedChildren(sectionKey, parentRow) {
 }
 
 async function setSection(section) {
-  state.section = section;
+  const normalizedSection = section === 'site-config' ? 'contact' : section;
+  state.section = normalizedSection;
   el.menuList.querySelectorAll('button').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.section === section);
+    btn.classList.toggle('active', btn.dataset.section === normalizedSection);
   });
-  el.sectionTitle.textContent = sectionTitleFromKey(section);
+  el.sectionTitle.textContent = sectionTitleFromKey(normalizedSection);
 
   const token = ++state.sectionRenderToken;
   const startedAt = Date.now();
-  showSectionLoading(section);
+  showSectionLoading(normalizedSection);
 
   try {
     await renderSection();
@@ -2365,6 +2858,8 @@ async function renderDashboard() {
 async function renderSingletonSection(cfg) {
   setPanelBodyClickHandler(null);
   const res = await apiGetCached(cfg.endpoint);
+  const footerPreviewEnabled = hasFooterSocialFields(cfg.fields);
+  const isAcademySection = state.section === 'academy';
 
   const logoUploadCard = state.section === 'contact'
     ? `
@@ -2383,19 +2878,119 @@ async function renderSingletonSection(cfg) {
     `
     : '';
 
-  el.panelBody.innerHTML = `
-    <form id="singletonForm" class="crud-form">
+  const singletonFieldsHtml = isAcademySection
+    ? `
+      <div class="crud-form-sections">
+        <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
+          <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">📊 Section Control</legend>
+          <div class="form-grid" style="margin-top: 12px;">
+            ${renderField(cfg.fields.find(f => f.name === 'is_enabled'), res.data ? res.data['is_enabled'] : '')}
+          </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
+          <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">📝 Introduction & Comparison</legend>
+          <div class="form-grid" style="margin-top: 12px;">
+            ${renderField(cfg.fields.find(f => f.name === 'intro_text'), res.data ? res.data['intro_text'] : '')}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div>
+                ${renderField(cfg.fields.find(f => f.name === 'before_heading'), res.data ? res.data['before_heading'] : '')}
+                ${renderField(cfg.fields.find(f => f.name === 'before_items'), res.data ? res.data['before_items'] : '')}
+              </div>
+              <div>
+                ${renderField(cfg.fields.find(f => f.name === 'after_heading'), res.data ? res.data['after_heading'] : '')}
+                ${renderField(cfg.fields.find(f => f.name === 'after_items'), res.data ? res.data['after_items'] : '')}
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
+          <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🎓 Learning Features</legend>
+          <div class="form-grid" style="margin-top: 12px;">
+            ${renderField(cfg.fields.find(f => f.name === 'features_intro'), res.data ? res.data['features_intro'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'features_json'), res.data ? res.data['features_json'] : '')}
+          </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
+          <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🛠️ Digital Products</legend>
+          <div class="form-grid" style="margin-top: 12px;">
+            ${renderField(cfg.fields.find(f => f.name === 'products_heading'), res.data ? res.data['products_heading'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'products_description'), res.data ? res.data['products_description'] : '')}
+          </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
+          <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">👥 Community Sneak Peek</legend>
+          <div class="form-grid" style="margin-top: 12px;">
+            ${renderField(cfg.fields.find(f => f.name === 'community_heading'), res.data ? res.data['community_heading'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'community_samples_json'), res.data ? res.data['community_samples_json'] : '')}
+          </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
+          <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🗺️ Learning Roadmap</legend>
+          <div class="form-grid" style="margin-top: 12px;">
+            ${renderField(cfg.fields.find(f => f.name === 'roadmap_heading'), res.data ? res.data['roadmap_heading'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'roadmap_items_json'), res.data ? res.data['roadmap_items_json'] : '')}
+          </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
+          <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">📈 Growth Roadmap</legend>
+          <div class="form-grid" style="margin-top: 12px;">
+            ${renderField(cfg.fields.find(f => f.name === 'growth_roadmap_heading'), res.data ? res.data['growth_roadmap_heading'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'growth_stages_json'), res.data ? res.data['growth_stages_json'] : '')}
+          </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
+          <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🎯 Who Should Join & Membership</legend>
+          <div class="form-grid" style="margin-top: 12px;">
+            ${renderField(cfg.fields.find(f => f.name === 'who_should_join_text'), res.data ? res.data['who_should_join_text'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'membership_heading'), res.data ? res.data['membership_heading'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'membership_description'), res.data ? res.data['membership_description'] : '')}
+          </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
+          <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🔗 Call-to-Action</legend>
+          <div class="form-grid" style="margin-top: 12px;">
+            ${renderField(cfg.fields.find(f => f.name === 'cta_button_text'), res.data ? res.data['cta_button_text'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'cta_button_url'), res.data ? res.data['cta_button_url'] : '')}
+          </div>
+        </fieldset>
+      </div>
+    `
+    : footerPreviewEnabled
+    ? renderFooterEditorLayout(cfg.fields, res.data || {})
+    : `
       <div class="form-grid">
         ${cfg.fields.map(f => renderField(f, res.data ? res.data[f.name] : '')).join('')}
       </div>
+    `;
+
+  el.panelBody.innerHTML = `
+    <form id="singletonForm" class="crud-form">
+      ${singletonFieldsHtml}
       <div class="form-actions">
         <button type="submit" ${!canWrite() ? 'disabled' : ''}>Save Changes</button>
+        ${footerPreviewEnabled && !isAcademySection ? '<button type="button" id="footerPreviewBtn" class="ghost-btn">Preview Footer</button>' : ''}
         <p id="formStatus" class="form-status"></p>
       </div>
+      ${!footerPreviewEnabled || isAcademySection ? `
       <div class="preview-panel">
-        <h3>Live Preview (Before Save)</h3>
+        <h3>${isAcademySection ? '👁️ Academy Section Preview' : 'Live Preview (Before Save)'}</h3>
         <div id="singletonPreview" class="preview-body"></div>
       </div>
+      ` : ''}
+      ${footerPreviewEnabled && !isAcademySection ? `
+      <div class="preview-panel">
+        <h3>Footer Preview</h3>
+        <div id="footerSingletonPreview" class="preview-body footer-preview-body"></div>
+      </div>
+      ` : ''}
     </form>
     ${logoUploadCard}
     <h3>Current Data</h3>
@@ -2404,7 +2999,30 @@ async function renderSingletonSection(cfg) {
 
   const form = document.getElementById('singletonForm');
   const status = document.getElementById('formStatus');
-  wireFormPreview(form, cfg.fields, 'singletonPreview', 'No values entered yet.');
+  
+  // Use custom preview for academy section
+  if (state.section === 'academy') {
+    wireAcademyPreview(form, state.section === 'academy' && footerPreviewEnabled ? 'footerSingletonPreview' : 'singletonPreview');
+  } else if (!footerPreviewEnabled) {
+    wireFormPreview(form, cfg.fields, 'singletonPreview', 'No values entered yet.');
+  }
+  
+  const updateFooterPreview = footerPreviewEnabled && state.section !== 'academy'
+    ? wireFooterSocialPreview(form, cfg.fields, 'footerSingletonPreview')
+    : null;
+
+  if (footerPreviewEnabled) {
+    const footerPreviewBtn = document.getElementById('footerPreviewBtn');
+    const footerPreviewNode = document.getElementById('footerSingletonPreview');
+    if (footerPreviewBtn && footerPreviewNode) {
+      footerPreviewBtn.addEventListener('click', () => {
+        if (typeof updateFooterPreview === 'function') {
+          updateFooterPreview();
+        }
+        footerPreviewNode.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!canWrite()) {
@@ -2777,6 +3395,16 @@ async function renderCollectionSection(cfg) {
     const row = rows.find(r => Number(r.id) === id);
     if (!row) return;
 
+    if (action === 'clone') {
+      if (cloneBtn && cloneSelect) {
+        cloneSelect.value = String(id);
+        cloneBtn.click();
+      } else {
+        status.textContent = 'Clone is not available in this section.';
+      }
+      return;
+    }
+
     if (action === 'edit') {
       await hydrateDynamicFieldOptions(form, cfg, row);
       setCollectionFormRowValues(form, cfg, row);
@@ -2853,6 +3481,7 @@ async function renderSimplifiedCollectionSection(section) {
 
   const res = await apiGetCached(sectionConfigs[section].endpoint);
   const rows = Array.isArray(res.data) ? res.data : [];
+  const canClone = cloneEnabledSections.has(section);
 
   // Group records by active status
   const activeRecords = rows.filter(r => Number(r.is_active ?? 1) === 1);
@@ -2869,6 +3498,7 @@ async function renderSimplifiedCollectionSection(section) {
         <div style="opacity: ${opacity}; background: ${bgColor}; border: 1px solid #e0e0e0; padding: 12px; border-radius: 4px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
           <span>${escapeHtml(displayLabel)}</span>
           <div style="display: flex; gap: 8px;">
+            ${canClone ? `<button type="button" class="ghost-btn" data-act="clone" data-id="${Number(record.id)}" ${!canWrite() ? 'disabled' : ''}>Clone</button>` : ''}
             <button type="button" class="ghost-btn" data-act="edit" data-id="${Number(record.id)}" ${!canWrite() ? 'disabled' : ''}>Edit</button>
             <button type="button" class="ghost-btn" data-act="toggle-active" data-id="${Number(record.id)}" ${!canWrite() ? 'disabled' : ''}>
               ${isInactive ? 'Activate' : 'Deactivate'}
@@ -2894,6 +3524,21 @@ async function renderSimplifiedCollectionSection(section) {
   el.panelBody.innerHTML = `
     <div style="max-width: 800px; margin: 0 auto;">
       ${renderSimplifiedForm(section)}
+      ${canClone ? `
+      <div class="crud-form" style="margin-top: 16px;">
+        <h3>Clone From Existing</h3>
+        <div class="form-grid" style="grid-template-columns: 2fr auto; align-items: end; gap: 12px;">
+          <label class="field" style="margin-bottom: 0;">
+            <span>Source Record</span>
+            <select id="simplifiedCloneSourceId" ${!canWrite() || !rows.length ? 'disabled' : ''}>
+              <option value="">${rows.length ? 'Select record to clone' : 'No records to clone'}</option>
+              ${rows.map((r) => `<option value="${Number(r.id)}">${escapeHtml(getCloneRowLabel(r))}</option>`).join('')}
+            </select>
+          </label>
+          <button type="button" id="simplifiedCloneSelectedBtn" class="ghost-btn" ${!canWrite() || !rows.length ? 'disabled' : ''}>Clone Selected</button>
+        </div>
+      </div>
+      ` : ''}
       <div id="simplified-records-list" style="margin-top: 32px;">
         ${recordsListHtml()}
       </div>
@@ -2912,12 +3557,121 @@ async function renderSimplifiedCollectionSection(section) {
   const form = document.getElementById(`simplified-form-${section}`);
   const recordsList = document.getElementById('simplified-records-list');
   const statusEl = document.getElementById(`simplified-form-${section}-status`);
+  const cloneSelect = document.getElementById('simplifiedCloneSourceId');
+  const cloneBtn = document.getElementById('simplifiedCloneSelectedBtn');
 
   if (!form) return;
 
   // Wire up slug auto-fill from title
   setupSimplifiedSlugAutoFill(`simplified-form-${section}`, simplifiedConfig.slugField, simplifiedConfig.color);
   const refreshSimplifiedPreview = setupSimplifiedPreviewModal(section, form, simplifiedConfig);
+
+  if (cloneBtn && cloneSelect) {
+    cloneBtn.addEventListener('click', async () => {
+      if (!canWrite()) {
+        statusEl.textContent = 'Read-only access.';
+        statusEl.style.color = '#d32f2f';
+        return;
+      }
+
+      const sourceId = Number(cloneSelect.value || 0);
+      if (!sourceId) {
+        statusEl.textContent = 'Select an existing record to clone.';
+        statusEl.style.color = '#d32f2f';
+        return;
+      }
+
+      const sourceRecord = rows.find((r) => Number(r.id) === sourceId);
+      if (!sourceRecord) {
+        statusEl.textContent = 'Selected source record was not found.';
+        statusEl.style.color = '#d32f2f';
+        return;
+      }
+
+      let field1Val = String(sourceRecord.features || '');
+      let field2Val = String(sourceRecord.target_audience || '');
+      let field3Val = String(sourceRecord.benefits || '');
+      let descriptionVal = String(sourceRecord.subtitle || sourceRecord.description || '');
+      let goDeeperVal = '';
+      let descriptionLabelVal = cleanSectionLabel(simplifiedConfig.labels.description);
+      let field1LabelVal = cleanSectionLabel(simplifiedConfig.labels.field1);
+      let field2LabelVal = cleanSectionLabel(simplifiedConfig.labels.field2);
+      let field3LabelVal = cleanSectionLabel(simplifiedConfig.labels.field3);
+      let faqLabelVal = cleanSectionLabel(simplifiedConfig.labels.faq || 'FAQ');
+
+      const sourceSlug = String(sourceRecord[simplifiedConfig.slugField] || sourceRecord.slug || '').trim();
+      if (sourceSlug && ['courses', 'webinars', 'digital-products'].includes(section)) {
+        try {
+          let childData = null;
+          if (section === 'courses') {
+            childData = await reverseHydrateCoursesContent(sourceSlug);
+          } else if (section === 'webinars') {
+            childData = await reverseHydrateWebinarsContent(sourceSlug);
+          } else if (section === 'digital-products') {
+            childData = await reverseHydrateDigitalContent(sourceSlug);
+          }
+
+          if (childData) {
+            descriptionVal = String(childData.description || descriptionVal);
+            field1Val = String(childData.whatLearn || field1Val);
+            field2Val = String(childData.whoFor || field2Val);
+            field3Val = String(childData.outcome || field3Val);
+            goDeeperVal = String(childData.goDeeper || '');
+            descriptionLabelVal = String(childData.descriptionLabel || descriptionLabelVal);
+            field1LabelVal = String(childData.field1Label || field1LabelVal);
+            field2LabelVal = String(childData.field2Label || field2LabelVal);
+            field3LabelVal = String(childData.field3Label || field3LabelVal);
+            faqLabelVal = String(childData.faqLabel || faqLabelVal);
+          }
+        } catch (err) {
+          console.warn('Could not load child data for clone source', sourceSlug, err);
+        }
+      }
+
+      form.elements.id.value = '';
+      form.elements.title.value = String(sourceRecord.title || sourceRecord.plan_id || '');
+      form.elements.description.value = descriptionVal;
+      form.elements.field1.value = field1Val;
+      form.elements.field2.value = field2Val;
+      form.elements.field3.value = field3Val;
+      if (form.elements.language) form.elements.language.value = String(sourceRecord.language || '');
+      if (form.elements.badge) form.elements.badge.value = String(sourceRecord.badge || '');
+      if (form.elements.goDeeper) form.elements.goDeeper.value = goDeeperVal;
+      if (form.elements.description_label) form.elements.description_label.value = descriptionLabelVal;
+      if (form.elements.field1_label) form.elements.field1_label.value = field1LabelVal;
+      if (form.elements.field2_label) form.elements.field2_label.value = field2LabelVal;
+      if (form.elements.field3_label) form.elements.field3_label.value = field3LabelVal;
+      if (form.elements.faq_label) form.elements.faq_label.value = faqLabelVal;
+
+      const slugEl = form.elements[simplifiedConfig.slugField];
+      if (slugEl) {
+        const existing = String(sourceRecord[simplifiedConfig.slugField] || sourceRecord.slug || '').trim();
+        const base = existing ? (existing.endsWith('-copy') ? existing : `${existing}-copy`) : toSlug(String(sourceRecord.title || sourceRecord.plan_id || 'copy'));
+        let candidate = base;
+        let counter = 1;
+        while (rows.some((r) => String(r[simplifiedConfig.slugField] || '').trim() === candidate)) {
+          candidate = `${base}-${counter}`;
+          counter += 1;
+        }
+        slugEl.value = candidate;
+      }
+
+      const imageEl = form.elements[simplifiedConfig.imageField];
+      if (imageEl) imageEl.value = String(sourceRecord[simplifiedConfig.imageField] || '');
+      if (form.elements.price_inr) form.elements.price_inr.value = String(sourceRecord.price_inr ?? '');
+      if (form.elements.payment_link) form.elements.payment_link.value = String(sourceRecord.payment_link || '');
+      if (section === 'webinars') {
+        if (form.elements.start_datetime_local) form.elements.start_datetime_local.value = String(sourceRecord.start_datetime_local || '');
+        if (form.elements.end_datetime_local) form.elements.end_datetime_local.value = String(sourceRecord.end_datetime_local || '');
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.textContent = '✚ Create';
+      statusEl.textContent = `Cloned from #${sourceId}. Review and save as new.`;
+      statusEl.style.color = '#388e3c';
+      refreshSimplifiedPreview();
+    });
+  }
 
   // Form submission handler
   form.addEventListener('submit', async (e) => {
@@ -2945,6 +3699,8 @@ async function renderSimplifiedCollectionSection(section) {
       const field2Label = String(formData.get('field2_label') || '').trim();
       const field3Label = String(formData.get('field3_label') || '').trim();
       const faqLabel = String(formData.get('faq_label') || '').trim();
+      const language = String(formData.get('language') || '').trim();
+      const badge = String(formData.get('badge') || '').trim();
 
       if (!title) {
         statusEl.textContent = 'Title is required.';
@@ -2987,6 +3743,11 @@ async function renderSimplifiedCollectionSection(section) {
       if (field1) payload.features = normalizeListValueForStorage(field1);
       if (field2) payload.target_audience = normalizeListValueForStorage(field2);
       if (field3) payload.benefits = normalizeListValueForStorage(field3);
+
+      if (simplifiedConfig.supportsLanguageBadge) {
+        payload.language = language;
+        payload.badge = badge;
+      }
 
       // Pricing
       const rawPrice = formData.get('price_inr');
@@ -3062,6 +3823,17 @@ async function renderSimplifiedCollectionSection(section) {
     const record = rows.find(r => Number(r.id) === id);
     if (!record) return;
 
+    if (action === 'clone') {
+      if (cloneBtn && cloneSelect) {
+        cloneSelect.value = String(id);
+        cloneBtn.click();
+      } else {
+        statusEl.textContent = 'Clone is not available in this section.';
+        statusEl.style.color = '#d32f2f';
+      }
+      return;
+    }
+
     if (action === 'edit') {
       const formData = new FormData(form);
       formData.set('id', String(id));
@@ -3117,6 +3889,8 @@ async function renderSimplifiedCollectionSection(section) {
       form.elements.field1.value = field1Val;
       form.elements.field2.value = field2Val;
       form.elements.field3.value = field3Val;
+      if (form.elements.language) form.elements.language.value = String(record.language || '');
+      if (form.elements.badge) form.elements.badge.value = String(record.badge || '');
       if (form.elements.goDeeper) form.elements.goDeeper.value = goDeeperVal;
       if (form.elements.description_label) form.elements.description_label.value = descriptionLabelVal;
       if (form.elements.field1_label) form.elements.field1_label.value = field1LabelVal;
@@ -3296,6 +4070,40 @@ async function renderGalleryBulkSection(cfg) {
 async function renderPollsSection() {
   const res = await apiGetCached('/api/polls-api?action=getAllPolls');
   const polls = Array.isArray(res.polls) ? res.polls : [];
+  const pollsHtml = polls.length
+    ? `
+      <div class="admin-card-list">
+        ${polls.map((p) => `
+          <article class="admin-item-card">
+            <div class="admin-item-head">
+              <div>
+                <p class="admin-item-eyebrow">Poll ID</p>
+                <h4>${escapeHtml(p.id)}</h4>
+              </div>
+              <span class="status-pill ${String(p.status || '').toUpperCase() === 'ACTIVE' ? 'is-success' : 'is-neutral'}">${escapeHtml(p.status || 'Unknown')}</span>
+            </div>
+            <p class="admin-item-body">${escapeHtml(p.question || 'No question added yet.')}</p>
+            <div class="admin-meta-grid">
+              <div class="admin-meta-card">
+                <span>Created</span>
+                <strong>${escapeHtml(p.created_at || '-')}</strong>
+              </div>
+              <div class="admin-meta-card">
+                <span>Options</span>
+                <strong>${Array.isArray(p.options) ? p.options.length : 0}</strong>
+              </div>
+            </div>
+            ${canWrite() ? `
+              <div class="admin-item-actions">
+                <button class="mini-btn" data-act="edit-poll" data-id="${escapeHtml(p.id)}">Edit</button>
+                <button class="mini-btn danger" data-act="delete-poll" data-id="${escapeHtml(p.id)}">Delete</button>
+              </div>
+            ` : ''}
+          </article>
+        `).join('')}
+      </div>
+    `
+    : '<p class="empty-state">No polls created yet.</p>';
 
   el.panelBody.innerHTML = `
     <form id="pollForm" class="crud-form">
@@ -3313,20 +4121,7 @@ async function renderPollsSection() {
       </div>
     </form>
     <h3>Polls</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>ID</th><th>Question</th><th>Status</th><th>Created</th>${canWrite() ? '<th>Actions</th>' : ''}</tr></thead>
-        <tbody>
-          ${polls.map(p => `<tr>
-            <td>${escapeHtml(p.id)}</td>
-            <td>${escapeHtml(p.question)}</td>
-            <td>${escapeHtml(p.status)}</td>
-            <td>${escapeHtml(p.created_at)}</td>
-            ${canWrite() ? `<td><button class="mini-btn" data-act="edit-poll" data-id="${escapeHtml(p.id)}">Edit</button> <button class="mini-btn danger" data-act="delete-poll" data-id="${escapeHtml(p.id)}">Delete</button></td>` : ''}
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
+    ${pollsHtml}
   `;
 
   const form = document.getElementById('pollForm');
@@ -3433,6 +4228,44 @@ async function renderAdminUsersSection() {
   }
   const res = await apiGetCached('/api/admin/users');
   const users = Array.isArray(res.data) ? res.data : [];
+  const usersHtml = users.length
+    ? `
+      <div class="admin-card-list">
+        ${users.map((u) => `
+          <article class="admin-item-card">
+            <div class="admin-item-head">
+              <div>
+                <p class="admin-item-eyebrow">Admin User</p>
+                <h4>${escapeHtml(u.username || u.email || `User #${u.id}`)}</h4>
+              </div>
+              <span class="status-pill ${Number(u.is_active) === 1 ? 'is-success' : 'is-neutral'}">${Number(u.is_active) === 1 ? 'Active' : 'Inactive'}</span>
+            </div>
+            <div class="admin-meta-grid">
+              <div class="admin-meta-card">
+                <span>Email</span>
+                <strong>${escapeHtml(u.email || '-')}</strong>
+              </div>
+              <div class="admin-meta-card">
+                <span>Role</span>
+                <strong>${escapeHtml(u.role || '-')}</strong>
+              </div>
+              <div class="admin-meta-card">
+                <span>Last Login</span>
+                <strong>${escapeHtml(u.last_login_at || 'Never')}</strong>
+              </div>
+              <div class="admin-meta-card">
+                <span>User ID</span>
+                <strong>#${escapeHtml(u.id)}</strong>
+              </div>
+            </div>
+            <div class="admin-item-actions">
+              <button class="mini-btn" data-act="edit-user" data-id="${u.id}">Edit</button>
+            </div>
+          </article>
+        `).join('')}
+      </div>
+    `
+    : '<p class="empty-state">No admin users found.</p>';
 
   el.panelBody.innerHTML = `
     <form id="userForm" class="crud-form">
@@ -3458,22 +4291,7 @@ async function renderAdminUsersSection() {
       </div>
     </form>
     <h3>Admin Users</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>ID</th><th>Email</th><th>Username</th><th>Role</th><th>Active</th><th>Last Login</th><th>Actions</th></tr></thead>
-        <tbody>
-          ${users.map(u => `<tr>
-            <td>${escapeHtml(u.id)}</td>
-            <td>${escapeHtml(u.email)}</td>
-            <td>${escapeHtml(u.username || '')}</td>
-            <td>${escapeHtml(u.role)}</td>
-            <td>${Number(u.is_active) === 1 ? 'Yes' : 'No'}</td>
-            <td>${escapeHtml(u.last_login_at || '')}</td>
-            <td><button class="mini-btn" data-act="edit-user" data-id="${u.id}">Edit</button></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
+    ${usersHtml}
   `;
 
   const form = document.getElementById('userForm');
@@ -3557,28 +4375,74 @@ async function renderDataCleanupSection() {
     }
     
     const hasOrphans = auditResult.total > 0;
-    const resultHtml = auditResult.results.map(r => {
-      return `
-        <div style="border-left: 4px solid ${r.orphanCount > 0 ? '#e74c3c' : '#27ae60'}; padding: 12px; margin-bottom: 12px; background: #f8f9fa;">
-          <strong>${escapeHtml(r.type)}</strong>: <span style="font-weight:bold; color: ${r.orphanCount > 0 ? '#e74c3c' : '#27ae60'};">${r.orphanCount} orphan records</span>
-          ${r.orphanCount > 0 ? `<button data-cleanup-action="delete-${r.type}" class="mini-btn danger" style="margin-left: 12px;">Delete All</button>` : ''}
+    const resultHtml = auditResult.results.map((r) => `
+      <article class="report-card ${r.orphanCount > 0 ? 'report-card-alert' : 'report-card-clean'}">
+        <div class="report-card-head">
+          <div>
+            <p class="report-card-kicker">Data Group</p>
+            <h4>${escapeHtml(r.type)}</h4>
+          </div>
+          <span class="status-pill ${r.orphanCount > 0 ? 'is-danger' : 'is-success'}">${r.orphanCount > 0 ? `${r.orphanCount} issues` : 'Clean'}</span>
         </div>
-      `;
-    }).join('');
+        <p class="report-card-copy">${r.orphanCount > 0 ? 'Child rows were found without a matching parent record.' : 'No orphaned rows were found in this dataset.'}</p>
+        <div class="admin-meta-grid">
+          <div class="admin-meta-card">
+            <span>Orphan Records</span>
+            <strong>${r.orphanCount}</strong>
+          </div>
+        </div>
+        ${r.orphanCount > 0 ? `<div class="admin-item-actions"><button data-cleanup-action="delete-${r.type}" class="mini-btn danger">Delete All Orphans</button></div>` : ''}
+      </article>
+    `).join('');
     
     el.panelBody.innerHTML = `
-      <div class="crud-form">
-        <h3>Data Integrity Report</h3>
-        <p>This report identifies child records without matching parent records (orphans).</p>
-        <div style="margin: 20px 0; padding: 16px; background: ${hasOrphans ? '#fff3cd' : '#d4edda'}; border: 1px solid ${hasOrphans ? '#ffc107' : '#28a745'}; border-radius: 4px;">
-          <strong>Total Orphan Records: ${auditResult.total}</strong>
-          ${hasOrphans ? '<p style="margin-top:8px;">Click "Delete All" to remove orphan records from any table above.</p>' : '<p style="margin-top:8px; color:#155724;">✓ No orphans detected. Data is clean!</p>'}
-        </div>
-        <h4>Detailed Results:</h4>
-        ${resultHtml}
-        <p style="margin-top: 20px; font-size: 0.9em; color: #666;">
-          <strong>Note:</strong> Orphans occur when child records reference parent slugs that no longer exist. 
-          This typically happens after manual parent deletions or data migration issues.
+      <div class="report-shell">
+        <section class="crud-form report-section">
+          <div class="report-section-head">
+            <div>
+              <span class="editor-section-kicker">Integrity Audit</span>
+              <h3>Data cleanup report</h3>
+            </div>
+            <p>This audit identifies child records without matching parent records.</p>
+          </div>
+          <div class="metric-tiles">
+            <article class="metric-tile ${hasOrphans ? 'warn' : 'success'}">
+              <span>Total Orphans</span>
+              <strong>${auditResult.total}</strong>
+              <small>${hasOrphans ? 'Cleanup recommended' : 'No cleanup needed'}</small>
+            </article>
+            <article class="metric-tile brand">
+              <span>Audit Latency</span>
+              <strong>${auditLatency}ms</strong>
+              <small>Browser-side audit time</small>
+            </article>
+            <article class="metric-tile neutral">
+              <span>Datasets Checked</span>
+              <strong>${auditResult.results.length}</strong>
+              <small>Collections included in the audit</small>
+            </article>
+          </div>
+          <div class="report-banner ${hasOrphans ? 'is-warning' : 'is-success'}">
+            <strong>${hasOrphans ? `Found ${auditResult.total} orphan records.` : 'No orphan records detected.'}</strong>
+            <span>${hasOrphans ? 'Use the action buttons below to remove invalid child records.' : 'The related child tables are currently clean.'}</span>
+          </div>
+        </section>
+
+        <section class="crud-form report-section">
+          <div class="report-section-head">
+            <div>
+              <span class="editor-section-kicker">Detailed Results</span>
+              <h3>Dataset by dataset view</h3>
+            </div>
+            <p>Each card shows the health of one child dataset and includes cleanup actions only when needed.</p>
+          </div>
+          <div class="report-card-grid">
+            ${resultHtml}
+          </div>
+        </section>
+
+        <p class="report-note">
+          <strong>Note:</strong> Orphans usually appear after parent records are deleted manually or after incomplete migrations.
         </p>
       </div>
     `;
@@ -3648,63 +4512,117 @@ async function deleteOrphansByType(tableType) {
 async function renderMonitoringSection() {
   const report = getMetricsReport();
   
-  const adoptionHtml = Object.entries(report.editorAdoption).map(([section, adoption]) => {
-    return `
-      <tr>
-        <td>${escapeHtml(section)}</td>
-        <td><span style="color:#4CAF50;">${adoption.simple}%</span></td>
-        <td><span style="color:#2196F3;">${adoption.advanced}%</span></td>
-        <td>${adoption.totalSaves}</td>
-      </tr>
-    `;
-  }).join('');
+  const adoptionHtml = Object.entries(report.editorAdoption).map(([section, adoption]) => `
+    <article class="report-card">
+      <div class="report-card-head">
+        <div>
+          <p class="report-card-kicker">Section</p>
+          <h4>${escapeHtml(section)}</h4>
+        </div>
+        <span class="status-pill is-neutral">${adoption.totalSaves} saves</span>
+      </div>
+      <div class="report-stat-grid">
+        <div class="report-stat-box success">
+          <span>Simple Mode</span>
+          <strong>${adoption.simple}%</strong>
+        </div>
+        <div class="report-stat-box brand">
+          <span>Advanced Mode</span>
+          <strong>${adoption.advanced}%</strong>
+        </div>
+      </div>
+    </article>
+  `).join('');
   
   el.panelBody.innerHTML = `
-    <div class="crud-form">
-      <h3>📈 Editor Performance & Usage Monitoring</h3>
-      
-      <h4>Overall Metrics</h4>
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
-        <div style="padding: 16px; background: #f0f7ff; border-radius: 4px;">
-          <div style="color: #666; font-size: 0.9em;">Total Saves</div>
-          <div style="font-size: 1.8em; font-weight: bold; color: #2196F3;">${report.totalSaves}</div>
+    <div class="report-shell">
+      <section class="crud-form report-section">
+        <div class="report-section-head">
+          <div>
+            <span class="editor-section-kicker">Monitoring</span>
+            <h3>Editor performance and usage</h3>
+          </div>
+          <p>These cards summarize local admin usage, save quality, and editor adoption patterns.</p>
         </div>
-        <div style="padding: 16px; background: #f0fff4; border-radius: 4px;">
-          <div style="color: #666; font-size: 0.9em;">Success Rate</div>
-          <div style="font-size: 1.8em; font-weight: bold; color: #4CAF50;">${report.successRate}%</div>
+        <div class="metric-tiles">
+          <article class="metric-tile brand">
+            <span>Total Saves</span>
+            <strong>${report.totalSaves}</strong>
+            <small>All local save attempts</small>
+          </article>
+          <article class="metric-tile success">
+            <span>Success Rate</span>
+            <strong>${report.successRate}%</strong>
+            <small>Successful saves / total saves</small>
+          </article>
+          <article class="metric-tile warn">
+            <span>Avg Save Latency</span>
+            <strong>${report.avgSaveLatency}ms</strong>
+            <small>Average client-side save duration</small>
+          </article>
+          <article class="metric-tile neutral">
+            <span>Mode Switches</span>
+            <strong>${report.modeSwaps}</strong>
+            <small>Simple/advanced editor toggles</small>
+          </article>
         </div>
-        <div style="padding: 16px; background: #fff8f0; border-radius: 4px;">
-          <div style="color: #666; font-size: 0.9em;">Avg Save Latency</div>
-          <div style="font-size: 1.8em; font-weight: bold; color: #FF9800;">${report.avgSaveLatency}ms</div>
+      </section>
+
+      <section class="crud-form report-section">
+        <div class="report-section-head">
+          <div>
+            <span class="editor-section-kicker">Editor Adoption</span>
+            <h3>Simple vs advanced mode by section</h3>
+          </div>
+          <p>Card-based adoption reporting is easier to scan on mobile than a wide comparison table.</p>
         </div>
-        <div style="padding: 16px; background: #f5f5f5; border-radius: 4px;">
-          <div style="color: #666; font-size: 0.9em;">Mode Switches</div>
-          <div style="font-size: 1.8em; font-weight: bold; color: #9C27B0;">${report.modeSwaps}</div>
+        <div class="report-card-grid">
+          ${adoptionHtml || '<p class="empty-state">No editor usage data yet.</p>'}
         </div>
+      </section>
+
+      <div class="report-split">
+        <section class="crud-form report-section">
+          <div class="report-section-head">
+            <div>
+              <span class="editor-section-kicker">Audit Metrics</span>
+              <h3>Data integrity checks</h3>
+            </div>
+          </div>
+          <div class="report-stat-grid">
+            <div class="report-stat-box neutral">
+              <span>Total Audits Run</span>
+              <strong>${report.totalAudits}</strong>
+            </div>
+            <div class="report-stat-box brand">
+              <span>Avg Audit Latency</span>
+              <strong>${report.avgAuditLatency}ms</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="crud-form report-section">
+          <div class="report-section-head">
+            <div>
+              <span class="editor-section-kicker">Feature Flags</span>
+              <h3>Current local admin configuration</h3>
+            </div>
+          </div>
+          <div class="report-flag-list">
+            <div class="report-flag-item">
+              <span>Simple Editor Enabled</span>
+              <strong class="${state.featureFlags.useSimpleEditor ? 'text-success' : 'text-muted'}">${state.featureFlags.useSimpleEditor ? 'Yes' : 'No'}</strong>
+            </div>
+            <div class="report-flag-item">
+              <span>Production Canary</span>
+              <strong class="${state.featureFlags.productionCanary ? 'text-warn' : 'text-muted'}">${state.featureFlags.productionCanary ? 'Active' : 'Disabled'}</strong>
+            </div>
+          </div>
+        </section>
       </div>
-      
-      <h4>Editor Adoption by Section (Simple vs Advanced)</h4>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Section</th><th>Simple Mode %</th><th>Advanced Mode %</th><th>Total Saves</th></tr></thead>
-          <tbody>${adoptionHtml || '<tr><td colspan="4">No data yet</td></tr>'}</tbody>
-        </table>
-      </div>
-      
-      <h4>Data Integrity Audits</h4>
-      <div style="padding: 12px; background: #f9f9f9; border-left: 4px solid #9C27B0;">
-        <div><strong>Total Audits Run:</strong> ${report.totalAudits}</div>
-        <div><strong>Avg Audit Latency:</strong> ${report.avgAuditLatency}ms</div>
-      </div>
-      
-      <h4>Feature Flags</h4>
-      <div style="padding: 12px; background: #f9f9f9; border-left: 4px solid #2196F3;">
-        <div><strong>Simple Editor Enabled:</strong> <span style="color: #4CAF50;">${state.featureFlags.useSimpleEditor ? '✓ Yes' : '✗ No'}</span></div>
-        <div><strong>Production Canary:</strong> <span style="color: ${state.featureFlags.productionCanary ? '#FF9800' : '#999'};">${state.featureFlags.productionCanary ? 'ℹ Active' : 'Disabled'}</span></div>
-      </div>
-      
-      <p style="margin-top: 24px; font-size: 0.85em; color: #666;">
-        <strong>Note:</strong> These metrics are stored locally in browser memory. For persistent monitoring, integrate with your backend analytics service.
+
+      <p class="report-note">
+        <strong>Note:</strong> These metrics are stored locally in browser memory. For persistent reporting, connect them to backend analytics.
       </p>
     </div>
   `;
@@ -3850,7 +4768,7 @@ async function bootstrapSession() {
 el.menuList.addEventListener('click', async (e) => {
   const btn = e.target.closest('button[data-section]');
   if (!btn || btn.style.display === 'none') return;
-  await setSection(btn.dataset.section);
+  await setSection(btn.dataset.section === 'site-config' ? 'contact' : btn.dataset.section);
 });
 
 el.loginForm.addEventListener('submit', onLogin);

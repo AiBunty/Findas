@@ -675,11 +675,17 @@ function ensure_modal_content_schema() {
         ensure_column_if_missing('contact_section', 'footer_about_text', 'TEXT NULL AFTER `footer_brand_name`');
         ensure_column_if_missing('contact_section', 'footer_quick_links_title', 'VARCHAR(255) NULL AFTER `footer_about_text`');
         ensure_column_if_missing('contact_section', 'footer_quick_link_1', 'VARCHAR(255) NULL AFTER `footer_quick_links_title`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_url_1', 'VARCHAR(500) NULL AFTER `footer_quick_link_1`');
         ensure_column_if_missing('contact_section', 'footer_quick_link_2', 'VARCHAR(255) NULL AFTER `footer_quick_link_1`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_url_2', 'VARCHAR(500) NULL AFTER `footer_quick_link_2`');
         ensure_column_if_missing('contact_section', 'footer_quick_link_3', 'VARCHAR(255) NULL AFTER `footer_quick_link_2`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_url_3', 'VARCHAR(500) NULL AFTER `footer_quick_link_3`');
         ensure_column_if_missing('contact_section', 'footer_quick_link_4', 'VARCHAR(255) NULL AFTER `footer_quick_link_3`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_url_4', 'VARCHAR(500) NULL AFTER `footer_quick_link_4`');
         ensure_column_if_missing('contact_section', 'footer_quick_link_5', 'VARCHAR(255) NULL AFTER `footer_quick_link_4`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_url_5', 'VARCHAR(500) NULL AFTER `footer_quick_link_5`');
         ensure_column_if_missing('contact_section', 'footer_quick_link_6', 'VARCHAR(255) NULL AFTER `footer_quick_link_5`');
+        ensure_column_if_missing('contact_section', 'footer_quick_link_url_6', 'VARCHAR(500) NULL AFTER `footer_quick_link_6`');
         ensure_column_if_missing('contact_section', 'footer_contact_title', 'VARCHAR(255) NULL AFTER `footer_quick_link_6`');
         ensure_column_if_missing('contact_section', 'footer_phone', 'VARCHAR(255) NULL AFTER `footer_contact_title`');
         ensure_column_if_missing('contact_section', 'footer_address', 'TEXT NULL AFTER `footer_phone`');
@@ -707,11 +713,17 @@ function ensure_modal_content_schema() {
             footer_about_text TEXT NULL,
             footer_quick_links_title VARCHAR(255) NULL,
             footer_quick_link_1 VARCHAR(255) NULL,
+            footer_quick_link_url_1 VARCHAR(500) NULL,
             footer_quick_link_2 VARCHAR(255) NULL,
+            footer_quick_link_url_2 VARCHAR(500) NULL,
             footer_quick_link_3 VARCHAR(255) NULL,
+            footer_quick_link_url_3 VARCHAR(500) NULL,
             footer_quick_link_4 VARCHAR(255) NULL,
+            footer_quick_link_url_4 VARCHAR(500) NULL,
             footer_quick_link_5 VARCHAR(255) NULL,
+            footer_quick_link_url_5 VARCHAR(500) NULL,
             footer_quick_link_6 VARCHAR(255) NULL,
+            footer_quick_link_url_6 VARCHAR(500) NULL,
             footer_contact_title VARCHAR(255) NULL,
             footer_phone VARCHAR(255) NULL,
             footer_address TEXT NULL,
@@ -728,6 +740,39 @@ function ensure_modal_content_schema() {
 
         ensure_column_if_missing('site_config', 'footer_social_twitter', 'VARCHAR(500) NULL AFTER `footer_social_youtube`');
         ensure_column_if_missing('site_config', 'footer_social_whatsapp', 'VARCHAR(500) NULL AFTER `footer_social_twitter`');
+        ensure_column_if_missing('site_config', 'footer_quick_link_url_1', 'VARCHAR(500) NULL AFTER `footer_quick_link_1`');
+        ensure_column_if_missing('site_config', 'footer_quick_link_url_2', 'VARCHAR(500) NULL AFTER `footer_quick_link_2`');
+        ensure_column_if_missing('site_config', 'footer_quick_link_url_3', 'VARCHAR(500) NULL AFTER `footer_quick_link_3`');
+        ensure_column_if_missing('site_config', 'footer_quick_link_url_4', 'VARCHAR(500) NULL AFTER `footer_quick_link_4`');
+        ensure_column_if_missing('site_config', 'footer_quick_link_url_5', 'VARCHAR(500) NULL AFTER `footer_quick_link_5`');
+        ensure_column_if_missing('site_config', 'footer_quick_link_url_6', 'VARCHAR(500) NULL AFTER `footer_quick_link_6`');
+
+        $db->query("CREATE TABLE IF NOT EXISTS academy_config (
+            id INT PRIMARY KEY,
+            is_enabled TINYINT(1) DEFAULT 1,
+            intro_text TEXT NULL,
+            before_heading VARCHAR(255) NULL,
+            before_items TEXT NULL,
+            after_heading VARCHAR(255) NULL,
+            after_items TEXT NULL,
+            features_intro VARCHAR(255) NULL,
+            features_json JSON NULL,
+            products_heading VARCHAR(255) NULL,
+            products_description TEXT NULL,
+            community_heading VARCHAR(255) NULL,
+            community_samples_json JSON NULL,
+            roadmap_heading VARCHAR(255) NULL,
+            roadmap_items_json JSON NULL,
+            growth_roadmap_heading VARCHAR(255) NULL,
+            growth_stages_json JSON NULL,
+            who_should_join_text TEXT NULL,
+            membership_heading VARCHAR(255) NULL,
+            membership_description TEXT NULL,
+            cta_button_text VARCHAR(255) NULL,
+            cta_button_url VARCHAR(500) NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $db->query("INSERT IGNORE INTO academy_config (id) VALUES (1)");
 }
 
 function get_site_assets_row() {
@@ -1151,11 +1196,17 @@ $singletonMap = [
             'footer_about_text',
             'footer_quick_links_title',
             'footer_quick_link_1',
+            'footer_quick_link_url_1',
             'footer_quick_link_2',
+            'footer_quick_link_url_2',
             'footer_quick_link_3',
+            'footer_quick_link_url_3',
             'footer_quick_link_4',
+            'footer_quick_link_url_4',
             'footer_quick_link_5',
+            'footer_quick_link_url_5',
             'footer_quick_link_6',
+            'footer_quick_link_url_6',
             'footer_contact_title',
             'footer_phone',
             'footer_address',
@@ -1175,11 +1226,17 @@ $singletonMap = [
             'footer_about_text',
             'footer_quick_links_title',
             'footer_quick_link_1',
+            'footer_quick_link_url_1',
             'footer_quick_link_2',
+            'footer_quick_link_url_2',
             'footer_quick_link_3',
+            'footer_quick_link_url_3',
             'footer_quick_link_4',
+            'footer_quick_link_url_4',
             'footer_quick_link_5',
+            'footer_quick_link_url_5',
             'footer_quick_link_6',
+            'footer_quick_link_url_6',
             'footer_contact_title',
             'footer_phone',
             'footer_address',
@@ -1191,8 +1248,87 @@ $singletonMap = [
             'footer_social_whatsapp',
             'footer_copyright'
         ]
+    ],
+    'academy' => [
+        'table' => 'academy_config',
+        'fields' => [
+            'is_enabled',
+            'intro_text',
+            'before_heading',
+            'before_items',
+            'after_heading',
+            'after_items',
+            'features_intro',
+            'features_json',
+            'products_heading',
+            'products_description',
+            'community_heading',
+            'community_samples_json',
+            'roadmap_heading',
+            'roadmap_items_json',
+            'growth_roadmap_heading',
+            'growth_stages_json',
+            'who_should_join_text',
+            'membership_heading',
+            'membership_description',
+            'cta_button_text',
+            'cta_button_url'
+        ]
     ]
 ];
+
+function get_default_contact_footer_payload() {
+    return [
+        'id' => 1,
+        'phone' => '+91 8766514883',
+        'email' => 'support@findasacademy.in',
+        'address' => 'Pune, Maharashtra, India',
+        'gallery_enabled' => 1,
+        'footer_brand_name' => 'Findas Academy',
+        'footer_about_text' => 'Empowering financial freedom through expert-led courses, webinars, and a growth-focused learning community.',
+        'footer_quick_links_title' => 'Quick Links',
+        'footer_quick_link_1' => 'Home',
+        'footer_quick_link_url_1' => '#home',
+        'footer_quick_link_2' => 'About',
+        'footer_quick_link_url_2' => '#about',
+        'footer_quick_link_3' => 'Courses',
+        'footer_quick_link_url_3' => '#courses',
+        'footer_quick_link_4' => 'Webinars',
+        'footer_quick_link_url_4' => '#webinars',
+        'footer_quick_link_5' => 'Membership',
+        'footer_quick_link_url_5' => '#membership',
+        'footer_quick_link_6' => 'Contact',
+        'footer_quick_link_url_6' => '#contact',
+        'footer_contact_title' => 'Contact',
+        'footer_phone' => '+91 8766514883',
+        'footer_address' => 'Pune, Maharashtra, India',
+        'footer_social_title' => 'Connect',
+        'footer_social_instagram' => 'https://instagram.com/findasacademy',
+        'footer_social_facebook' => 'https://facebook.com/findasacademy',
+        'footer_social_youtube' => 'https://youtube.com/@findasacademy',
+        'footer_social_twitter' => 'https://x.com/findasacademy',
+        'footer_social_whatsapp' => 'https://wa.me/918766514883',
+        'footer_copyright' => '&copy; 2026 Findas Academy. All rights reserved.'
+    ];
+}
+
+function get_default_singleton_row($section, $row) {
+    if ($section !== 'contact' && $section !== 'site-config') {
+        return $row;
+    }
+
+    $defaults = get_default_contact_footer_payload();
+    if (!is_array($row) || count($row) === 0) {
+        return $defaults;
+    }
+
+    foreach ($defaults as $key => $value) {
+        if (!array_key_exists($key, $row) || $row[$key] === null || $row[$key] === '') {
+            $row[$key] = $value;
+        }
+    }
+    return $row;
+}
 
 if ($path === '/health' || $path === '/api/health') {
     send_json(200, ['ok' => true, 'service' => 'findas-php-api']);
@@ -1378,7 +1514,7 @@ if (preg_match('#^/(api/)?admin/users/([0-9]+)$#', $path, $m)) {
     send_json(405, ['ok' => false, 'error' => 'Method not allowed']);
 }
 
-if (preg_match('#^/(api/)?admin/(hero|about|contact|site-config)$#', $path, $m)) {
+if (preg_match('#^/(api/)?admin/(hero|about|contact|site-config|academy)$#', $path, $m)) {
     $payload = require_auth();
     $section = sanitize_resource_name($m[2]);
     $meta = $singletonMap[$section] ?? null;
@@ -1388,6 +1524,7 @@ if (preg_match('#^/(api/)?admin/(hero|about|contact|site-config)$#', $path, $m))
 
     if ($method === 'GET') {
         $row = fetch_one("SELECT * FROM `{$meta['table']}` ORDER BY id DESC LIMIT 1");
+        $row = get_default_singleton_row($section, $row);
         send_json(200, ['ok' => true, 'data' => $row]);
     }
 

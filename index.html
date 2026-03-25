@@ -5229,40 +5229,76 @@
       }
       
       // Footer Section
-      if (S.siteConfig.footer_brand_name && D.footerBrandName) {
-        D.footerBrandName.textContent = S.siteConfig.footer_brand_name;
+      if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_brand_name') && D.footerBrandName) {
+        D.footerBrandName.textContent = String(S.siteConfig.footer_brand_name || '');
       }
-      if (S.siteConfig.footer_about_text && D.footerAboutText) {
-        D.footerAboutText.textContent = S.siteConfig.footer_about_text;
+      if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_about_text') && D.footerAboutText) {
+        D.footerAboutText.textContent = String(S.siteConfig.footer_about_text || '');
       }
-      if (S.siteConfig.footer_quick_links_title && D.footerQuickLinksTitle) {
-        D.footerQuickLinksTitle.textContent = S.siteConfig.footer_quick_links_title;
+      if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_quick_links_title') && D.footerQuickLinksTitle) {
+        D.footerQuickLinksTitle.textContent = String(S.siteConfig.footer_quick_links_title || '');
       }
-      
+
       // Footer Quick Links
       if (D.footerQuickLinks) {
         const links = D.footerQuickLinks.querySelectorAll('li a');
+        let visibleQuickLinks = 0;
         for (let i = 1; i <= 6; i++) {
           const linkKey = 'footer_quick_link_' + i;
-          if (S.siteConfig[linkKey] && links[i - 1]) {
-            links[i - 1].textContent = S.siteConfig[linkKey];
+          const linkUrlKey = 'footer_quick_link_url_' + i;
+          const linkNode = links[i - 1];
+          if (!linkNode) continue;
+
+          const labelValue = String(S.siteConfig[linkKey] || '').trim();
+          const hrefValue = String(S.siteConfig[linkUrlKey] || '').trim();
+          const liNode = linkNode.closest('li');
+
+          if (labelValue) {
+            linkNode.textContent = labelValue;
+          }
+
+          if (hrefValue) {
+            linkNode.setAttribute('href', hrefValue);
+            if (hrefValue.startsWith('#')) {
+              linkNode.removeAttribute('target');
+              linkNode.removeAttribute('rel');
+            } else {
+              linkNode.setAttribute('target', '_blank');
+              linkNode.setAttribute('rel', 'noopener noreferrer');
+            }
+          } else {
+            linkNode.setAttribute('href', '#');
+            linkNode.removeAttribute('target');
+            linkNode.removeAttribute('rel');
+          }
+
+          const shouldShow = Boolean(labelValue || hrefValue);
+          if (liNode) {
+            liNode.style.display = shouldShow ? '' : 'none';
+          }
+          if (shouldShow) {
+            visibleQuickLinks += 1;
           }
         }
+
+        if (D.footerQuickLinksTitle) {
+          D.footerQuickLinksTitle.style.display = visibleQuickLinks > 0 ? '' : 'none';
+        }
       }
-      
-      if (S.siteConfig.footer_contact_title && D.footerContactTitle) {
-        D.footerContactTitle.textContent = S.siteConfig.footer_contact_title;
+
+      if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_contact_title') && D.footerContactTitle) {
+        D.footerContactTitle.textContent = String(S.siteConfig.footer_contact_title || '');
       }
-      if (S.siteConfig.footer_phone && D.footerPhone) {
-        D.footerPhone.textContent = S.siteConfig.footer_phone;
+      if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_phone') && D.footerPhone) {
+        D.footerPhone.textContent = String(S.siteConfig.footer_phone || '');
       }
-      if (S.siteConfig.footer_address && D.footerAddress) {
-        D.footerAddress.textContent = S.siteConfig.footer_address;
+      if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_address') && D.footerAddress) {
+        D.footerAddress.textContent = String(S.siteConfig.footer_address || '');
       }
-      if (S.siteConfig.footer_social_title && D.footerSocialTitle) {
-        D.footerSocialTitle.textContent = S.siteConfig.footer_social_title;
+      if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_social_title') && D.footerSocialTitle) {
+        D.footerSocialTitle.textContent = String(S.siteConfig.footer_social_title || '');
       }
-      
+
       // Footer Social Links
       if (D.footerSocialLinks) {
         const socialMap = [
@@ -5294,9 +5330,9 @@
           D.footerSocialTitle.style.display = visibleCount > 0 ? '' : 'none';
         }
       }
-      
-      if (S.siteConfig.footer_copyright && D.footerCopyright) {
-        D.footerCopyright.innerHTML = S.siteConfig.footer_copyright;
+
+      if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_copyright') && D.footerCopyright) {
+        D.footerCopyright.innerHTML = String(S.siteConfig.footer_copyright || '');
       }
 
       const raw = S.siteConfig.gallery_enabled;
@@ -5340,7 +5376,7 @@
 
     function openDetails(type, id) {
       const i = by(type, id); if (!i) return; mc = { type, id };
-      if (type === 'membership') { if (i.link) openPaymentModal(i.title || 'Join Now', String(i.link)); return; }
+      if (type === 'membership') { if (i.link) openPaymentModal('Join Membership', String(i.link)); return; }
       if (type === 'digital') { openDigitalDetails(i.id); return; }
       if (type === 'webinar') { openWebinarDetails(i.id); return; }
       if (type === 'course') { openCourseDetails(i.id); return; }
@@ -5508,16 +5544,16 @@
       });
     }
 
-    function handleCourseOrProductPurchase(item) {
+    function handleCourseOrProductPurchase(item, options = {}) {
       if (!item) return;
-      // Only digital products use direct redirects.
-      if (String(item.type || '') === 'digital' && item.redirect_url && item.redirect_url.trim()) {
-        window.location.href = item.redirect_url;
-        return;
-      }
-      // Courses use embedded payment form links.
-      if (item.payment_link) {
-        openPaymentModal('Buy Now', String(item.payment_link));
+      const paymentLink = String(item.payment_link || '').trim();
+      const redirectUrl = String(item.redirect_url || '').trim();
+      const target = paymentLink || redirectUrl;
+
+      // For all sections, open buy links inside the modal checkout container.
+      if (target) {
+        const title = String(item.type || '').toLowerCase() === 'membership' ? 'Join Membership' : 'Buy Now';
+        openPaymentModal(title, target);
       }
     }
     function openTermsModal() {
@@ -5590,7 +5626,7 @@
         if (x === 'dec') { adj(a.dataset.id, a.dataset.type, -1); return }
         if (x === 'rm') { del(a.dataset.id, a.dataset.type); return }
         if (x === 'modal-add') { if (!mc) return; const i = by(mc.type, mc.id); if (i && (i.type === 'course' || i.type === 'digital')) addCart(i); return }
-        if (x === 'modal-link') { if (!mc) return; const i = by(mc.type, mc.id); if (i && i.link) window.open(i.link, '_blank', 'noopener'); return }
+        if (x === 'modal-link') { if (!mc) return; const i = by(mc.type, mc.id); if (i && i.link) openPaymentModal('Buy Now', String(i.link)); return }
       }
       if (e.target === D.ov) { closeModal(); return }
       if (e.target === D.termsOverlay) { closeTermsModal(); return }

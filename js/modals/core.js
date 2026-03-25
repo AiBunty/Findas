@@ -42,7 +42,7 @@ function openPaymentModal(title, url) {
   // Show loading overlay
   if (D.loadingOverlay) {
     if (D.loadingText) {
-      D.loadingText.textContent = 'Processing Your Payment';
+      D.loadingText.textContent = 'Opening Secure Checkout';
     }
     D.loadingOverlay.classList.add('show');
     D.loadingOverlay.setAttribute('aria-hidden', 'false');
@@ -58,6 +58,13 @@ function openPaymentModal(title, url) {
   iframe.loading = 'lazy';
   iframe.allow = 'payment';
   iframeContainer.appendChild(iframe);
+
+  const fallbackHint = document.createElement('div');
+  fallbackHint.className = 'section-body';
+  fallbackHint.style.marginTop = '10px';
+  fallbackHint.innerHTML = 'If the page does not load in modal, <a href="' + String(url) + '" target="_blank" rel="noopener noreferrer">open in new tab</a>.';
+  iframeContainer.appendChild(fallbackHint);
+
   overlay.classList.add('on');
   document.body.classList.add('no');
   // Hide loading overlay after iframe loads
@@ -67,13 +74,13 @@ function openPaymentModal(title, url) {
       D.loadingOverlay.setAttribute('aria-hidden', 'true');
     }
   };
-  // Also hide after 1.2s timeout as fallback
+  // Safety fallback in case iframe load event never arrives.
   setTimeout(() => {
     if (D.loadingOverlay) {
       D.loadingOverlay.classList.remove('show');
       D.loadingOverlay.setAttribute('aria-hidden', 'true');
     }
-  }, 1200);
+  }, 12000);
 }
 
 function closePaymentModal() {

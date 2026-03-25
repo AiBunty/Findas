@@ -132,17 +132,11 @@ function renderDigitalDetails(payload) {
   const btnRow = el('div', 'acts');
   const buy = el('button', 'btn b1', 'Buy Now');
   if (product.payment_link || product.redirect_url) {
-    buy.addEventListener('click', () => handleCourseOrProductPurchase(product));
+    buy.addEventListener('click', () => handleCourseOrProductPurchase(product, { directRedirect: true }));
   } else {
     buy.disabled = true;
   }
   btnRow.appendChild(buy);
-
-  if (product.preview_url) {
-    const preview = el('button', 'btn b2', 'Preview');
-    preview.addEventListener('click', () => window.open(String(product.preview_url), '_blank', 'noopener'));
-    btnRow.appendChild(preview);
-  }
   content.appendChild(btnRow);
 
   layout.appendChild(mediaWrap);
@@ -159,7 +153,7 @@ function renderDigitalDetails(payload) {
   if (!product.payment_link && !product.redirect_url) {
     btn.disabled = true;
   } else {
-    btn.addEventListener('click', () => handleCourseOrProductPurchase(product));
+    btn.addEventListener('click', () => handleCourseOrProductPurchase(product, { directRedirect: true }));
   }
   ctaWrap.appendChild(btn);
   D.mContent.appendChild(ctaWrap);
