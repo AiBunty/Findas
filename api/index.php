@@ -750,6 +750,14 @@ function ensure_modal_content_schema() {
         $db->query("CREATE TABLE IF NOT EXISTS academy_config (
             id INT PRIMARY KEY,
             is_enabled TINYINT(1) DEFAULT 1,
+            show_intro_comparison TINYINT(1) DEFAULT 1,
+            show_features TINYINT(1) DEFAULT 1,
+            show_products TINYINT(1) DEFAULT 1,
+            show_community TINYINT(1) DEFAULT 1,
+            show_roadmap TINYINT(1) DEFAULT 1,
+            show_growth_roadmap TINYINT(1) DEFAULT 1,
+            show_who_should_join TINYINT(1) DEFAULT 1,
+            show_cta TINYINT(1) DEFAULT 1,
             intro_text TEXT NULL,
             before_heading VARCHAR(255) NULL,
             before_items TEXT NULL,
@@ -773,6 +781,16 @@ function ensure_modal_content_schema() {
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         $db->query("INSERT IGNORE INTO academy_config (id) VALUES (1)");
+        
+        // Add individual section toggle columns if missing
+        ensure_column_if_missing('academy_config', 'show_intro_comparison', 'TINYINT(1) DEFAULT 1 AFTER `is_enabled`');
+        ensure_column_if_missing('academy_config', 'show_features', 'TINYINT(1) DEFAULT 1 AFTER `show_intro_comparison`');
+        ensure_column_if_missing('academy_config', 'show_products', 'TINYINT(1) DEFAULT 1 AFTER `show_features`');
+        ensure_column_if_missing('academy_config', 'show_community', 'TINYINT(1) DEFAULT 1 AFTER `show_products`');
+        ensure_column_if_missing('academy_config', 'show_roadmap', 'TINYINT(1) DEFAULT 1 AFTER `show_community`');
+        ensure_column_if_missing('academy_config', 'show_growth_roadmap', 'TINYINT(1) DEFAULT 1 AFTER `show_roadmap`');
+        ensure_column_if_missing('academy_config', 'show_who_should_join', 'TINYINT(1) DEFAULT 1 AFTER `show_growth_roadmap`');
+        ensure_column_if_missing('academy_config', 'show_cta', 'TINYINT(1) DEFAULT 1 AFTER `show_who_should_join`');
 }
 
 function get_site_assets_row() {
@@ -1253,6 +1271,14 @@ $singletonMap = [
         'table' => 'academy_config',
         'fields' => [
             'is_enabled',
+            'show_intro_comparison',
+            'show_features',
+            'show_products',
+            'show_community',
+            'show_roadmap',
+            'show_growth_roadmap',
+            'show_who_should_join',
+            'show_cta',
             'intro_text',
             'before_heading',
             'before_items',

@@ -1797,24 +1797,40 @@ const sectionConfigs = {
     endpoint: '/api/admin/academy',
     fields: [
       { name: 'is_enabled', label: '📊 Show Academy Section on Homepage', type: 'checkbox' },
+      
+      { name: 'show_intro_comparison', label: '📝 Show Introduction & Comparison Section', type: 'checkbox' },
       { name: 'intro_text', label: 'Introduction Paragraph', type: 'textarea', placeholder: 'About learning from real-world experience...' },
       { name: 'before_heading', label: '"Before Joining" Section Heading', type: 'text', placeholder: 'What You\'re Missing' },
       { name: 'before_items', label: '"Before Joining" Items (one per line)', type: 'textarea', placeholder: 'Lacking practical financial knowledge\nUnsure about investment strategy\n...' },
       { name: 'after_heading', label: '"After Joining" Section Heading', type: 'text', placeholder: 'What You\'ll Gain' },
       { name: 'after_items', label: '"After Joining" Items (one per line)', type: 'textarea', placeholder: 'Understand real-world financial systems\nBuild proven investment strategies\n...' },
+      
+      { name: 'show_features', label: '🎓 Show Learning Features Section', type: 'checkbox' },
       { name: 'features_intro', label: '"What You Get Inside" Heading', type: 'text', placeholder: 'Our Learning Framework' },
       { name: 'features_json', label: 'Learning Features (JSON format)', type: 'textarea', placeholder: '[{"title":"Book of the Month","emoji":"📚","description":"Curated financial literature"}]' },
+      
+      { name: 'show_products', label: '🛠️ Show Digital Products Section', type: 'checkbox' },
       { name: 'products_heading', label: '"Digital Products" Section Heading', type: 'text', placeholder: 'Tools & Resources' },
       { name: 'products_description', label: 'Digital Products Description', type: 'textarea', placeholder: 'Access to trackers, templates, and habit systems...' },
+      
+      { name: 'show_community', label: '👥 Show Community Sneak Peek Section', type: 'checkbox' },
       { name: 'community_heading', label: '"Community Sneak Peek" Section Heading', type: 'text', placeholder: 'Join Our Growing Community' },
       { name: 'community_samples_json', label: 'Community Post Samples (JSON format)', type: 'textarea', placeholder: '[{"type":"Daily Dose","content":"Learn this tip...","author":"Instructor"}]' },
+      
+      { name: 'show_roadmap', label: '🗺️ Show Learning Roadmap Section', type: 'checkbox' },
       { name: 'roadmap_heading', label: '"What Happens After You Join" Heading', type: 'text', placeholder: 'Your 5-Step Learning Path' },
       { name: 'roadmap_items_json', label: 'Roadmap Steps (JSON format)', type: 'textarea', placeholder: '[{"step":1,"title":"Foundation","description":"Learn the basics"}]' },
+      
+      { name: 'show_growth_roadmap', label: '📈 Show Growth Roadmap Section', type: 'checkbox' },
       { name: 'growth_roadmap_heading', label: '"Growth Roadmap" Section Heading', type: 'text', placeholder: 'Your Journey to Financial Mastery' },
       { name: 'growth_stages_json', label: 'Growth Roadmap Stages (JSON format)', type: 'textarea', placeholder: '[{"stage":"Awareness","description":"Understand your financial position"}]' },
+      
+      { name: 'show_who_should_join', label: '🎯 Show Who Should Join & Membership Section', type: 'checkbox' },
       { name: 'who_should_join_text', label: '"Who Should Join" Description', type: 'textarea', placeholder: 'This academy is for anyone who...' },
       { name: 'membership_heading', label: '"Membership & Pricing" Section Heading', type: 'text', placeholder: 'Membership Options' },
       { name: 'membership_description', label: 'Membership Description', type: 'textarea', placeholder: 'Choose the plan that works best for you...' },
+      
+      { name: 'show_cta', label: '🔗 Show Call-to-Action Section', type: 'checkbox' },
       { name: 'cta_button_text', label: 'Call-to-Action Button Text', type: 'text', placeholder: 'Join Findas Academy' },
       { name: 'cta_button_url', label: 'Call-to-Action Button URL', type: 'text', placeholder: 'https://...' }
     ]
@@ -2408,50 +2424,167 @@ function buildAcademyPreviewHtml(payload) {
     `;
   }
 
+  // Check individual section toggles
+  const showIntroComparison = payload.show_intro_comparison === 'on' || payload.show_intro_comparison === true;
+  const showFeatures = payload.show_features === 'on' || payload.show_features === true;
+  const showProducts = payload.show_products === 'on' || payload.show_products === true;
+  const showCommunity = payload.show_community === 'on' || payload.show_community === true;
+  const showRoadmap = payload.show_roadmap === 'on' || payload.show_roadmap === true;
+  const showGrowthRoadmap = payload.show_growth_roadmap === 'on' || payload.show_growth_roadmap === true;
+  const showWhoShouldJoin = payload.show_who_should_join === 'on' || payload.show_who_should_join === true;
+  const showCta = payload.show_cta === 'on' || payload.show_cta === true;
+  
   const intro = nl2brSafe(escapeHtml(String(payload.intro_text || '').trim() || 'Add introduction text...'));
   
-  const beforeHeading = escapeHtml(String(payload.before_heading || '').trim() || 'Before Joining');
-  const beforeItems = String(payload.before_items || '').trim().split('\n').filter(i => i.trim()).slice(0, 5)
-    .map(item => `<li style="margin: 8px 0;">${escapeHtml(item.trim())}</li>`).join('');
+  // Introduction & Comparison
+  const introComparisonHtml = showIntroComparison ? `
+    <section style="margin-bottom: 24px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+          <h4 style="color: #2196F3; margin-top: 0;">${escapeHtml(String(payload.before_heading || '').trim() || 'Before Joining')}</h4>
+          <ul style="padding-left: 20px; color: #666;">
+            ${String(payload.before_items || '').trim().split('\n').filter(i => i.trim()).slice(0, 5).map(item => `<li style="margin: 8px 0;">${escapeHtml(item.trim())}</li>`).join('') || '<li><em>No items</em></li>'}
+          </ul>
+        </div>
+        <div>
+          <h4 style="color: #2196F3; margin-top: 0;">${escapeHtml(String(payload.after_heading || '').trim() || 'After Joining')}</h4>
+          <ul style="padding-left: 20px; color: #666;">
+            ${String(payload.after_items || '').trim().split('\n').filter(i => i.trim()).slice(0, 5).map(item => `<li style="margin: 8px 0;">${escapeHtml(item.trim())}</li>`).join('') || '<li><em>No items</em></li>'}
+          </ul>
+        </div>
+      </div>
+    </section>
+  ` : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">📝 Introduction & Comparison section is disabled</small></div>';
   
-  const afterHeading = escapeHtml(String(payload.after_heading || '').trim() || 'After Joining');
-  const afterItems = String(payload.after_items || '').trim().split('\n').filter(i => i.trim()).slice(0, 5)
-    .map(item => `<li style="margin: 8px 0;">${escapeHtml(item.trim())}</li>`).join('');
-  
-  const featuresIntro = escapeHtml(String(payload.features_intro || '').trim() || 'What You Get Inside');
+  // Learning Features
   let features = [];
   try {
     const featuresJson = String(payload.features_json || '').trim();
     if (featuresJson && featuresJson !== '[]') {
       features = JSON.parse(featuresJson);
     }
-  } catch (_e) {
-    // Invalid JSON, leave empty  
-  }
-  const featuresHtml = features.slice(0, 6).map(f => `
-    <div style="text-align: center; padding: 15px; border: 1px solid #e0e0e0; border-radius: 6px; flex: 1; min-width: 150px;">
-      <div style="font-size: 24px; margin-bottom: 8px;">${escapeHtml(f.emoji || '📚')}</div>
-      <strong style="display: block; margin-bottom: 6px;">${escapeHtml(f.title || 'Feature')}</strong>
-      <small style="color: #666;">${escapeHtml(f.description || '')}</small>
-    </div>
-  `).join('');
+  } catch (_e) {}
+  const featuresIntro = escapeHtml(String(payload.features_intro || '').trim() || 'What You Get Inside');
+  const featuresHtml = showFeatures && features.length ? `
+    <section style="margin-bottom: 24px;">
+      <h4 style="color: #2196F3; margin-top: 0;">${featuresIntro}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+        ${features.slice(0, 6).map(f => `
+          <div style="text-align: center; padding: 15px; border: 1px solid #e0e0e0; border-radius: 6px; flex: 1; min-width: 150px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">${escapeHtml(f.emoji || '📚')}</div>
+            <strong style="display: block; margin-bottom: 6px;">${escapeHtml(f.title || 'Feature')}</strong>
+            <small style="color: #666;">${escapeHtml(f.description || '')}</small>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : showFeatures ? '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🎓 Add learning features JSON to display</small></div>' : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🎓 Learning Features section is disabled</small></div>';
   
-  const roadmapHeading = escapeHtml(String(payload.roadmap_heading || '').trim() || 'Your 5-Step Learning Path');
+  // Digital Products
+  const productsHeading = escapeHtml(String(payload.products_heading || '').trim() || 'Digital Products & Tools');
+  const productsDescription = nl2brSafe(escapeHtml(String(payload.products_description || '').trim() || ''));
+  const productsHtml = showProducts ? `
+    <section style="margin-bottom: 24px;">
+      <h4 style="color: #2196F3; margin-top: 0;">${productsHeading}</h4>
+      <p style="color: #666;">${productsDescription || '<em>Add digital products description...</em>'}</p>
+    </section>
+  ` : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🛠️ Digital Products section is disabled</small></div>';
+  
+  // Community Sneak Peek
+  let communityPosts = [];
+  try {
+    const communityJson = String(payload.community_samples_json || '').trim();
+    if (communityJson && communityJson !== '[]') {
+      communityPosts = JSON.parse(communityJson);
+    }
+  } catch (_e) {}
+  const communityHeading = escapeHtml(String(payload.community_heading || '').trim() || 'Sneak Peek into Community');
+  const communityHtml = showCommunity && communityPosts.length ? `
+    <section style="margin-bottom: 24px;">
+      <h4 style="color: #2196F3; margin-top: 0;">${communityHeading}</h4>
+      <div style="display: grid; gap: 12px;">
+        ${communityPosts.slice(0, 6).map(p => `
+          <div style="padding: 12px; border-left: 3px solid #FF9800; background: #fff9e6;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-weight: bold; color: #FF9800;">${escapeHtml(p.type || 'Post')}</span>
+              <small style="color: #999;">${escapeHtml(p.author || 'Community')}</small>
+            </div>
+            <p style="margin: 0; color: #666;">${escapeHtml(p.content || '')}</p>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : showCommunity ? '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">👥 Add community posts JSON to display</small></div>' : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">👥 Community Sneak Peek section is disabled</small></div>';
+  
+  // Learning Roadmap
   let roadmapItems = [];
   try {
     const roadmapJson = String(payload.roadmap_items_json || '').trim();
     if (roadmapJson && roadmapJson !== '[]') {
       roadmapItems = JSON.parse(roadmapJson);
     }
-  } catch (_e) {
-    // Invalid JSON
-  }
-  const roadmapHtml = roadmapItems.slice(0, 5).map((r, i) => `
-    <div style="text-align: center; padding: 15px; border-left: 3px solid #2196F3;">
-      <strong style="display: block; margin-bottom: 4px;">Step ${i + 1}: ${escapeHtml(r.title || 'Step')}</strong>
-      <small style="color: #666;">${escapeHtml(r.description || '')}</small>
-    </div>
-  `).join('');
+  } catch (_e) {}
+  const roadmapHeading = escapeHtml(String(payload.roadmap_heading || '').trim() || 'Your 5-Step Learning Path');
+  const roadmapHtml = showRoadmap && roadmapItems.length ? `
+    <section style="margin-bottom: 24px;">
+      <h4 style="color: #2196F3; margin-top: 0;">${roadmapHeading}</h4>
+      <div style="display: grid; gap: 12px;">
+        ${roadmapItems.slice(0, 5).map((r, i) => `
+          <div style="text-align: center; padding: 15px; border-left: 3px solid #2196F3;">
+            <strong style="display: block; margin-bottom: 4px;">Step ${i + 1}: ${escapeHtml(r.title || 'Step')}</strong>
+            <small style="color: #666;">${escapeHtml(r.description || '')}</small>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : showRoadmap ? '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🗺️ Add roadmap items JSON to display</small></div>' : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🗺️ Learning Roadmap section is disabled</small></div>';
+  
+  // Growth Roadmap
+  let growthStages = [];
+  try {
+    const growthJson = String(payload.growth_stages_json || '').trim();
+    if (growthJson && growthJson !== '[]') {
+      growthStages = JSON.parse(growthJson);
+    }
+  } catch (_e) {}
+  const growthRoadmapHeading = escapeHtml(String(payload.growth_roadmap_heading || '').trim() || 'Growth Roadmap');
+  const growthRoadmapHtml = showGrowthRoadmap && growthStages.length ? `
+    <section style="margin-bottom: 24px;">
+      <h4 style="color: #2196F3; margin-top: 0;">${growthRoadmapHeading}</h4>
+      <div style="display: grid; gap: 12px;">
+        ${growthStages.slice(0, 5).map((g, i) => `
+          <div style="padding: 12px; border-left: 3px solid #4CAF50; background: #f1f8e9;">
+            <strong style="display: block; margin-bottom: 4px;">${i + 1}. ${escapeHtml(g.stage || 'Stage')}</strong>
+            <small style="color: #666;">${escapeHtml(g.description || '')}</small>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : showGrowthRoadmap ? '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">📈 Add growth stages JSON to display</small></div>' : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">📈 Growth Roadmap section is disabled</small></div>';
+  
+  // Who Should Join & Membership
+  const whoShouldJoinText = nl2brSafe(escapeHtml(String(payload.who_should_join_text || '').trim() || ''));
+  const membershipHeading = escapeHtml(String(payload.membership_heading || '').trim() || 'Membership & Pricing');
+  const membershipDescription = nl2brSafe(escapeHtml(String(payload.membership_description || '').trim() || ''));
+  const whoShouldJoinHtml = showWhoShouldJoin ? `
+    <section style="margin-bottom: 24px;">
+      <h4 style="color: #2196F3; margin-top: 0;">Who Should Join</h4>
+      <p style="color: #666;">${whoShouldJoinText || '<em>Add who should join description...</em>'}</p>
+      <h4 style="color: #2196F3; margin-top: 16px;">${membershipHeading}</h4>
+      <p style="color: #666;">${membershipDescription || '<em>Add membership description...</em>'}</p>
+    </section>
+  ` : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🎯 Who Should Join & Membership section is disabled</small></div>';
+  
+  // Call-to-Action
+  const ctaButtonText = escapeHtml(String(payload.cta_button_text || '').trim() || 'Join Academy');
+  const ctaButtonUrl = escapeHtml(String(payload.cta_button_url || '').trim() || '#');
+  const ctaHtml = showCta && ctaButtonText ? `
+    <section style="margin-bottom: 24px; text-align: center;">
+      <a href="${ctaButtonUrl}" style="display: inline-block; padding: 12px 32px; background: #2196F3; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        ${ctaButtonText}
+      </a>
+    </section>
+  ` : showCta ? '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🔗 Add CTA button text to display</small></div>' : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🔗 Call-to-Action section is disabled</small></div>';
   
   const toggleState = isEnabled ? '✅ <strong>ENABLED</strong>' : '❌ <strong>DISABLED</strong>';
   
@@ -2467,40 +2600,18 @@ function buildAcademyPreviewHtml(payload) {
         <p style="line-height: 1.6; color: #333; font-size: 14px;">${intro}</p>
       </section>
 
-      <section style="margin-bottom: 24px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div>
-            <h4 style="color: #2196F3; margin-top: 0;">${beforeHeading}</h4>
-            <ul style="padding-left: 20px; color: #666;">${beforeItems || '<li><em>No items</em></li>'}</ul>
-          </div>
-          <div>
-            <h4 style="color: #2196F3; margin-top: 0;">${afterHeading}</h4>
-            <ul style="padding-left: 20px; color: #666;">${afterItems || '<li><em>No items</em></li>'}</ul>
-          </div>
-        </div>
-      </section>
-
-      ${featuresHtml ? `
-      <section style="margin-bottom: 24px;">
-        <h4 style="color: #2196F3; margin-top: 0;">${featuresIntro}</h4>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
-          ${featuresHtml}
-        </div>
-      </section>
-      ` : ''}
-
-      ${roadmapHtml ? `
-      <section style="margin-bottom: 24px;">
-        <h4 style="color: #2196F3; margin-top: 0;">${roadmapHeading}</h4>
-        <div style="display: grid; gap: 12px;">
-          ${roadmapHtml}
-        </div>
-      </section>
-      ` : ''}
+      ${introComparisonHtml}
+      ${featuresHtml}
+      ${productsHtml}
+      ${communityHtml}
+      ${roadmapHtml}
+      ${growthRoadmapHtml}
+      ${whoShouldJoinHtml}
+      ${ctaHtml}
 
       <div style="text-align: center; padding: 20px; background: #f0f0f0; border-radius: 6px; margin-top: 24px;">
         <p style="margin: 0; color: #666; font-size: 12px;">
-          ℹ️ This preview shows how the Academy section will appear on your homepage (when enabled)
+          ℹ️ This preview shows sections based on their individual toggle settings
         </p>
       </div>
     </div>
@@ -2891,6 +3002,9 @@ async function renderSingletonSection(cfg) {
         <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">📝 Introduction & Comparison</legend>
           <div class="form-grid" style="margin-top: 12px;">
+            <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+              ${renderField(cfg.fields.find(f => f.name === 'show_intro_comparison'), res.data ? res.data['show_intro_comparison'] : '')}
+            </div>
             ${renderField(cfg.fields.find(f => f.name === 'intro_text'), res.data ? res.data['intro_text'] : '')}
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div>
@@ -2908,6 +3022,9 @@ async function renderSingletonSection(cfg) {
         <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🎓 Learning Features</legend>
           <div class="form-grid" style="margin-top: 12px;">
+            <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+              ${renderField(cfg.fields.find(f => f.name === 'show_features'), res.data ? res.data['show_features'] : '')}
+            </div>
             ${renderField(cfg.fields.find(f => f.name === 'features_intro'), res.data ? res.data['features_intro'] : '')}
             ${renderField(cfg.fields.find(f => f.name === 'features_json'), res.data ? res.data['features_json'] : '')}
           </div>
@@ -2916,6 +3033,9 @@ async function renderSingletonSection(cfg) {
         <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🛠️ Digital Products</legend>
           <div class="form-grid" style="margin-top: 12px;">
+            <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+              ${renderField(cfg.fields.find(f => f.name === 'show_products'), res.data ? res.data['show_products'] : '')}
+            </div>
             ${renderField(cfg.fields.find(f => f.name === 'products_heading'), res.data ? res.data['products_heading'] : '')}
             ${renderField(cfg.fields.find(f => f.name === 'products_description'), res.data ? res.data['products_description'] : '')}
           </div>
@@ -2924,6 +3044,9 @@ async function renderSingletonSection(cfg) {
         <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">👥 Community Sneak Peek</legend>
           <div class="form-grid" style="margin-top: 12px;">
+            <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+              ${renderField(cfg.fields.find(f => f.name === 'show_community'), res.data ? res.data['show_community'] : '')}
+            </div>
             ${renderField(cfg.fields.find(f => f.name === 'community_heading'), res.data ? res.data['community_heading'] : '')}
             ${renderField(cfg.fields.find(f => f.name === 'community_samples_json'), res.data ? res.data['community_samples_json'] : '')}
           </div>
@@ -2932,6 +3055,9 @@ async function renderSingletonSection(cfg) {
         <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🗺️ Learning Roadmap</legend>
           <div class="form-grid" style="margin-top: 12px;">
+            <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+              ${renderField(cfg.fields.find(f => f.name === 'show_roadmap'), res.data ? res.data['show_roadmap'] : '')}
+            </div>
             ${renderField(cfg.fields.find(f => f.name === 'roadmap_heading'), res.data ? res.data['roadmap_heading'] : '')}
             ${renderField(cfg.fields.find(f => f.name === 'roadmap_items_json'), res.data ? res.data['roadmap_items_json'] : '')}
           </div>
@@ -2940,6 +3066,9 @@ async function renderSingletonSection(cfg) {
         <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">📈 Growth Roadmap</legend>
           <div class="form-grid" style="margin-top: 12px;">
+            <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+              ${renderField(cfg.fields.find(f => f.name === 'show_growth_roadmap'), res.data ? res.data['show_growth_roadmap'] : '')}
+            </div>
             ${renderField(cfg.fields.find(f => f.name === 'growth_roadmap_heading'), res.data ? res.data['growth_roadmap_heading'] : '')}
             ${renderField(cfg.fields.find(f => f.name === 'growth_stages_json'), res.data ? res.data['growth_stages_json'] : '')}
           </div>
@@ -2948,6 +3077,9 @@ async function renderSingletonSection(cfg) {
         <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🎯 Who Should Join & Membership</legend>
           <div class="form-grid" style="margin-top: 12px;">
+            <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+              ${renderField(cfg.fields.find(f => f.name === 'show_who_should_join'), res.data ? res.data['show_who_should_join'] : '')}
+            </div>
             ${renderField(cfg.fields.find(f => f.name === 'who_should_join_text'), res.data ? res.data['who_should_join_text'] : '')}
             ${renderField(cfg.fields.find(f => f.name === 'membership_heading'), res.data ? res.data['membership_heading'] : '')}
             ${renderField(cfg.fields.find(f => f.name === 'membership_description'), res.data ? res.data['membership_description'] : '')}
@@ -2957,6 +3089,9 @@ async function renderSingletonSection(cfg) {
         <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🔗 Call-to-Action</legend>
           <div class="form-grid" style="margin-top: 12px;">
+            <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+              ${renderField(cfg.fields.find(f => f.name === 'show_cta'), res.data ? res.data['show_cta'] : '')}
+            </div>
             ${renderField(cfg.fields.find(f => f.name === 'cta_button_text'), res.data ? res.data['cta_button_text'] : '')}
             ${renderField(cfg.fields.find(f => f.name === 'cta_button_url'), res.data ? res.data['cta_button_url'] : '')}
           </div>
