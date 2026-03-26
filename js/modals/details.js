@@ -395,3 +395,17 @@ async function openWebinarDetails(slug) {
     showErr('Unable to load webinar details: ' + errText(e));
   }
 }
+
+async function openMembershipDetails(planId) {
+  const plan = Array.isArray(S.membershipPlans)
+    ? S.membershipPlans.find((p) => String(p.id || '') === String(planId || ''))
+    : null;
+  if (!plan) {
+    showErr('Membership details not found.');
+    return;
+  }
+  mc = { type: 'membership', id: String(plan.id || planId || '') };
+  setModalLoading();
+  openModal();
+  renderMembershipDetails(plan);
+}

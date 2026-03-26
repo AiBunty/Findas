@@ -665,6 +665,9 @@ function ensure_modal_content_schema() {
         ensure_column_if_missing('webinars', 'payment_link', 'VARCHAR(500) NULL AFTER `is_free`');
         ensure_column_if_missing('webinars', 'primary_cta_text', 'VARCHAR(160) NULL AFTER `payment_link`');
 
+        ensure_column_if_missing('hero_section', 'button_url_1', 'VARCHAR(500) NULL AFTER `button_text_1`');
+        ensure_column_if_missing('hero_section', 'button_url_2', 'VARCHAR(500) NULL AFTER `button_text_2`');
+
         ensure_column_if_missing('membership_plans', 'period', 'VARCHAR(120) NULL AFTER `price_inr`');
         ensure_column_if_missing('membership_plans', 'recommended', 'TINYINT(1) DEFAULT 0 AFTER `period`');
         ensure_column_if_missing('membership_plans', 'image_url', 'VARCHAR(500) NULL AFTER `recommended`');
@@ -1197,7 +1200,7 @@ $resourceMap = [
 $singletonMap = [
     'hero' => [
         'table' => 'hero_section',
-        'fields' => ['title', 'subtitle', 'button_text_1', 'button_text_2', 'video_url']
+        'fields' => ['title', 'subtitle', 'button_text_1', 'button_url_1', 'button_text_2', 'button_url_2', 'video_url']
     ],
     'about' => [
         'table' => 'about_section',
@@ -1338,12 +1341,49 @@ function get_default_contact_footer_payload() {
     ];
 }
 
+function get_default_academy_payload() {
+    return [
+        'id' => 1,
+        'is_enabled' => 1,
+        'show_intro_comparison' => 1,
+        'show_features' => 1,
+        'show_products' => 1,
+        'show_community' => 1,
+        'show_roadmap' => 1,
+        'show_growth_roadmap' => 1,
+        'show_who_should_join' => 1,
+        'show_cta' => 1,
+        'intro_text' => 'Learn what took decades of real-world experience to discover in a structured environment built for clarity, action, and growth. Your journey toward financial freedom begins here.',
+        'before_heading' => 'Before Joining',
+        'before_items' => "Confusion about how money really works\nIrregular saving and investing habits\nLack of clarity about financial goals\nLearning from scattered sources\nNo accountability or support",
+        'after_heading' => 'After Joining',
+        'after_items' => "Clear understanding of financial systems\nStructured learning about wealth creation\nPractical tools to build financial discipline\nContinuous insights that improve thinking\nA community that encourages growth",
+        'features_intro' => 'What You Get Inside',
+        'features_json' => '[{"id":1,"title":"Book of the Month","description":"Powerful books on success, wealth, mindset, and growth with actionable insights every week.","icon_emoji":"📚","is_active":1,"order":1},{"id":2,"title":"Weekly Learning Videos","description":"Focused 15-30 min videos on wealth creation, investing, insurance, and financial planning.","icon_emoji":"🎬","is_active":1,"order":2},{"id":3,"title":"Daily Dose of Insights","description":"Two-minute daily insights with one action step to improve thinking and build momentum.","icon_emoji":"💡","is_active":1,"order":3},{"id":4,"title":"Monthly Challenges","description":"Budgeting, habits, gratitude, and investing challenges that build financial discipline.","icon_emoji":"🏆","is_active":1,"order":4},{"id":5,"title":"Live Q&A Sessions","description":"Monthly live session where members ask questions and get advice directly from experts.","icon_emoji":"🎯","is_active":1,"order":5},{"id":6,"title":"Community Forum","description":"Safe space to ask questions, share wins, and learn from thousands of members.","icon_emoji":"👥","is_active":1,"order":6}]',
+        'products_heading' => 'Digital Products & Practical Tools',
+        'products_description' => 'Knowledge alone does not create change. Action does. Use budgeting trackers, financial planning templates, goal planners, journaling tools, and habit-building frameworks to turn learning into results.',
+        'community_heading' => 'Sneak Peek into the Community',
+        'community_samples_json' => '[{"id":1,"post_type":"Daily Dose","content":"💡 Two-minute insight: track every rupee for the next 7 days to improve awareness.","author":"Findas Team","is_active":1},{"id":2,"post_type":"Weekly Learning","content":"🎬 New video: Building your first long-term investment system without overwhelm.","author":"Samir Machawe","is_active":1},{"id":3,"post_type":"Success Story","content":"🎯 Members are sharing wins from the budgeting challenge - 47 people saved ₹50K+ this month!","author":"Community","is_active":1}]',
+        'roadmap_heading' => 'What Happens After You Join',
+        'roadmap_items_json' => '[{"stage_num":1,"stage_name":"Awareness","description":"Understand how money works and improve financial literacy."},{"stage_num":2,"stage_name":"Systems","description":"Build simple systems like budgeting and goal planning."},{"stage_num":3,"stage_name":"Wealth Creation","description":"Learn investing principles and long-term wealth strategies."},{"stage_num":4,"stage_name":"Mindset Upgrade","description":"Develop an abundance mindset through daily insights and books."},{"stage_num":5,"stage_name":"Life by Design","description":"Design your life intentionally instead of reacting to circumstances."}]',
+        'growth_roadmap_heading' => 'Findas Academy Growth Roadmap',
+        'growth_stages_json' => '[{"stage_num":1,"stage_name":"Awareness","description":"Understand your current financial position and where you want to go."},{"stage_num":2,"stage_name":"Foundation","description":"Build budgeting, saving, and goal-setting systems."},{"stage_num":3,"stage_name":"Growth","description":"Learn investing principles and wealth creation strategies."},{"stage_num":4,"stage_name":"Mastery","description":"Develop an abundance mindset and refine your wealth systems."},{"stage_num":5,"stage_name":"Freedom","description":"Design your life intentionally with financial freedom as the foundation."}]',
+        'who_should_join_text' => 'Entrepreneurs, employees, students, investors, business owners, and anyone committed to improving financial literacy and life systems.',
+        'membership_heading' => 'Membership & Pricing',
+        'membership_description' => 'Simple membership with unlimited access to courses, channels, tools, challenges, and support. Every new member receives a 14-day free look period.',
+        'cta_button_text' => 'Join Findas Academy',
+        'cta_button_url' => '#membership'
+    ];
+}
+
 function get_default_singleton_row($section, $row) {
-    if ($section !== 'contact' && $section !== 'site-config') {
+    if ($section !== 'contact' && $section !== 'site-config' && $section !== 'academy') {
         return $row;
     }
 
-    $defaults = get_default_contact_footer_payload();
+    $defaults = $section === 'academy'
+        ? get_default_academy_payload()
+        : get_default_contact_footer_payload();
     if (!is_array($row) || count($row) === 0) {
         return $defaults;
     }

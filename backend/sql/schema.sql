@@ -6,13 +6,15 @@ CREATE TABLE IF NOT EXISTS hero_section (
   title VARCHAR(255) NOT NULL,
   subtitle TEXT,
   button_text_1 VARCHAR(120),
+  button_url_1 VARCHAR(500),
   button_text_2 VARCHAR(120),
+  button_url_2 VARCHAR(500),
   video_url VARCHAR(500),
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-INSERT IGNORE INTO hero_section (id, title, subtitle, button_text_1, button_text_2, video_url)
-VALUES (1, 'Build Wealth.', 'Findas Academy community intro', 'Join Findas Academy', 'Book Free Call', '');
+INSERT IGNORE INTO hero_section (id, title, subtitle, button_text_1, button_url_1, button_text_2, button_url_2, video_url)
+VALUES (1, 'Build Wealth.', 'Findas Academy community intro', 'Join Findas Academy', '#academy', 'Book Free Call', '#booking', '');
 
 CREATE TABLE IF NOT EXISTS courses (
   id INT AUTO_INCREMENT PRIMARY KEY,

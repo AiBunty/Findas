@@ -6,7 +6,9 @@ CREATE TABLE IF NOT EXISTS hero_section (
   title VARCHAR(255) NOT NULL,
   subtitle TEXT,
   button_text_1 VARCHAR(120),
+  button_url_1 VARCHAR(500),
   button_text_2 VARCHAR(120),
+  button_url_2 VARCHAR(500),
   video_url VARCHAR(500),
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -156,8 +158,8 @@ CREATE TABLE IF NOT EXISTS academy_community_posts (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-INSERT IGNORE INTO hero_section (id, title, subtitle, button_text_1, button_text_2, video_url)
-VALUES (1, 'Build Wealth.', 'Findas Academy is a learning community designed for financial intelligence and growth.', 'Join Findas Academy', 'Book Free Call', '');
+INSERT IGNORE INTO hero_section (id, title, subtitle, button_text_1, button_url_1, button_text_2, button_url_2, video_url)
+VALUES (1, 'Build Wealth.', 'Findas Academy is a learning community designed for financial intelligence and growth.', 'Join Findas Academy', '#academy', 'Book Free Call', '#booking', '');
 
 INSERT IGNORE INTO about_section (id, founder_name, founder_title, paragraph_1, paragraph_2, paragraph_3, founder_image_url)
 VALUES (1, 'Samir Machawe', 'Founder, Findas Academy', 'Financial Freedom Coach with 20+ years of experience.', 'Most people struggle with money because no one teaches how money works.', 'Mission: help people move from survival mode to freedom mode.', 'https://storage.files-vault.com/uploads/1772207760-dgdy7ilGGl.png');

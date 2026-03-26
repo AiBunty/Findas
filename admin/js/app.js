@@ -32,6 +32,7 @@ const state = {
   existingSlugOptions: null,
   sectionDataCache: {},
   sectionRenderToken: 0,
+  pollsUi: { query: '', status: 'ALL', sort: 'newest', expanded: {}, archiveOpen: false },
   // Phase 5: Performance & Canary
   metrics: { saves: [], modeSwaps: [], auditTimes: [], editorUsage: {} },
   featureFlags: { useSimpleEditor: true, productionCanary: false, useSimplifiedUI: true }
@@ -39,6 +40,14 @@ const state = {
 
 function sectionTitleFromKey(section) {
   return section.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function normalizeSectionKey(section) {
+  const raw = String(section || '').trim();
+  if (!raw) return 'dashboard';
+  if (raw === 'site-config') return 'contact';
+  if (raw === 'academy-sections' || raw === 'academy-community') return 'academy';
+  return raw;
 }
 
 function clearDataCache() {
@@ -1296,6 +1305,161 @@ function splitInputLines(value) {
     .filter(Boolean);
 }
 
+function formatInrPriceLabel(priceRaw, fallback = 'Free') {
+  const priceNumber = Number(priceRaw);
+  if (priceRaw === '' || !Number.isFinite(priceNumber) || priceNumber <= 0) return fallback;
+  return `INR ${priceNumber.toLocaleString('en-IN')}`;
+}
+
+function buildCourseOrDigitalPreviewHtml({
+  section,
+  title,
+  description,
+  imageUrl,
+  priceLabel,
+  badge,
+  language,
+  category,
+  ctaHref,
+  ctaDisabled,
+  slug,
+  field1,
+  field2,
+  field3
+}) {
+  const sectionName = section === 'courses' ? 'Courses' : 'Digital Products';
+  const helperList = [...field1, ...field2, ...field3].slice(0, 3);
+
+  return `
+    <article class="simplified-preview-card" style="--accent-color: #1f4d87; border: 1px solid rgba(31, 77, 135, .08); border-radius: 16px; background: #fff; box-shadow: 0 1px 3px rgba(31, 77, 135, .05); overflow: hidden;">
+      <div class="simplified-preview-media-wrap${imageUrl ? '' : ' is-empty'}" style="position: relative; min-height: 170px; background: linear-gradient(135deg, #e8f0fe, #f0f5ff); border-bottom: 1px solid rgba(31, 77, 135, .08);">
+        ${imageUrl
+          ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title)}" loading="lazy" class="simplified-preview-hero-image">`
+          : `<div style="padding: 18px; text-align: center; color: #4f678d; font-weight: 600;">Add cover image to match live card style.</div>`}
+        <span style="position: absolute; top: 12px; left: 12px; border-radius: 999px; padding: 5px 10px; font-size: .75rem; font-weight: 700; color: #1F4D87; background: rgba(31, 77, 135, .1);">${escapeHtml(badge)}</span>
+      </div>
+      <div class="simplified-preview-body-content" style="padding: 16px; display: flex; flex-direction: column; gap: 8px; min-height: 185px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+          <h2 style="margin: 0; font-size: 1.02rem; line-height: 1.35; font-weight: 700; color: #071a34;">${escapeHtml(title)}</h2>
+          <span style="font-size: .75rem; padding: 5px 10px; border-radius: 999px; font-weight: 700; color: #1F4D87; background: rgba(31, 77, 135, .1);">${escapeHtml(sectionName)}</span>
+        </div>
+        <div class="simplified-preview-meta-row" style="margin-top: 0; color: #4d5b78; font-size: .82rem;">
+          ${category ? `<span><strong>Category:</strong> ${escapeHtml(category)}</span>` : ''}
+          ${language ? `<span><strong>Language:</strong> ${escapeHtml(language)}</span>` : ''}
+        </div>
+        <p class="simplified-preview-description" style="margin-top: 0; color: #4d5b78; font-size: .88rem; line-height: 1.5;">${description || 'Add description to preview how the live card summary will look.'}</p>
+        ${helperList.length
+          ? `<ul style="margin: 0; padding-left: 18px; display: grid; gap: 6px; color: #30496f; font-size: .85rem;">${helperList.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+          : '<p class="preview-empty" style="margin: 0;">Add bullet points in details fields to mirror production card benefits.</p>'}
+        <div class="simplified-preview-slug-row" style="margin-top: auto; padding-top: 8px;">
+          <span class="simplified-preview-slug">${escapeHtml(slug)}</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: 800; font-size: .9rem; padding: 5px 12px; border-radius: 999px; background: linear-gradient(135deg, #1F4D87, #163a63); color: #fff;">${escapeHtml(priceLabel)}</span>
+            <a href="${ctaHref}" target="_blank" rel="noopener noreferrer" class="simplified-preview-cta ${ctaDisabled}">${section === 'courses' ? 'View Course' : 'Buy Now'}</a>
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function buildWebinarPreviewHtml({
+  title,
+  description,
+  imageUrl,
+  priceLabel,
+  badge,
+  language,
+  ctaHref,
+  ctaDisabled,
+  startValue,
+  endValue,
+  statusLabel,
+  statusClass,
+  slug,
+  field1,
+  field2,
+  field3
+}) {
+  const helperList = [...field1, ...field2, ...field3].slice(0, 3);
+  return `
+    <article class="simplified-preview-card" style="--accent-color: #1f4d87; border: 1px solid rgba(31, 77, 135, .08); border-radius: 16px; background: #fff; box-shadow: 0 1px 3px rgba(31, 77, 135, .05); overflow: hidden;">
+      <div class="simplified-preview-media-wrap${imageUrl ? '' : ' is-empty'}" style="position: relative; min-height: 170px; background: linear-gradient(135deg, #e8f0fe, #f0f5ff); border-bottom: 1px solid rgba(31, 77, 135, .08);">
+        ${imageUrl
+          ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title)}" loading="lazy" class="simplified-preview-hero-image">`
+          : `<div style="padding: 18px; text-align: center; color: #4f678d; font-weight: 600;">Add webinar banner to match live section card.</div>`}
+        <span style="position: absolute; top: 12px; left: 12px; border-radius: 999px; padding: 5px 10px; font-size: .75rem; font-weight: 700; color: #1F4D87; background: rgba(31, 77, 135, .1);">${escapeHtml(badge)}</span>
+      </div>
+      <div class="simplified-preview-body-content" style="padding: 16px; display: flex; flex-direction: column; gap: 8px; min-height: 195px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+          <h2 style="margin: 0; font-size: 1.02rem; line-height: 1.35; font-weight: 700; color: #071a34;">${escapeHtml(title)}</h2>
+          <span class="simplified-preview-status ${escapeHtml(statusClass)}">${escapeHtml(statusLabel)}</span>
+        </div>
+        <div class="simplified-preview-meta-row" style="margin-top: 0; color: #4d5b78; font-size: .82rem;">
+          <span><strong>Start:</strong> ${escapeHtml(formatLocalDateTimeLabel(startValue))}</span>
+          <span><strong>End:</strong> ${escapeHtml(formatLocalDateTimeLabel(endValue))}</span>
+          ${language ? `<span><strong>Language:</strong> ${escapeHtml(language)}</span>` : ''}
+          <span><strong>Price:</strong> ${escapeHtml(priceLabel)}</span>
+        </div>
+        <p class="simplified-preview-description" style="margin-top: 0; color: #4d5b78; font-size: .88rem; line-height: 1.5;">${description || 'Add webinar summary to mirror the live website card preview.'}</p>
+        ${helperList.length
+          ? `<ul style="margin: 0; padding-left: 18px; display: grid; gap: 6px; color: #30496f; font-size: .85rem;">${helperList.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+          : '<p class="preview-empty" style="margin: 0;">Add session points in details fields to show webinar highlights.</p>'}
+        <div class="simplified-preview-slug-row" style="margin-top: auto; padding-top: 8px;">
+          <span class="simplified-preview-slug">${escapeHtml(slug)}</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: 800; font-size: .9rem; padding: 5px 12px; border-radius: 999px; background: linear-gradient(135deg, #1F4D87, #163a63); color: #fff;">${escapeHtml(priceLabel)}</span>
+            <a href="${ctaHref}" target="_blank" rel="noopener noreferrer" class="simplified-preview-cta ${ctaDisabled}">Register</a>
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function buildMembershipPreviewHtml({
+  title,
+  description,
+  imageUrl,
+  priceLabel,
+  badge,
+  ctaHref,
+  ctaDisabled,
+  slug,
+  field1,
+  field2,
+  field3
+}) {
+  const features = [...field1, ...field2, ...field3].slice(0, 5);
+  return `
+    <article class="simplified-preview-card" style="--accent-color: #1f4d87; border: 1px solid rgba(31, 77, 135, .08); border-radius: 16px; background: #fff; box-shadow: 0 1px 3px rgba(31, 77, 135, .05); overflow: hidden;">
+      <div class="simplified-preview-media-wrap${imageUrl ? '' : ' is-empty'}" style="position: relative; min-height: 170px; background: linear-gradient(135deg, #e8f0fe, #f0f5ff); border-bottom: 1px solid rgba(31, 77, 135, .08);">
+        ${imageUrl
+          ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title)}" loading="lazy" class="simplified-preview-hero-image">`
+          : `<div style="padding: 18px; text-align: center; color: #4f678d; font-weight: 600;">Add plan image to match membership card appearance.</div>`}
+        <span style="position: absolute; top: 12px; left: 12px; border-radius: 999px; padding: 5px 10px; font-size: .75rem; font-weight: 700; color: #1F4D87; background: rgba(31, 77, 135, .1);">${escapeHtml(badge)}</span>
+      </div>
+      <div class="simplified-preview-body-content" style="padding: 16px; display: flex; flex-direction: column; gap: 8px; min-height: 195px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+          <h2 style="margin: 0; font-size: 1.02rem; line-height: 1.35; font-weight: 700; color: #071a34;">${escapeHtml(title)}</h2>
+          <span style="font-size: .75rem; padding: 5px 10px; border-radius: 999px; font-weight: 700; color: #1F4D87; background: rgba(31, 77, 135, .1);">Membership</span>
+        </div>
+        <p class="simplified-preview-description" style="margin-top: 0; color: #4d5b78; font-size: .88rem; line-height: 1.5;">${description || 'Add membership description to mirror live pricing section.'}</p>
+        ${features.length
+          ? `<ul style="margin: 0; padding-left: 18px; display: grid; gap: 6px; color: #30496f; font-size: .85rem;">${features.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+          : '<p class="preview-empty" style="margin: 0;">Add features/benefits in detail fields to preview plan points.</p>'}
+        <div class="simplified-preview-slug-row" style="margin-top: auto; padding-top: 8px;">
+          <span class="simplified-preview-slug">${escapeHtml(slug)}</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: 800; font-size: .9rem; padding: 5px 12px; border-radius: 999px; background: linear-gradient(135deg, #1F4D87, #163a63); color: #fff;">${escapeHtml(priceLabel)}</span>
+            <a href="${ctaHref}" target="_blank" rel="noopener noreferrer" class="simplified-preview-cta ${ctaDisabled}">Join Membership</a>
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
 function formatLocalDateTimeLabel(value) {
   const raw = String(value || '').trim();
   if (!raw) return 'Not set';
@@ -1386,9 +1550,7 @@ function buildSimplifiedModalPreviewHtml(section, form, cfg) {
   const ctaDisabled = paymentLink ? '' : 'disabled';
   const ctaHref = paymentLink ? escapeHtml(paymentLink) : '#';
 
-  const priceNumber = Number(priceRaw);
-  const hasPrice = priceRaw !== '' && Number.isFinite(priceNumber) && priceNumber > 0;
-  const priceLabel = hasPrice ? `INR ${priceNumber.toLocaleString('en-IN')}` : 'Free';
+  const priceLabel = formatInrPriceLabel(priceRaw, 'Free');
   const sectionBadgeDefaults = {
     courses: 'COURSE',
     webinars: 'WEBINAR',
@@ -1439,6 +1601,65 @@ function buildSimplifiedModalPreviewHtml(section, form, cfg) {
       </div>
     `
     : '<div class="simplified-preview-media-wrap is-empty">Add an image URL to preview cover image.</div>';
+
+  if (section === 'courses' || section === 'digital-products') {
+    return buildCourseOrDigitalPreviewHtml({
+      section,
+      title,
+      description: safeDescription,
+      imageUrl,
+      priceLabel,
+      badge: previewBadge,
+      language,
+      category: getValue('category'),
+      ctaHref,
+      ctaDisabled,
+      slug,
+      field1,
+      field2,
+      field3
+    });
+  }
+
+  if (section === 'webinars') {
+    const startValue = getValue('start_datetime_local');
+    const endValue = getValue('end_datetime_local');
+    const timingStatus = getWebinarTimingStatus(endValue);
+    return buildWebinarPreviewHtml({
+      title,
+      description: safeDescription,
+      imageUrl,
+      priceLabel,
+      badge: previewBadge,
+      language,
+      ctaHref,
+      ctaDisabled,
+      startValue,
+      endValue,
+      statusLabel: timingStatus.label,
+      statusClass: timingStatus.klass,
+      slug,
+      field1,
+      field2,
+      field3
+    });
+  }
+
+  if (section === 'membership') {
+    return buildMembershipPreviewHtml({
+      title,
+      description: safeDescription,
+      imageUrl,
+      priceLabel,
+      badge: previewBadge,
+      ctaHref,
+      ctaDisabled,
+      slug,
+      field1,
+      field2,
+      field3
+    });
+  }
 
   return `
     <article class="simplified-preview-card" style="--accent-color: ${cfg.color};">
@@ -1523,7 +1744,9 @@ const sectionConfigs = {
       { name: 'title', label: 'Title', type: 'text', required: true },
       { name: 'subtitle', label: 'Subtitle', type: 'textarea' },
       { name: 'button_text_1', label: 'Primary Button Text', type: 'text' },
+      { name: 'button_url_1', label: 'Primary Button URL', type: 'text', placeholder: '#academy' },
       { name: 'button_text_2', label: 'Secondary Button Text', type: 'text' },
+      { name: 'button_url_2', label: 'Secondary Button URL', type: 'text', placeholder: '#booking or https://...' },
       { name: 'video_url', label: 'Video URL', type: 'text' }
     ]
   },
@@ -1670,7 +1893,7 @@ const sectionConfigs = {
       { name: 'end_datetime_local', label: 'End Date & Time', type: 'datetime-local' },
       { name: 'price_inr', label: 'Price (INR)', type: 'number', step: '0.01' },
       { name: 'is_free', label: 'Free Webinar', type: 'checkbox' },
-      { name: 'payment_link', label: 'Payment Link', type: 'text' },
+      { name: 'payment_link', label: 'Primary CTA URL', type: 'text' },
       { name: 'primary_cta_text', label: 'Primary CTA Text', type: 'text' },
       { name: 'is_active', label: 'Active', type: 'checkbox' },
       { name: 'order', label: 'Order', type: 'number' }
@@ -2408,23 +2631,215 @@ function wireAcademyPreview(form, previewBodyId) {
   return update;
 }
 
-function buildAcademyPreviewHtml(payload) {
-  const isEnabled = payload.is_enabled === 'on' || payload.is_enabled === true;
-  
-  if (!isEnabled) {
-    return `
-      <div style="text-align: center; padding: 40px; background: #f5f5f5; border-radius: 8px;">
-        <p style="font-size: 18px; color: #999; margin: 0;">
-          🔕 Academy section is <strong>DISABLED</strong>
-        </p>
-        <p style="font-size: 14px; color: #aaa; margin: 10px 0 0 0;">
-          Enable the toggle to show this section on your homepage.
-        </p>
-      </div>
-    `;
+function safeParseJsonArray(rawValue) {
+  const raw = String(rawValue || '').trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_e) {
+    return [];
   }
+}
 
-  // Check individual section toggles
+function getAcademyStructuredEditorConfigs() {
+  return {
+    features_json: {
+      rowLabel: 'Feature',
+      columns: [
+        { key: 'title', label: 'Title' },
+        { key: 'icon_emoji', label: 'Emoji' },
+        { key: 'description', label: 'Description' }
+      ]
+    },
+    community_samples_json: {
+      rowLabel: 'Post',
+      columns: [
+        { key: 'post_type', label: 'Post Type' },
+        { key: 'author', label: 'Author' },
+        { key: 'content', label: 'Content' }
+      ]
+    },
+    roadmap_items_json: {
+      rowLabel: 'Step',
+      columns: [
+        { key: 'stage_name', label: 'Stage Name' },
+        { key: 'description', label: 'Description' }
+      ]
+    },
+    growth_stages_json: {
+      rowLabel: 'Stage',
+      columns: [
+        { key: 'stage_name', label: 'Stage Name' },
+        { key: 'description', label: 'Description' }
+      ]
+    }
+  };
+}
+
+function renderAcademyStructuredRow(fieldName, rowData, rowIndex) {
+  const config = getAcademyStructuredEditorConfigs()[fieldName];
+  if (!config) return '';
+  const disabled = !canWrite() ? 'disabled' : '';
+
+  return `
+    <div class="academy-row-card" data-editor-row data-field="${escapeHtml(fieldName)}" style="border:1px solid #dfe7f6;border-radius:8px;padding:12px;margin-bottom:10px;background:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;">
+        <strong data-row-label>${escapeHtml(config.rowLabel)} ${rowIndex}</strong>
+        <div style="display:flex;gap:6px;">
+          <button type="button" class="mini-btn" data-act="academy-move-up" data-field="${escapeHtml(fieldName)}" ${disabled}>↑</button>
+          <button type="button" class="mini-btn" data-act="academy-move-down" data-field="${escapeHtml(fieldName)}" ${disabled}>↓</button>
+          <button type="button" class="mini-btn danger" data-act="academy-remove-row" data-field="${escapeHtml(fieldName)}" ${disabled}>Remove</button>
+        </div>
+      </div>
+      <div class="form-grid">
+        ${config.columns.map((col) => `
+          <label class="field">
+            <span>${escapeHtml(col.label)}</span>
+            <input type="text" data-row-key="${escapeHtml(col.key)}" data-structured-field="${escapeHtml(fieldName)}" value="${escapeHtml(String(rowData[col.key] || ''))}" ${disabled}>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderAcademyStructuredEditor(fieldName, title, helperText, rows) {
+  const disabled = !canWrite() ? 'disabled' : '';
+  const safeRows = Array.isArray(rows) && rows.length ? rows : [{}];
+  return `
+    <div class="academy-structured-editor" data-editor-field="${escapeHtml(fieldName)}" style="grid-column:1/-1;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 0 10px;">
+        <span style="font-weight:600;color:#2f4f7a;">${escapeHtml(title)}</span>
+        <button type="button" class="ghost-btn" data-act="academy-add-row" data-field="${escapeHtml(fieldName)}" ${disabled}>+ Add ${escapeHtml(getAcademyStructuredEditorConfigs()[fieldName].rowLabel)}</button>
+      </div>
+      <div data-editor-rows="${escapeHtml(fieldName)}">
+        ${safeRows.map((row, idx) => renderAcademyStructuredRow(fieldName, row || {}, idx + 1)).join('')}
+      </div>
+      <small>${escapeHtml(helperText)}</small>
+    </div>
+  `;
+}
+
+function refreshAcademyStructuredRowLabels(form, fieldName) {
+  const config = getAcademyStructuredEditorConfigs()[fieldName];
+  if (!config) return;
+  const rows = Array.from(form.querySelectorAll(`[data-editor-row][data-field="${fieldName}"]`));
+  rows.forEach((row, idx) => {
+    const label = row.querySelector('[data-row-label]');
+    if (label) label.textContent = `${config.rowLabel} ${idx + 1}`;
+  });
+}
+
+function initAcademyStructuredEditors(form) {
+  if (!form) return;
+  const configs = getAcademyStructuredEditorConfigs();
+
+  form.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-act^="academy-"]');
+    if (!btn) return;
+    const fieldName = String(btn.dataset.field || '').trim();
+    if (!configs[fieldName]) return;
+    const rowsWrap = form.querySelector(`[data-editor-rows="${fieldName}"]`);
+    if (!rowsWrap) return;
+
+    if (btn.dataset.act === 'academy-add-row') {
+      const nextIndex = rowsWrap.querySelectorAll('[data-editor-row]').length + 1;
+      rowsWrap.insertAdjacentHTML('beforeend', renderAcademyStructuredRow(fieldName, {}, nextIndex));
+      refreshAcademyStructuredRowLabels(form, fieldName);
+      syncAcademySimpleEditors(form);
+      return;
+    }
+
+    const row = btn.closest('[data-editor-row]');
+    if (!row) return;
+
+    if (btn.dataset.act === 'academy-remove-row') {
+      row.remove();
+      refreshAcademyStructuredRowLabels(form, fieldName);
+      syncAcademySimpleEditors(form);
+      return;
+    }
+
+    if (btn.dataset.act === 'academy-move-up') {
+      const prev = row.previousElementSibling;
+      if (prev) rowsWrap.insertBefore(row, prev);
+      refreshAcademyStructuredRowLabels(form, fieldName);
+      syncAcademySimpleEditors(form);
+      return;
+    }
+
+    if (btn.dataset.act === 'academy-move-down') {
+      const next = row.nextElementSibling;
+      if (next) rowsWrap.insertBefore(next, row);
+      refreshAcademyStructuredRowLabels(form, fieldName);
+      syncAcademySimpleEditors(form);
+    }
+  });
+
+  form.addEventListener('input', (e) => {
+    if (!e.target.closest('[data-structured-field]')) return;
+    syncAcademySimpleEditors(form);
+  });
+
+  Object.keys(configs).forEach((fieldName) => refreshAcademyStructuredRowLabels(form, fieldName));
+  syncAcademySimpleEditors(form);
+}
+
+function syncAcademySimpleEditors(form) {
+  if (!form) return;
+  const configs = getAcademyStructuredEditorConfigs();
+
+  const setJsonField = (fieldName, value) => {
+    const node = form.elements[fieldName];
+    if (node) node.value = value;
+  };
+
+  Object.keys(configs).forEach((fieldName) => {
+    const rows = Array.from(form.querySelectorAll(`[data-editor-row][data-field="${fieldName}"]`));
+    const items = rows.map((row, idx) => {
+      const obj = {};
+      configs[fieldName].columns.forEach((col) => {
+        const input = row.querySelector(`[data-row-key="${col.key}"]`);
+        obj[col.key] = input ? String(input.value || '').trim() : '';
+      });
+
+      if (fieldName === 'features_json') {
+        return {
+          id: idx + 1,
+          title: obj.title || `Feature ${idx + 1}`,
+          icon_emoji: obj.icon_emoji || '📚',
+          description: obj.description || '',
+          is_active: 1,
+          order: idx + 1
+        };
+      }
+      if (fieldName === 'community_samples_json') {
+        return {
+          id: idx + 1,
+          post_type: obj.post_type || `Post ${idx + 1}`,
+          author: obj.author || 'Community',
+          content: obj.content || '',
+          is_active: 1
+        };
+      }
+      return {
+        stage_num: idx + 1,
+        stage_name: obj.stage_name || `${configs[fieldName].rowLabel} ${idx + 1}`,
+        description: obj.description || ''
+      };
+    }).filter((item) => {
+      if (fieldName === 'features_json') return String(item.title || '').trim() || String(item.description || '').trim();
+      if (fieldName === 'community_samples_json') return String(item.post_type || '').trim() || String(item.content || '').trim();
+      return String(item.stage_name || '').trim() || String(item.description || '').trim();
+    });
+
+    setJsonField(fieldName, JSON.stringify(items));
+  });
+}
+
+function buildAcademyPreviewHtml(payload) {
+  // Preview intentionally ignores section enable/disable banners.
   const showIntroComparison = payload.show_intro_comparison === 'on' || payload.show_intro_comparison === true;
   const showFeatures = payload.show_features === 'on' || payload.show_features === true;
   const showProducts = payload.show_products === 'on' || payload.show_products === true;
@@ -2454,16 +2869,10 @@ function buildAcademyPreviewHtml(payload) {
         </div>
       </div>
     </section>
-  ` : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">📝 Introduction & Comparison section is disabled</small></div>';
+  ` : '';
   
   // Learning Features
-  let features = [];
-  try {
-    const featuresJson = String(payload.features_json || '').trim();
-    if (featuresJson && featuresJson !== '[]') {
-      features = JSON.parse(featuresJson);
-    }
-  } catch (_e) {}
+  const features = safeParseJsonArray(payload.features_json);
   const featuresIntro = escapeHtml(String(payload.features_intro || '').trim() || 'What You Get Inside');
   const featuresHtml = showFeatures && features.length ? `
     <section style="margin-bottom: 24px;">
@@ -2471,14 +2880,14 @@ function buildAcademyPreviewHtml(payload) {
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
         ${features.slice(0, 6).map(f => `
           <div style="text-align: center; padding: 15px; border: 1px solid #e0e0e0; border-radius: 6px; flex: 1; min-width: 150px;">
-            <div style="font-size: 24px; margin-bottom: 8px;">${escapeHtml(f.emoji || '📚')}</div>
+            <div style="font-size: 24px; margin-bottom: 8px;">${escapeHtml(f.icon_emoji || f.emoji || '📚')}</div>
             <strong style="display: block; margin-bottom: 6px;">${escapeHtml(f.title || 'Feature')}</strong>
             <small style="color: #666;">${escapeHtml(f.description || '')}</small>
           </div>
         `).join('')}
       </div>
     </section>
-  ` : showFeatures ? '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🎓 Add learning features JSON to display</small></div>' : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🎓 Learning Features section is disabled</small></div>';
+  ` : '';
   
   // Digital Products
   const productsHeading = escapeHtml(String(payload.products_heading || '').trim() || 'Digital Products & Tools');
@@ -2488,16 +2897,10 @@ function buildAcademyPreviewHtml(payload) {
       <h4 style="color: #2196F3; margin-top: 0;">${productsHeading}</h4>
       <p style="color: #666;">${productsDescription || '<em>Add digital products description...</em>'}</p>
     </section>
-  ` : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🛠️ Digital Products section is disabled</small></div>';
+  ` : '';
   
   // Community Sneak Peek
-  let communityPosts = [];
-  try {
-    const communityJson = String(payload.community_samples_json || '').trim();
-    if (communityJson && communityJson !== '[]') {
-      communityPosts = JSON.parse(communityJson);
-    }
-  } catch (_e) {}
+  const communityPosts = safeParseJsonArray(payload.community_samples_json);
   const communityHeading = escapeHtml(String(payload.community_heading || '').trim() || 'Sneak Peek into Community');
   const communityHtml = showCommunity && communityPosts.length ? `
     <section style="margin-bottom: 24px;">
@@ -2506,7 +2909,7 @@ function buildAcademyPreviewHtml(payload) {
         ${communityPosts.slice(0, 6).map(p => `
           <div style="padding: 12px; border-left: 3px solid #FF9800; background: #fff9e6;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-              <span style="font-weight: bold; color: #FF9800;">${escapeHtml(p.type || 'Post')}</span>
+              <span style="font-weight: bold; color: #FF9800;">${escapeHtml(p.post_type || p.type || 'Post')}</span>
               <small style="color: #999;">${escapeHtml(p.author || 'Community')}</small>
             </div>
             <p style="margin: 0; color: #666;">${escapeHtml(p.content || '')}</p>
@@ -2514,16 +2917,10 @@ function buildAcademyPreviewHtml(payload) {
         `).join('')}
       </div>
     </section>
-  ` : showCommunity ? '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">👥 Add community posts JSON to display</small></div>' : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">👥 Community Sneak Peek section is disabled</small></div>';
+  ` : '';
   
   // Learning Roadmap
-  let roadmapItems = [];
-  try {
-    const roadmapJson = String(payload.roadmap_items_json || '').trim();
-    if (roadmapJson && roadmapJson !== '[]') {
-      roadmapItems = JSON.parse(roadmapJson);
-    }
-  } catch (_e) {}
+  const roadmapItems = safeParseJsonArray(payload.roadmap_items_json);
   const roadmapHeading = escapeHtml(String(payload.roadmap_heading || '').trim() || 'Your 5-Step Learning Path');
   const roadmapHtml = showRoadmap && roadmapItems.length ? `
     <section style="margin-bottom: 24px;">
@@ -2531,22 +2928,16 @@ function buildAcademyPreviewHtml(payload) {
       <div style="display: grid; gap: 12px;">
         ${roadmapItems.slice(0, 5).map((r, i) => `
           <div style="text-align: center; padding: 15px; border-left: 3px solid #2196F3;">
-            <strong style="display: block; margin-bottom: 4px;">Step ${i + 1}: ${escapeHtml(r.title || 'Step')}</strong>
+            <strong style="display: block; margin-bottom: 4px;">Step ${i + 1}: ${escapeHtml(r.stage_name || r.title || 'Step')}</strong>
             <small style="color: #666;">${escapeHtml(r.description || '')}</small>
           </div>
         `).join('')}
       </div>
     </section>
-  ` : showRoadmap ? '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🗺️ Add roadmap items JSON to display</small></div>' : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🗺️ Learning Roadmap section is disabled</small></div>';
+  ` : '';
   
   // Growth Roadmap
-  let growthStages = [];
-  try {
-    const growthJson = String(payload.growth_stages_json || '').trim();
-    if (growthJson && growthJson !== '[]') {
-      growthStages = JSON.parse(growthJson);
-    }
-  } catch (_e) {}
+  const growthStages = safeParseJsonArray(payload.growth_stages_json);
   const growthRoadmapHeading = escapeHtml(String(payload.growth_roadmap_heading || '').trim() || 'Growth Roadmap');
   const growthRoadmapHtml = showGrowthRoadmap && growthStages.length ? `
     <section style="margin-bottom: 24px;">
@@ -2554,13 +2945,13 @@ function buildAcademyPreviewHtml(payload) {
       <div style="display: grid; gap: 12px;">
         ${growthStages.slice(0, 5).map((g, i) => `
           <div style="padding: 12px; border-left: 3px solid #4CAF50; background: #f1f8e9;">
-            <strong style="display: block; margin-bottom: 4px;">${i + 1}. ${escapeHtml(g.stage || 'Stage')}</strong>
+            <strong style="display: block; margin-bottom: 4px;">${i + 1}. ${escapeHtml(g.stage_name || g.stage || 'Stage')}</strong>
             <small style="color: #666;">${escapeHtml(g.description || '')}</small>
           </div>
         `).join('')}
       </div>
     </section>
-  ` : showGrowthRoadmap ? '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">📈 Add growth stages JSON to display</small></div>' : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">📈 Growth Roadmap section is disabled</small></div>';
+  ` : '';
   
   // Who Should Join & Membership
   const whoShouldJoinText = nl2brSafe(escapeHtml(String(payload.who_should_join_text || '').trim() || ''));
@@ -2573,7 +2964,7 @@ function buildAcademyPreviewHtml(payload) {
       <h4 style="color: #2196F3; margin-top: 16px;">${membershipHeading}</h4>
       <p style="color: #666;">${membershipDescription || '<em>Add membership description...</em>'}</p>
     </section>
-  ` : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🎯 Who Should Join & Membership section is disabled</small></div>';
+  ` : '';
   
   // Call-to-Action
   const ctaButtonText = escapeHtml(String(payload.cta_button_text || '').trim() || 'Join Academy');
@@ -2584,18 +2975,10 @@ function buildAcademyPreviewHtml(payload) {
         ${ctaButtonText}
       </a>
     </section>
-  ` : showCta ? '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🔗 Add CTA button text to display</small></div>' : '<div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 12px 0; border-radius: 4px;"><small style="color: #856404;">🔗 Call-to-Action section is disabled</small></div>';
-  
-  const toggleState = isEnabled ? '✅ <strong>ENABLED</strong>' : '❌ <strong>DISABLED</strong>';
+  ` : '';
   
   return `
     <div style="background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
-      <div style="margin-bottom: 24px; padding: 16px; background: #e3f2fd; border-left: 4px solid #2196F3; border-radius: 4px;">
-        <p style="margin: 0; color: #1565c0;">
-          <strong>Academy Section Status:</strong> ${toggleState}
-        </p>
-      </div>
-      
       <section style="margin-bottom: 24px;">
         <p style="line-height: 1.6; color: #333; font-size: 14px;">${intro}</p>
       </section>
@@ -2608,12 +2991,6 @@ function buildAcademyPreviewHtml(payload) {
       ${growthRoadmapHtml}
       ${whoShouldJoinHtml}
       ${ctaHtml}
-
-      <div style="text-align: center; padding: 20px; background: #f0f0f0; border-radius: 6px; margin-top: 24px;">
-        <p style="margin: 0; color: #666; font-size: 12px;">
-          ℹ️ This preview shows sections based on their individual toggle settings
-        </p>
-      </div>
     </div>
   `;
 }
@@ -2875,7 +3252,7 @@ async function renderIntegratedChildren(sectionKey, parentRow) {
 }
 
 async function setSection(section) {
-  const normalizedSection = section === 'site-config' ? 'contact' : section;
+  const normalizedSection = normalizeSectionKey(section);
   state.section = normalizedSection;
   el.menuList.querySelectorAll('button').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.section === normalizedSection);
@@ -2972,6 +3349,69 @@ async function renderSingletonSection(cfg) {
   const footerPreviewEnabled = hasFooterSocialFields(cfg.fields);
   const isAcademySection = state.section === 'academy';
 
+  const academyDefaults = {
+    is_enabled: 1,
+    show_intro_comparison: 1,
+    intro_text: 'Learn what took decades of real-world experience to discover in a structured environment built for clarity, action, and growth. Your journey toward financial freedom begins here.',
+    before_heading: 'Before Joining',
+    before_items: 'Confusion about how money really works\nIrregular saving and investing habits\nLack of clarity about financial goals\nLearning from scattered sources\nNo accountability or support',
+    after_heading: 'After Joining',
+    after_items: 'Clear understanding of financial systems\nStructured learning about wealth creation\nPractical tools to build financial discipline\nContinuous insights that improve thinking\nA community that encourages growth',
+    show_features: 1,
+    features_intro: 'What You Get Inside',
+    features_json: '[{"id":1,"title":"Book of the Month","description":"Powerful books on success, wealth, mindset, and growth with actionable insights every week.","icon_emoji":"📚","is_active":1,"order":1},{"id":2,"title":"Weekly Learning Videos","description":"Focused 15-30 min videos on wealth creation, investing, insurance, and financial planning.","icon_emoji":"🎬","is_active":1,"order":2},{"id":3,"title":"Daily Dose of Insights","description":"Two-minute daily insights with one action step to improve thinking and build momentum.","icon_emoji":"💡","is_active":1,"order":3},{"id":4,"title":"Monthly Challenges","description":"Budgeting, habits, gratitude, and investing challenges that build financial discipline.","icon_emoji":"🏆","is_active":1,"order":4},{"id":5,"title":"Live Q&A Sessions","description":"Monthly live session where members ask questions and get advice directly from experts.","icon_emoji":"🎯","is_active":1,"order":5},{"id":6,"title":"Community Forum","description":"Safe space to ask questions, share wins, and learn from thousands of members.","icon_emoji":"👥","is_active":1,"order":6}]',
+    show_products: 1,
+    products_heading: 'Digital Products & Practical Tools',
+    products_description: 'Knowledge alone does not create change. Action does. Use budgeting trackers, financial planning templates, goal planners, journaling tools, and habit-building frameworks to turn learning into results.',
+    show_community: 1,
+    community_heading: 'Sneak Peek into the Community',
+    community_samples_json: '[{"id":1,"post_type":"Daily Dose","content":"💡 Two-minute insight: track every rupee for the next 7 days to improve awareness.","author":"Findas Team","is_active":1},{"id":2,"post_type":"Weekly Learning","content":"🎬 New video: Building your first long-term investment system without overwhelm.","author":"Samir Machawe","is_active":1},{"id":3,"post_type":"Success Story","content":"🎯 Members are sharing wins from the budgeting challenge - 47 people saved ₹50K+ this month!","author":"Community","is_active":1}]',
+    show_roadmap: 1,
+    roadmap_heading: 'What Happens After You Join',
+    roadmap_items_json: '[{"stage_num":1,"stage_name":"Awareness","description":"Understand how money works and improve financial literacy."},{"stage_num":2,"stage_name":"Systems","description":"Build simple systems like budgeting and goal planning."},{"stage_num":3,"stage_name":"Wealth Creation","description":"Learn investing principles and long-term wealth strategies."},{"stage_num":4,"stage_name":"Mindset Upgrade","description":"Develop an abundance mindset through daily insights and books."},{"stage_num":5,"stage_name":"Life by Design","description":"Design your life intentionally instead of reacting to circumstances."}]',
+    show_growth_roadmap: 1,
+    growth_roadmap_heading: 'Findas Academy Growth Roadmap',
+    growth_stages_json: '[{"stage_num":1,"stage_name":"Awareness","description":"Understand your current financial position and where you want to go."},{"stage_num":2,"stage_name":"Foundation","description":"Build budgeting, saving, and goal-setting systems."},{"stage_num":3,"stage_name":"Growth","description":"Learn investing principles and wealth creation strategies."},{"stage_num":4,"stage_name":"Mastery","description":"Develop an abundance mindset and refine your wealth systems."},{"stage_num":5,"stage_name":"Freedom","description":"Design your life intentionally with financial freedom as the foundation."}]',
+    show_who_should_join: 1,
+    who_should_join_text: 'Entrepreneurs, employees, students, investors, business owners, and anyone committed to improving financial literacy and life systems.',
+    membership_heading: 'Membership & Pricing',
+    membership_description: 'Simple membership with unlimited access to courses, channels, tools, challenges, and support. Every new member receives a 14-day free look period.',
+    show_cta: 1,
+    cta_button_text: 'Join Findas Academy',
+    cta_button_url: '#membership'
+  };
+  const acData = (() => {
+    if (!isAcademySection) return {};
+    const source = res.data && typeof res.data === 'object' ? res.data : {};
+    const merged = { ...academyDefaults };
+    Object.keys(source).forEach((key) => {
+      const value = source[key];
+      if (value !== null && value !== '') {
+        merged[key] = value;
+      }
+    });
+    return merged;
+  })();
+  const av = (name) => { const v = acData[name]; return v != null ? v : ''; };
+  const academyFeatureRows = safeParseJsonArray(av('features_json')).map((item) => ({
+    title: String(item && item.title || '').trim(),
+    icon_emoji: String(item && (item.icon_emoji || item.emoji) || '').trim(),
+    description: String(item && item.description || '').trim()
+  }));
+  const academyCommunityRows = safeParseJsonArray(av('community_samples_json')).map((item) => ({
+    post_type: String(item && (item.post_type || item.type) || '').trim(),
+    author: String(item && item.author || '').trim(),
+    content: String(item && item.content || '').trim()
+  }));
+  const academyRoadmapRows = safeParseJsonArray(av('roadmap_items_json')).map((item) => ({
+    stage_name: String(item && (item.stage_name || item.title) || '').trim(),
+    description: String(item && item.description || '').trim()
+  }));
+  const academyGrowthRows = safeParseJsonArray(av('growth_stages_json')).map((item) => ({
+    stage_name: String(item && (item.stage_name || item.stage) || '').trim(),
+    description: String(item && item.description || '').trim()
+  }));
+
   const logoUploadCard = state.section === 'contact'
     ? `
       <div class="crud-form" id="logoUploadCard">
@@ -2995,7 +3435,7 @@ async function renderSingletonSection(cfg) {
         <fieldset style="border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">📊 Section Control</legend>
           <div class="form-grid" style="margin-top: 12px;">
-            ${renderField(cfg.fields.find(f => f.name === 'is_enabled'), res.data ? res.data['is_enabled'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'is_enabled'), av('is_enabled'))}
           </div>
         </fieldset>
 
@@ -3003,17 +3443,17 @@ async function renderSingletonSection(cfg) {
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">📝 Introduction & Comparison</legend>
           <div class="form-grid" style="margin-top: 12px;">
             <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
-              ${renderField(cfg.fields.find(f => f.name === 'show_intro_comparison'), res.data ? res.data['show_intro_comparison'] : '')}
+              ${renderField(cfg.fields.find(f => f.name === 'show_intro_comparison'), av('show_intro_comparison'))}
             </div>
-            ${renderField(cfg.fields.find(f => f.name === 'intro_text'), res.data ? res.data['intro_text'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'intro_text'), av('intro_text'))}
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div>
-                ${renderField(cfg.fields.find(f => f.name === 'before_heading'), res.data ? res.data['before_heading'] : '')}
-                ${renderField(cfg.fields.find(f => f.name === 'before_items'), res.data ? res.data['before_items'] : '')}
+                ${renderField(cfg.fields.find(f => f.name === 'before_heading'), av('before_heading'))}
+                ${renderField(cfg.fields.find(f => f.name === 'before_items'), av('before_items'))}
               </div>
               <div>
-                ${renderField(cfg.fields.find(f => f.name === 'after_heading'), res.data ? res.data['after_heading'] : '')}
-                ${renderField(cfg.fields.find(f => f.name === 'after_items'), res.data ? res.data['after_items'] : '')}
+                ${renderField(cfg.fields.find(f => f.name === 'after_heading'), av('after_heading'))}
+                ${renderField(cfg.fields.find(f => f.name === 'after_items'), av('after_items'))}
               </div>
             </div>
           </div>
@@ -3023,10 +3463,11 @@ async function renderSingletonSection(cfg) {
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🎓 Learning Features</legend>
           <div class="form-grid" style="margin-top: 12px;">
             <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
-              ${renderField(cfg.fields.find(f => f.name === 'show_features'), res.data ? res.data['show_features'] : '')}
+              ${renderField(cfg.fields.find(f => f.name === 'show_features'), av('show_features'))}
             </div>
-            ${renderField(cfg.fields.find(f => f.name === 'features_intro'), res.data ? res.data['features_intro'] : '')}
-            ${renderField(cfg.fields.find(f => f.name === 'features_json'), res.data ? res.data['features_json'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'features_intro'), av('features_intro'))}
+            ${renderAcademyStructuredEditor('features_json', 'Learning Features', 'Add rows with title, emoji, and description. Use arrows to reorder.', academyFeatureRows)}
+            <div style="display:none;">${renderField(cfg.fields.find(f => f.name === 'features_json'), av('features_json'))}</div>
           </div>
         </fieldset>
 
@@ -3034,10 +3475,10 @@ async function renderSingletonSection(cfg) {
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🛠️ Digital Products</legend>
           <div class="form-grid" style="margin-top: 12px;">
             <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
-              ${renderField(cfg.fields.find(f => f.name === 'show_products'), res.data ? res.data['show_products'] : '')}
+              ${renderField(cfg.fields.find(f => f.name === 'show_products'), av('show_products'))}
             </div>
-            ${renderField(cfg.fields.find(f => f.name === 'products_heading'), res.data ? res.data['products_heading'] : '')}
-            ${renderField(cfg.fields.find(f => f.name === 'products_description'), res.data ? res.data['products_description'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'products_heading'), av('products_heading'))}
+            ${renderField(cfg.fields.find(f => f.name === 'products_description'), av('products_description'))}
           </div>
         </fieldset>
 
@@ -3045,10 +3486,11 @@ async function renderSingletonSection(cfg) {
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">👥 Community Sneak Peek</legend>
           <div class="form-grid" style="margin-top: 12px;">
             <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
-              ${renderField(cfg.fields.find(f => f.name === 'show_community'), res.data ? res.data['show_community'] : '')}
+              ${renderField(cfg.fields.find(f => f.name === 'show_community'), av('show_community'))}
             </div>
-            ${renderField(cfg.fields.find(f => f.name === 'community_heading'), res.data ? res.data['community_heading'] : '')}
-            ${renderField(cfg.fields.find(f => f.name === 'community_samples_json'), res.data ? res.data['community_samples_json'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'community_heading'), av('community_heading'))}
+            ${renderAcademyStructuredEditor('community_samples_json', 'Community Post Samples', 'Add rows with post type, author, and content.', academyCommunityRows)}
+            <div style="display:none;">${renderField(cfg.fields.find(f => f.name === 'community_samples_json'), av('community_samples_json'))}</div>
           </div>
         </fieldset>
 
@@ -3056,10 +3498,11 @@ async function renderSingletonSection(cfg) {
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🗺️ Learning Roadmap</legend>
           <div class="form-grid" style="margin-top: 12px;">
             <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
-              ${renderField(cfg.fields.find(f => f.name === 'show_roadmap'), res.data ? res.data['show_roadmap'] : '')}
+              ${renderField(cfg.fields.find(f => f.name === 'show_roadmap'), av('show_roadmap'))}
             </div>
-            ${renderField(cfg.fields.find(f => f.name === 'roadmap_heading'), res.data ? res.data['roadmap_heading'] : '')}
-            ${renderField(cfg.fields.find(f => f.name === 'roadmap_items_json'), res.data ? res.data['roadmap_items_json'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'roadmap_heading'), av('roadmap_heading'))}
+            ${renderAcademyStructuredEditor('roadmap_items_json', 'Roadmap Steps', 'Add rows with stage name and description. Step number is auto-managed.', academyRoadmapRows)}
+            <div style="display:none;">${renderField(cfg.fields.find(f => f.name === 'roadmap_items_json'), av('roadmap_items_json'))}</div>
           </div>
         </fieldset>
 
@@ -3067,10 +3510,11 @@ async function renderSingletonSection(cfg) {
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">📈 Growth Roadmap</legend>
           <div class="form-grid" style="margin-top: 12px;">
             <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
-              ${renderField(cfg.fields.find(f => f.name === 'show_growth_roadmap'), res.data ? res.data['show_growth_roadmap'] : '')}
+              ${renderField(cfg.fields.find(f => f.name === 'show_growth_roadmap'), av('show_growth_roadmap'))}
             </div>
-            ${renderField(cfg.fields.find(f => f.name === 'growth_roadmap_heading'), res.data ? res.data['growth_roadmap_heading'] : '')}
-            ${renderField(cfg.fields.find(f => f.name === 'growth_stages_json'), res.data ? res.data['growth_stages_json'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'growth_roadmap_heading'), av('growth_roadmap_heading'))}
+            ${renderAcademyStructuredEditor('growth_stages_json', 'Growth Roadmap Stages', 'Add rows with stage name and description. Stage number is auto-managed.', academyGrowthRows)}
+            <div style="display:none;">${renderField(cfg.fields.find(f => f.name === 'growth_stages_json'), av('growth_stages_json'))}</div>
           </div>
         </fieldset>
 
@@ -3078,11 +3522,11 @@ async function renderSingletonSection(cfg) {
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🎯 Who Should Join & Membership</legend>
           <div class="form-grid" style="margin-top: 12px;">
             <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
-              ${renderField(cfg.fields.find(f => f.name === 'show_who_should_join'), res.data ? res.data['show_who_should_join'] : '')}
+              ${renderField(cfg.fields.find(f => f.name === 'show_who_should_join'), av('show_who_should_join'))}
             </div>
-            ${renderField(cfg.fields.find(f => f.name === 'who_should_join_text'), res.data ? res.data['who_should_join_text'] : '')}
-            ${renderField(cfg.fields.find(f => f.name === 'membership_heading'), res.data ? res.data['membership_heading'] : '')}
-            ${renderField(cfg.fields.find(f => f.name === 'membership_description'), res.data ? res.data['membership_description'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'who_should_join_text'), av('who_should_join_text'))}
+            ${renderField(cfg.fields.find(f => f.name === 'membership_heading'), av('membership_heading'))}
+            ${renderField(cfg.fields.find(f => f.name === 'membership_description'), av('membership_description'))}
           </div>
         </fieldset>
 
@@ -3090,10 +3534,10 @@ async function renderSingletonSection(cfg) {
           <legend style="padding: 0 8px; font-weight: bold; color: #2196F3;">🔗 Call-to-Action</legend>
           <div class="form-grid" style="margin-top: 12px;">
             <div style="grid-column: 1 / -1; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
-              ${renderField(cfg.fields.find(f => f.name === 'show_cta'), res.data ? res.data['show_cta'] : '')}
+              ${renderField(cfg.fields.find(f => f.name === 'show_cta'), av('show_cta'))}
             </div>
-            ${renderField(cfg.fields.find(f => f.name === 'cta_button_text'), res.data ? res.data['cta_button_text'] : '')}
-            ${renderField(cfg.fields.find(f => f.name === 'cta_button_url'), res.data ? res.data['cta_button_url'] : '')}
+            ${renderField(cfg.fields.find(f => f.name === 'cta_button_text'), av('cta_button_text'))}
+            ${renderField(cfg.fields.find(f => f.name === 'cta_button_url'), av('cta_button_url'))}
           </div>
         </fieldset>
       </div>
@@ -3111,11 +3555,12 @@ async function renderSingletonSection(cfg) {
       ${singletonFieldsHtml}
       <div class="form-actions">
         <button type="submit" ${!canWrite() ? 'disabled' : ''}>Save Changes</button>
+        ${isAcademySection ? '<button type="button" id="academyPreviewBtn" class="ghost-btn">Show Preview</button>' : ''}
         ${footerPreviewEnabled && !isAcademySection ? '<button type="button" id="footerPreviewBtn" class="ghost-btn">Preview Footer</button>' : ''}
         <p id="formStatus" class="form-status"></p>
       </div>
       ${!footerPreviewEnabled || isAcademySection ? `
-      <div class="preview-panel">
+      <div class="preview-panel" ${isAcademySection ? 'id="academyPreviewPanel" style="display:none;"' : ''}>
         <h3>${isAcademySection ? '👁️ Academy Section Preview' : 'Live Preview (Before Save)'}</h3>
         <div id="singletonPreview" class="preview-body"></div>
       </div>
@@ -3128,18 +3573,32 @@ async function renderSingletonSection(cfg) {
       ` : ''}
     </form>
     ${logoUploadCard}
-    <h3>Current Data</h3>
-    ${renderRowsTable(res.data ? [res.data] : [], false)}
+    ${isAcademySection ? '' : `<h3>Current Data</h3>${renderRowsTable(res.data ? [res.data] : [], false)}`}
   `;
 
   const form = document.getElementById('singletonForm');
   const status = document.getElementById('formStatus');
   
   // Use custom preview for academy section
+  let updateAcademyPreview = null;
   if (state.section === 'academy') {
-    wireAcademyPreview(form, state.section === 'academy' && footerPreviewEnabled ? 'footerSingletonPreview' : 'singletonPreview');
+    updateAcademyPreview = wireAcademyPreview(form, state.section === 'academy' && footerPreviewEnabled ? 'footerSingletonPreview' : 'singletonPreview');
+    initAcademyStructuredEditors(form);
   } else if (!footerPreviewEnabled) {
     wireFormPreview(form, cfg.fields, 'singletonPreview', 'No values entered yet.');
+  }
+
+  if (isAcademySection) {
+    const academyPreviewBtn = document.getElementById('academyPreviewBtn');
+    const academyPreviewPanel = document.getElementById('academyPreviewPanel');
+    if (academyPreviewBtn && academyPreviewPanel && typeof updateAcademyPreview === 'function') {
+      academyPreviewBtn.addEventListener('click', () => {
+        syncAcademySimpleEditors(form);
+        updateAcademyPreview();
+        academyPreviewPanel.style.display = '';
+        academyPreviewPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   }
   
   const updateFooterPreview = footerPreviewEnabled && state.section !== 'academy'
@@ -3166,6 +3625,9 @@ async function renderSingletonSection(cfg) {
     }
     status.textContent = 'Saving...';
     try {
+      if (isAcademySection) {
+        syncAcademySimpleEditors(form);
+      }
       const payload = collectFormData(form, cfg.fields);
       await api(cfg.endpoint, {
         method: 'PUT',
@@ -4205,49 +4667,221 @@ async function renderGalleryBulkSection(cfg) {
 async function renderPollsSection() {
   const res = await apiGetCached('/api/polls-api?action=getAllPolls');
   const polls = Array.isArray(res.polls) ? res.polls : [];
-  const pollsHtml = polls.length
+  const normalizeStatus = (value) => {
+    const raw = String(value || '').trim().toUpperCase();
+    if (raw === 'ACTIVE' || raw === 'CLOSED' || raw === 'ARCHIVED') return raw;
+    return 'CLOSED';
+  };
+  const formatDateLabel = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '-';
+    const dt = new Date(raw);
+    if (Number.isNaN(dt.getTime())) return raw;
+    return dt.toLocaleString();
+  };
+  const toInputDateTime = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const normalized = raw.replace(' ', 'T');
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(normalized)) {
+      return normalized.slice(0, 16);
+    }
+    const dt = new Date(raw);
+    if (Number.isNaN(dt.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+  };
+  const parseOptionsText = (value) => {
+    const seen = new Set();
+    return String(value || '')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .filter((line) => {
+        const key = line.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  };
+  const isPollActive = (poll) => normalizeStatus(poll.status) === 'ACTIVE';
+  const buildVotingUrl = (pollId) => {
+    const path = String(window.location.pathname || '');
+    const basePath = path.replace(/\/admin\/.*$/i, '/');
+    return `${window.location.origin}${basePath}admin-polls.html#/vote/${encodeURIComponent(String(pollId || '').trim())}`;
+  };
+  const buildWhatsAppReport = (poll) => {
+    const options = Array.isArray(poll.options) ? poll.options : [];
+    const totalVotes = options.reduce((sum, opt) => sum + Number(opt && opt.votes || 0), 0);
+    const lines = [
+      `Poll Report: ${String(poll.question || 'Untitled Poll')}`,
+      `Poll ID: ${String(poll.id || '-')}`,
+      `Status: ${normalizeStatus(poll.status || 'CLOSED')}`,
+      `Total Votes: ${totalVotes}`,
+      ''
+    ];
+    options.forEach((opt) => {
+      const count = Number(opt && opt.votes || 0);
+      const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+      lines.push(`- ${String(opt && opt.label || 'Option')}: ${count} (${percentage}%)`);
+    });
+    lines.push('');
+    lines.push(`Vote link: ${buildVotingUrl(poll.id)}`);
+    return lines.join('\n');
+  };
+
+  const uiState = state.pollsUi || { query: '', status: 'ALL', sort: 'newest', expanded: {}, archiveOpen: false };
+  const query = String(uiState.query || '').trim().toLowerCase();
+  const filterStatus = String(uiState.status || 'ALL').toUpperCase();
+  const sortMode = String(uiState.sort || 'newest').toLowerCase();
+
+  let filteredPolls = polls.filter((p) => {
+    const pollStatus = normalizeStatus(p.status);
+    if (filterStatus !== 'ALL' && pollStatus !== filterStatus) return false;
+    if (!query) return true;
+    const hay = `${String(p.id || '')} ${String(p.question || '')} ${String(p.description || '')}`.toLowerCase();
+    return hay.includes(query);
+  });
+
+  filteredPolls = filteredPolls.slice().sort((a, b) => {
+    if (sortMode === 'oldest') {
+      return new Date(String(a.created_at || '')).getTime() - new Date(String(b.created_at || '')).getTime();
+    }
+    if (sortMode === 'most-votes') {
+      const av = (Array.isArray(a.options) ? a.options : []).reduce((s, o) => s + Number(o && o.votes || 0), 0);
+      const bv = (Array.isArray(b.options) ? b.options : []).reduce((s, o) => s + Number(o && o.votes || 0), 0);
+      return bv - av;
+    }
+    return new Date(String(b.created_at || '')).getTime() - new Date(String(a.created_at || '')).getTime();
+  });
+
+  const buildPollCardHtml = (p) => {
+          const status = normalizeStatus(p.status);
+          return status; // placeholder — real render below
+        };
+  void buildPollCardHtml; // suppress unused
+
+  // Split into active/closed vs archived
+  const mainPolls = filteredPolls.filter((p) => normalizeStatus(p.status) !== 'ARCHIVED');
+  const archivedPolls = filteredPolls.filter((p) => normalizeStatus(p.status) === 'ARCHIVED');
+
+  const buildCardHtml = (p) => {
+          const status = normalizeStatus(p.status);
+          const options = Array.isArray(p.options) ? p.options : [];
+          const voters = Array.isArray(p.voters) ? p.voters : [];
+          const totalVotes = options.reduce((sum, opt) => sum + Number(opt && opt.votes || 0), 0);
+          const requireName = !!p.require_name;
+          const showVoters = !!p.show_voters_publicly;
+          const statusClass = status === 'ACTIVE' ? 'is-success' : (status === 'ARCHIVED' ? 'is-danger' : 'is-neutral');
+
+          const optionResultsHtml = options.length
+            ? options.map((opt) => {
+                const votes = Number(opt && opt.votes || 0);
+                const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                return `
+                  <div class="result-item">
+                    <div class="result-label"><span>${escapeHtml(String(opt && opt.label || 'Option'))}</span><span>${votes} (${pct}%)</span></div>
+                    <div class="result-bar-container"><div class="result-bar" style="width:${pct}%"></div></div>
+                  </div>`;
+              }).join('')
+            : '<p class="empty-state">No options configured for this poll yet.</p>';
+
+          const votersTableHtml = voters.length
+            ? `<table class="voters-table"><thead><tr><th>Name</th><th>Selected</th><th>Time</th>${canWrite() ? '<th>Action</th>' : ''}</tr></thead><tbody>${voters.map((voter, idx) => `<tr><td>${escapeHtml(String(voter && voter.name || 'Anonymous'))}</td><td>${escapeHtml(String(voter && voter.optionLabel || '-'))}</td><td>${escapeHtml(formatDateLabel(voter && voter.timeISO || ''))}</td>${canWrite() ? `<td><button class="mini-btn danger" data-act="remove-vote" data-id="${escapeHtml(p.id)}" data-voter-index="${idx}">Remove</button></td>` : ''}</tr>`).join('')}</tbody></table>`
+            : '<p class="no-voters">No responses yet.</p>';
+
+          const isExpanded = !!(uiState.expanded && uiState.expanded[p.id]);
+          return `
+            <article class="admin-item-card">
+              <div class="admin-item-head">
+                <div><p class="admin-item-eyebrow">Poll ID</p><h4>${escapeHtml(p.id)}</h4></div>
+                <span class="status-pill ${statusClass}">${escapeHtml(status)}</span>
+              </div>
+              <p class="admin-item-body">${escapeHtml(String(p.question || 'No question added yet.'))}</p>
+              ${String(p.description || '').trim() ? `<p class="text-muted">${escapeHtml(String(p.description || ''))}</p>` : ''}
+              <div class="admin-meta-grid">
+                <div class="admin-meta-card"><span>Created</span><strong>${escapeHtml(formatDateLabel(p.created_at || ''))}</strong></div>
+                <div class="admin-meta-card"><span>Ends</span><strong>${escapeHtml(formatDateLabel(p.ends_at || ''))}</strong></div>
+                <div class="admin-meta-card"><span>Total Votes</span><strong>${totalVotes}</strong></div>
+                <div class="admin-meta-card"><span>Options</span><strong>${options.length}</strong></div>
+                <div class="admin-meta-card"><span>Responses</span><strong>${voters.length}</strong></div>
+                <div class="admin-meta-card"><span>Flags</span><strong>${requireName ? 'Require Name' : 'Name Optional'} \u2022 ${showVoters ? 'Public Voters' : 'Private Voters'}</strong></div>
+              </div>
+              <div class="admin-item-actions">
+                <button class="mini-btn" data-act="toggle-responses" data-id="${escapeHtml(p.id)}">${isExpanded ? 'Hide Responses' : 'Show Responses'}</button>
+                <button class="mini-btn" data-act="edit-poll" data-id="${escapeHtml(p.id)}">Edit</button>
+                ${canWrite() && status !== 'ACTIVE' ? `<button class="mini-btn" data-act="set-status" data-id="${escapeHtml(p.id)}" data-status="ACTIVE">Activate</button>` : ''}
+                ${canWrite() && status !== 'CLOSED' ? `<button class="mini-btn" data-act="set-status" data-id="${escapeHtml(p.id)}" data-status="CLOSED">Close</button>` : ''}
+                ${canWrite() && status !== 'ARCHIVED' ? `<button class="mini-btn" data-act="set-status" data-id="${escapeHtml(p.id)}" data-status="ARCHIVED">Archive</button>` : ''}
+                ${canWrite() && options.length > 0 ? `<button class="mini-btn" data-act="test-vote" data-id="${escapeHtml(p.id)}">Test Vote</button>` : ''}
+                <button class="mini-btn" data-act="copy-link" data-id="${escapeHtml(p.id)}">Copy Link</button>
+                <button class="mini-btn" data-act="copy-report" data-id="${escapeHtml(p.id)}">Copy Report</button>
+                ${canWrite() ? `<button class="mini-btn" data-act="clear-votes" data-id="${escapeHtml(p.id)}">Clear Votes</button>` : ''}
+                ${canWrite() ? `<button class="mini-btn danger" data-act="delete-poll" data-id="${escapeHtml(p.id)}">Delete</button>` : ''}
+              </div>
+              <div class="poll-response-panel ${isExpanded ? '' : 'is-collapsed'}" data-poll-responses="${escapeHtml(p.id)}">
+                <div class="poll-results">${optionResultsHtml}</div>
+                <div class="voters-section"><div class="voters-header"><h4>Poll Responses (${voters.length})</h4></div>${votersTableHtml}</div>
+              </div>
+            </article>`;
+        };
+
+  const mainPollsHtml = mainPolls.length
     ? `
       <div class="admin-card-list">
-        ${polls.map((p) => `
-          <article class="admin-item-card">
-            <div class="admin-item-head">
-              <div>
-                <p class="admin-item-eyebrow">Poll ID</p>
-                <h4>${escapeHtml(p.id)}</h4>
-              </div>
-              <span class="status-pill ${String(p.status || '').toUpperCase() === 'ACTIVE' ? 'is-success' : 'is-neutral'}">${escapeHtml(p.status || 'Unknown')}</span>
-            </div>
-            <p class="admin-item-body">${escapeHtml(p.question || 'No question added yet.')}</p>
-            <div class="admin-meta-grid">
-              <div class="admin-meta-card">
-                <span>Created</span>
-                <strong>${escapeHtml(p.created_at || '-')}</strong>
-              </div>
-              <div class="admin-meta-card">
-                <span>Options</span>
-                <strong>${Array.isArray(p.options) ? p.options.length : 0}</strong>
-              </div>
-            </div>
-            ${canWrite() ? `
-              <div class="admin-item-actions">
-                <button class="mini-btn" data-act="edit-poll" data-id="${escapeHtml(p.id)}">Edit</button>
-                <button class="mini-btn danger" data-act="delete-poll" data-id="${escapeHtml(p.id)}">Delete</button>
-              </div>
-            ` : ''}
-          </article>
-        `).join('')}
+        ${mainPolls.map((p) => buildCardHtml(p)).join('')}
       </div>
     `
-    : '<p class="empty-state">No polls created yet.</p>';
+    : '';
+
+  const archivedPollsHtml = archivedPolls.length
+    ? archivedPolls.map((p) => buildCardHtml(p)).join('')
+    : '<p class="empty-state">No archived polls.</p>';
+
+  const archiveOpen = !!uiState.archiveOpen;
 
   el.panelBody.innerHTML = `
+    <div class="poll-manager-toolbar">
+      <label class="field"><span>Search Polls</span><input id="pollSearchInput" type="text" value="${escapeHtml(uiState.query || '')}" placeholder="Search by poll ID, question, description"></label>
+      <label class="field"><span>Status</span>
+        <select id="pollStatusFilter">
+          <option value="ALL" ${filterStatus === 'ALL' ? 'selected' : ''}>All</option>
+          <option value="ACTIVE" ${filterStatus === 'ACTIVE' ? 'selected' : ''}>Active</option>
+          <option value="CLOSED" ${filterStatus === 'CLOSED' ? 'selected' : ''}>Closed</option>
+          <option value="ARCHIVED" ${filterStatus === 'ARCHIVED' ? 'selected' : ''}>Archived</option>
+        </select>
+      </label>
+      <label class="field"><span>Sort</span>
+        <select id="pollSortMode">
+          <option value="newest" ${sortMode === 'newest' ? 'selected' : ''}>Newest First</option>
+          <option value="oldest" ${sortMode === 'oldest' ? 'selected' : ''}>Oldest First</option>
+          <option value="most-votes" ${sortMode === 'most-votes' ? 'selected' : ''}>Most Votes</option>
+        </select>
+      </label>
+      <button type="button" class="ghost-btn" id="pollCollapseAllBtn">Collapse All Responses</button>
+      <button type="button" class="ghost-btn" id="pollExpandAllBtn">Expand All Responses</button>
+      <button type="button" class="ghost-btn" id="pollRefreshBtn" title="Re-fetch polls from server">&#x21bb; Refresh</button>
+    </div>
+
     <form id="pollForm" class="crud-form">
       <input type="hidden" name="id" value="">
       <h3 id="pollFormTitle">Create Poll</h3>
       <div class="form-grid">
         <label class="field"><span>Poll ID</span><input name="poll_id" type="text" placeholder="Enter unique poll id (example: poll_20260324)" ${!canWrite() ? 'disabled' : ''}></label>
-        <label class="field"><span>Status</span><input name="status" type="text" value="ACTIVE" placeholder="Enter status (example: ACTIVE)" ${!canWrite() ? 'disabled' : ''}></label>
+        <label class="field"><span>Status</span>
+          <select name="status" ${!canWrite() ? 'disabled' : ''}>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="CLOSED">CLOSED</option>
+            <option value="ARCHIVED">ARCHIVED</option>
+          </select>
+        </label>
+        <label class="field checkbox-field"><input type="checkbox" name="is_active_toggle" ${!canWrite() ? 'disabled' : ''}> Activate Poll</label>
+        <label class="field"><span>End Date/Time</span><input name="ends_at" type="datetime-local" ${!canWrite() ? 'disabled' : ''}></label>
         <label class="field" style="grid-column:1/-1"><span>Question</span><textarea name="question" placeholder="Write the poll question users will vote on" ${!canWrite() ? 'disabled' : ''}></textarea></label>
+        <label class="field" style="grid-column:1/-1"><span>Description</span><textarea name="description" placeholder="Optional poll description" ${!canWrite() ? 'disabled' : ''}></textarea></label>
+        <label class="field" style="grid-column:1/-1"><span>Options (one per line)</span><textarea name="options_text" placeholder="Option 1&#10;Option 2&#10;Option 3" ${!canWrite() ? 'disabled' : ''}></textarea></label>
+        <label class="field checkbox-field"><input type="checkbox" name="require_name" ${!canWrite() ? 'disabled' : ''}> Require Name Before Voting</label>
+        <label class="field checkbox-field"><input type="checkbox" name="show_voters_publicly" ${!canWrite() ? 'disabled' : ''}> Show Voter Names Publicly</label>
       </div>
       <div class="form-actions">
         <button type="submit" ${!canWrite() ? 'disabled' : ''}>Save Poll</button>
@@ -4255,23 +4889,96 @@ async function renderPollsSection() {
         <p id="pollStatus" class="form-status"></p>
       </div>
     </form>
-    <h3>Polls</h3>
-    ${pollsHtml}
+    <h3>Active &amp; Closed Polls</h3>
+    ${mainPolls.length ? mainPollsHtml : '<p class="empty-state">No active or closed polls matched your filters.</p>'}
+
+    <details class="archived-polls-section" id="archivedPollsDetails" ${archiveOpen ? 'open' : ''}>
+      <summary class="archived-polls-summary">
+        <span>Archived Polls</span>
+        <span class="archived-count-badge">${archivedPolls.length}</span>
+      </summary>
+      <div class="admin-card-list archived-card-list">
+        ${archivedPollsHtml}
+      </div>
+    </details>
   `;
 
   const form = document.getElementById('pollForm');
   const status = document.getElementById('pollStatus');
   const resetBtn = document.getElementById('pollResetBtn');
   const formTitle = document.getElementById('pollFormTitle');
+  const statusSelect = form.elements.status;
+  const activeToggle = form.elements.is_active_toggle;
+  const pollSearchInput = document.getElementById('pollSearchInput');
+  const pollStatusFilter = document.getElementById('pollStatusFilter');
+  const pollSortMode = document.getElementById('pollSortMode');
+  const pollCollapseAllBtn = document.getElementById('pollCollapseAllBtn');
+  const pollExpandAllBtn = document.getElementById('pollExpandAllBtn');
+  const pollRefreshBtn = document.getElementById('pollRefreshBtn');
+
+  const syncToggleFromStatus = () => {
+    activeToggle.checked = normalizeStatus(statusSelect.value) === 'ACTIVE';
+  };
+  const syncStatusFromToggle = () => {
+    const currentStatus = normalizeStatus(statusSelect.value);
+    if (currentStatus === 'ARCHIVED') return;
+    statusSelect.value = activeToggle.checked ? 'ACTIVE' : 'CLOSED';
+  };
 
   function resetForm() {
     form.reset();
     form.elements.id.value = '';
     form.elements.status.value = 'ACTIVE';
+    form.elements.is_active_toggle.checked = true;
+    form.elements.ends_at.value = '';
+    form.elements.description.value = '';
+    form.elements.options_text.value = '';
+    form.elements.require_name.checked = false;
+    form.elements.show_voters_publicly.checked = false;
     formTitle.textContent = 'Create Poll';
     status.textContent = '';
   }
   resetBtn.addEventListener('click', resetForm);
+  statusSelect.addEventListener('change', syncToggleFromStatus);
+  activeToggle.addEventListener('change', syncStatusFromToggle);
+
+  pollRefreshBtn.addEventListener('click', async () => {
+    pollRefreshBtn.disabled = true;
+    pollRefreshBtn.textContent = 'Refreshing...';
+    invalidateCache('/api/polls-api?action=getAllPolls');
+    await renderPollsSection();
+  });
+
+  pollSearchInput.addEventListener('input', () => {
+    state.pollsUi.query = pollSearchInput.value || '';
+    renderPollsSection();
+  });
+  pollStatusFilter.addEventListener('change', () => {
+    state.pollsUi.status = pollStatusFilter.value || 'ALL';
+    renderPollsSection();
+  });
+  pollSortMode.addEventListener('change', () => {
+    state.pollsUi.sort = pollSortMode.value || 'newest';
+    renderPollsSection();
+  });
+  pollCollapseAllBtn.addEventListener('click', () => {
+    state.pollsUi.expanded = {};
+    renderPollsSection();
+  });
+  pollExpandAllBtn.addEventListener('click', () => {
+    const expanded = {};
+    mainPolls.forEach((p) => { expanded[p.id] = true; });
+    state.pollsUi.expanded = expanded;
+    renderPollsSection();
+  });
+
+  const archivedDetails = document.getElementById('archivedPollsDetails');
+  if (archivedDetails) {
+    archivedDetails.addEventListener('toggle', () => {
+      state.pollsUi.archiveOpen = archivedDetails.open;
+    });
+  }
+
   resetForm();
 
   form.addEventListener('submit', async (e) => {
@@ -4284,26 +4991,61 @@ async function renderPollsSection() {
     const editId = form.elements.id.value;
     const pollId = (form.elements.poll_id.value || '').trim();
     const question = (form.elements.question.value || '').trim();
-    const pStatus = (form.elements.status.value || 'ACTIVE').trim() || 'ACTIVE';
-    if (!pollId || !question) {
-      status.textContent = 'Poll ID and question are required.';
+    const description = (form.elements.description.value || '').trim();
+    const optionsText = form.elements.options_text.value || '';
+    const parsedOptions = parseOptionsText(optionsText);
+    const requestedStatus = normalizeStatus(form.elements.status.value || 'ACTIVE');
+    const endsAt = (form.elements.ends_at.value || '').trim();
+    const requireName = !!form.elements.require_name.checked;
+    const showVotersPublicly = !!form.elements.show_voters_publicly.checked;
+
+    if (!pollId || !question || parsedOptions.length < 2) {
+      status.textContent = 'Poll ID, question, and at least 2 options are required.';
       return;
     }
 
-    const existing = polls.find(p => String(p.id) === String(editId));
+    const duplicate = polls.find((p) => String(p.id) === pollId && String(p.id) !== String(editId));
+    if (duplicate) {
+      status.textContent = 'Poll ID already exists. Please use a unique ID.';
+      return;
+    }
+
+    const existing = polls.find((p) => String(p.id) === String(editId));
+    const effectiveStatus = requestedStatus === 'ARCHIVED'
+      ? 'ARCHIVED'
+      : (form.elements.is_active_toggle.checked ? 'ACTIVE' : 'CLOSED');
+
+    const existingOptionsByLabel = new Map(
+      (existing && Array.isArray(existing.options) ? existing.options : []).map((opt) => [String(opt.label || '').trim().toLowerCase(), opt])
+    );
+
+    const nextOptions = parsedOptions.map((label, idx) => {
+      const key = String(label || '').trim().toLowerCase();
+      const prev = existingOptionsByLabel.get(key);
+      return {
+        id: prev && prev.id ? prev.id : `opt_${idx}`,
+        label,
+        votes: Number(prev && prev.votes || 0)
+      };
+    });
+
+    const allowedOptionIds = new Set(nextOptions.map((o) => String(o.id)));
+    const existingVoters = existing && Array.isArray(existing.voters) ? existing.voters : [];
+    const nextVoters = existingVoters.filter((v) => allowedOptionIds.has(String(v.optionId || '')));
+
     const nextPolls = polls
-      .filter(p => String(p.id) !== String(editId))
+      .filter((p) => String(p.id) !== String(editId))
       .concat([{
         id: pollId,
         question,
-        status: pStatus,
-        created_at: existing ? existing.created_at : new Date().toISOString(),
-        ends_at: existing ? existing.ends_at : '',
-        require_name: existing ? !!existing.require_name : false,
-        show_voters_publicly: existing ? !!existing.show_voters_publicly : false,
-        options: existing && Array.isArray(existing.options) ? existing.options : [],
-        voters: existing && Array.isArray(existing.voters) ? existing.voters : [],
-        description: existing ? (existing.description || '') : ''
+        status: effectiveStatus,
+        created_at: existing ? (existing.created_at || new Date().toISOString()) : new Date().toISOString(),
+        ends_at: endsAt,
+        require_name: requireName,
+        show_voters_publicly: showVotersPublicly,
+        options: nextOptions,
+        voters: nextVoters,
+        description
       }]);
 
     status.textContent = 'Saving poll...';
@@ -4312,6 +5054,7 @@ async function renderPollsSection() {
         method: 'POST',
         body: JSON.stringify({ action: 'saveAllPolls', polls: nextPolls })
       });
+      invalidateCache('/api/polls-api?action=getAllPolls');
       await renderPollsSection();
     } catch (error) {
       status.textContent = error.message;
@@ -4320,35 +5063,158 @@ async function renderPollsSection() {
 
   setPanelBodyClickHandler(async (e) => {
     const btn = e.target.closest('button[data-act]');
-    if (!btn || !canWrite()) return;
+    if (!btn) return;
 
     const act = btn.dataset.act;
     const id = btn.dataset.id;
-    const found = polls.find(p => String(p.id) === String(id));
+    const found = polls.find((p) => String(p.id) === String(id));
     if (!found) return;
+
+    const savePollsAndRefresh = async (nextPolls, workingText) => {
+      status.textContent = workingText;
+      await api('/api/polls-api', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'saveAllPolls', polls: nextPolls })
+      });
+      invalidateCache('/api/polls-api?action=getAllPolls');
+      await renderPollsSection();
+    };
+
+    if (act === 'toggle-responses') {
+      const current = !!(state.pollsUi.expanded && state.pollsUi.expanded[id]);
+      state.pollsUi.expanded[id] = !current;
+      renderPollsSection();
+      return;
+    }
 
     if (act === 'edit-poll') {
       form.elements.id.value = found.id;
       form.elements.poll_id.value = found.id;
       form.elements.question.value = found.question || '';
-      form.elements.status.value = found.status || 'ACTIVE';
+      form.elements.status.value = normalizeStatus(found.status || 'ACTIVE');
+      form.elements.is_active_toggle.checked = normalizeStatus(found.status || 'ACTIVE') === 'ACTIVE';
+      form.elements.ends_at.value = toInputDateTime(found.ends_at || '');
+      form.elements.description.value = found.description || '';
+      form.elements.options_text.value = Array.isArray(found.options) ? found.options.map((o) => String(o && o.label || '').trim()).filter(Boolean).join('\n') : '';
+      form.elements.require_name.checked = !!found.require_name;
+      form.elements.show_voters_publicly.checked = !!found.show_voters_publicly;
       formTitle.textContent = `Edit Poll ${found.id}`;
       status.textContent = 'Editing poll.';
       return;
     }
 
-    if (act === 'delete-poll') {
-      if (!window.confirm(`Delete poll ${id}?`)) return;
-      status.textContent = 'Deleting poll...';
+    if (act === 'set-status') {
+      if (!canWrite()) return;
+      const nextStatus = normalizeStatus(btn.dataset.status || found.status || 'CLOSED');
+      const nextPolls = polls.map((p) => (String(p.id) === String(id) ? { ...p, status: nextStatus } : p));
       try {
-        const nextPolls = polls.filter(p => String(p.id) !== String(id));
-        await api('/api/polls-api', {
-          method: 'POST',
-          body: JSON.stringify({ action: 'saveAllPolls', polls: nextPolls })
+        await savePollsAndRefresh(nextPolls, `Updating status to ${nextStatus}...`);
+      } catch (error) {
+        status.textContent = error.message;
+      }
+      return;
+    }
+
+    if (act === 'test-vote') {
+      if (!canWrite()) return;
+      const options = Array.isArray(found.options) ? found.options : [];
+      if (!options.length) {
+        status.textContent = 'This poll has no options for test vote.';
+        return;
+      }
+      const randomOption = options[Math.floor(Math.random() * options.length)];
+      const nextPolls = polls.map((p) => {
+        if (String(p.id) !== String(id)) return p;
+        const nextOptions = (Array.isArray(p.options) ? p.options : []).map((opt) => (
+          String(opt && opt.id || '') === String(randomOption.id)
+            ? { ...opt, votes: Number(opt.votes || 0) + 1 }
+            : opt
+        ));
+        const nextVoters = Array.isArray(p.voters) ? [...p.voters] : [];
+        nextVoters.push({
+          name: `Test User ${Math.floor(Math.random() * 1000)}`,
+          optionId: randomOption.id,
+          optionLabel: randomOption.label,
+          timeISO: new Date().toISOString()
         });
-        invalidateCache('/api/polls-api?action=getAllPolls');
-        invalidateCache('/api/polls-api?action=getAllPolls');
-        await renderPollsSection();
+        return { ...p, options: nextOptions, voters: nextVoters };
+      });
+      try {
+        await savePollsAndRefresh(nextPolls, 'Adding test vote...');
+      } catch (error) {
+        status.textContent = error.message;
+      }
+      return;
+    }
+
+    if (act === 'remove-vote') {
+      if (!canWrite()) return;
+      const voterIndex = Number(btn.dataset.voterIndex || -1);
+      if (!Number.isInteger(voterIndex) || voterIndex < 0) return;
+      const voters = Array.isArray(found.voters) ? found.voters : [];
+      const targetVote = voters[voterIndex];
+      if (!targetVote) return;
+      const nextPolls = polls.map((p) => {
+        if (String(p.id) !== String(id)) return p;
+        const nextVoters = (Array.isArray(p.voters) ? p.voters : []).filter((_v, idx) => idx !== voterIndex);
+        const nextOptions = (Array.isArray(p.options) ? p.options : []).map((opt) => {
+          if (String(opt && opt.id || '') !== String(targetVote.optionId || '')) return opt;
+          return { ...opt, votes: Math.max(0, Number(opt.votes || 0) - 1) };
+        });
+        return { ...p, voters: nextVoters, options: nextOptions };
+      });
+      try {
+        await savePollsAndRefresh(nextPolls, 'Removing response...');
+      } catch (error) {
+        status.textContent = error.message;
+      }
+      return;
+    }
+
+    if (act === 'clear-votes') {
+      if (!canWrite()) return;
+      if (!window.confirm(`Clear all votes for poll ${id}?`)) return;
+      const nextPolls = polls.map((p) => {
+        if (String(p.id) !== String(id)) return p;
+        const nextOptions = Array.isArray(p.options)
+          ? p.options.map((opt) => ({ ...opt, votes: 0 }))
+          : [];
+        return { ...p, options: nextOptions, voters: [] };
+      });
+      try {
+        await savePollsAndRefresh(nextPolls, 'Clearing votes...');
+      } catch (error) {
+        status.textContent = error.message;
+      }
+      return;
+    }
+
+    if (act === 'copy-link') {
+      try {
+        await navigator.clipboard.writeText(buildVotingUrl(id));
+        status.textContent = `Voting link copied for ${id}.`;
+      } catch (_error) {
+        status.textContent = buildVotingUrl(id);
+      }
+      return;
+    }
+
+    if (act === 'copy-report') {
+      try {
+        await navigator.clipboard.writeText(buildWhatsAppReport(found));
+        status.textContent = `Poll report copied for ${id}.`;
+      } catch (_error) {
+        status.textContent = 'Unable to copy report.';
+      }
+      return;
+    }
+
+    if (act === 'delete-poll') {
+      if (!canWrite()) return;
+      if (!window.confirm(`Delete poll ${id}?`)) return;
+      try {
+        const nextPolls = polls.filter((p) => String(p.id) !== String(id));
+        await savePollsAndRefresh(nextPolls, 'Deleting poll...');
       } catch (error) {
         status.textContent = error.message;
       }
@@ -4903,7 +5769,7 @@ async function bootstrapSession() {
 el.menuList.addEventListener('click', async (e) => {
   const btn = e.target.closest('button[data-section]');
   if (!btn || btn.style.display === 'none') return;
-  await setSection(btn.dataset.section === 'site-config' ? 'contact' : btn.dataset.section);
+  await setSection(normalizeSectionKey(btn.dataset.section));
 });
 
 el.loginForm.addEventListener('submit', onLogin);

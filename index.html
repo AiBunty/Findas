@@ -5138,9 +5138,12 @@
         D.heroBenefit3.textContent = S.siteConfig.hero_benefit_3;
       }
       
-      // Hero Button Text
+      // Hero Button Text & URL
       if (S.siteConfig.hero_button_1_text && D.heroBtn1) {
         D.heroBtn1.textContent = S.siteConfig.hero_button_1_text;
+      }
+      if (S.siteConfig.hero_button_1_url && D.heroBtn1) {
+        D.heroBtn1.href = S.siteConfig.hero_button_1_url;
       }
       if (S.siteConfig.hero_button_2_text && D.heroCta) {
         D.heroCta.textContent = S.siteConfig.hero_button_2_text;
@@ -5376,7 +5379,7 @@
 
     function openDetails(type, id) {
       const i = by(type, id); if (!i) return; mc = { type, id };
-      if (type === 'membership') { if (i.link) openPaymentModal('Join Membership', String(i.link)); return; }
+      if (type === 'membership') { openMembershipDetails(i.id); return; }
       if (type === 'digital') { openDigitalDetails(i.id); return; }
       if (type === 'webinar') { openWebinarDetails(i.id); return; }
       if (type === 'course') { openCourseDetails(i.id); return; }
@@ -5675,7 +5678,12 @@
       }
       if (D.heroCta) {
         D.heroCta.addEventListener('click', () => {
-          openBookingModal();
+          const heroBtn2Url = S.siteConfig.hero_button_2_url;
+          if (heroBtn2Url && heroBtn2Url.trim() && heroBtn2Url.trim() !== '#') {
+            window.location.href = heroBtn2Url.trim();
+          } else {
+            openBookingModal();
+          }
         });
       }
       let resizeTimer = null;

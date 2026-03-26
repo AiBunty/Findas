@@ -2014,14 +2014,10 @@
                 
                 showVotingPage(pollId, false, embeddedPollData);
             } else {
-                // Admin page - If not authenticated, show login
-                if (isAuthenticated) {
-                    document.getElementById('loginOverlay').classList.add('hidden');
-                    showAdminPanel();
-                } else {
-                    document.getElementById('loginOverlay').classList.remove('hidden');
-                    document.getElementById('adminPanel').classList.add('hidden');
-                }
+                // Admin is now fully managed from /admin panel.
+                const path = String(window.location.pathname || '');
+                const target = `${window.location.origin}${path.replace(/admin-polls\.html$/i, 'admin/index.html')}#polls`;
+                window.location.replace(target);
             }
         }
 
@@ -2825,112 +2821,15 @@
         // ========================================
         document.addEventListener('DOMContentLoaded', async () => {
             loadPolls();
-            
-            // Try to load from Google Sheets if enabled (optional)
+
+            // Keep public voting links synced with latest poll data.
             if (GOOGLE_SHEETS_CONFIG.ENABLED) {
                 await loadPollsFromGoogleSheets();
             }
-            
-            await checkAuth();
+
             await handleRoute();
 
-            // Login form
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                
-                const success = await login(username, password);
-                if (!success) {
-                    document.getElementById('loginError').classList.remove('hidden');
-                }
-            });
-
-            // Logout
-            document.getElementById('logoutBtn').addEventListener('click', logout);
-            // WhatsApp Number Config
-            document.getElementById('editWhatsAppBtn').addEventListener('click', () => {
-                const current = localStorage.getItem(STORAGE_KEYS.WHATSAPP) || adminWhatsAppNumber;
-                const newNumber = prompt("Enter WhatsApp number (with country code, no +):", current);
-                if (newNumber && /^\d+$/.test(newNumber)) {
-                    adminWhatsAppNumber = newNumber;
-                    localStorage.setItem(STORAGE_KEYS.WHATSAPP, newNumber);
-                    saveWhatsAppNumberToServer(newNumber); // Save to Google Sheets
-                    showToast('WhatsApp number updated', 'success');
-                } else if (newNumber !== null) {
-                    showToast('Invalid number format', 'error');
-                }
-            });
-
-            // Toggle switches
-            document.getElementById('toggleRequireName').addEventListener('click', function() {
-                toggleStates.requireName = !toggleStates.requireName;
-                this.classList.toggle('active', toggleStates.requireName);
-            });
-
-            document.getElementById('toggleShowVoters').addEventListener('click', function() {
-                toggleStates.showVoters = !toggleStates.showVoters;
-                this.classList.toggle('active', toggleStates.showVoters);
-            });
-
-            // Create poll form
-            document.getElementById('createPollForm').addEventListener('submit', (e) => {
-                e.preventDefault();
-                
-                const question = document.getElementById('pollQuestion').value;
-                const optionsText = document.getElementById('pollOptions').value;
-                const status = document.getElementById('pollStatus').value;
-                const endsAt = document.getElementById('pollEndsAt').value;
-
-                const options = optionsText.split('\n')
-                    .map(opt => opt.trim())
-                    .filter(opt => opt.length > 0);
-
-                if (options.length < 2) {
-                    showToast('Please provide at least 2 options', 'error');
-                    return;
-                }
-
-                createPoll(question, options, status, endsAt);
-
-                // Reset form
-                e.target.reset();
-                toggleStates.requireName = false;
-                toggleStates.showVoters = false;
-                document.getElementById('toggleRequireName').classList.remove('active');
-                document.getElementById('toggleShowVoters').classList.remove('active');
-            });
-
-            // Filter
-            document.getElementById('filterStatus').addEventListener('change', renderPollsList);
-
-            // Success message actions
-            document.getElementById('copyLinkBtn').addEventListener('click', () => {
-                const url = document.getElementById('createSuccess').dataset.url;
-                navigator.clipboard.writeText(url).then(() => {
-                    showToast('Link copied!', 'success');
-                });
-            });
-
-            document.getElementById('openVotingBtn').addEventListener('click', () => {
-                const url = document.getElementById('createSuccess').dataset.url;
-                const hash = url.split('#')[1];
-                navigateTo('#' + hash);
-            });
-
-            // Export
-            document.getElementById('exportBtn').addEventListener('click', exportPolls);
-
-            // Import
-            document.getElementById('importFile').addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    importPolls(file);
-                    e.target.value = ''; // Reset input
-                }
-            });
-
-            // Name modal
+            // Name modal (public voting flow)
             document.getElementById('submitNameBtn').addEventListener('click', () => {
                 const name = document.getElementById('voterName').value.trim();
                 if (name.length < 2) {
@@ -2951,11 +2850,6 @@
                 pendingVote = null;
             });
 
-            // Credentials Modal Listeners
-            document.getElementById('saveCredentialsBtn').addEventListener('click', saveAdminCredentials);
-            document.getElementById('cancelCredentialsBtn').addEventListener('click', hideCredentialsModal);
-
-            // Hash change
             window.addEventListener('hashchange', handleRoute);
         });
     </script>

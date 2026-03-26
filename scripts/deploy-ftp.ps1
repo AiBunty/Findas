@@ -1,7 +1,7 @@
 param(
   [string]$FtpHost = 'ftp.theboxerp.com',
-  [string]$Username = $env:FINDAS_FTP_USER,
-  [string]$Password = $env:FINDAS_FTP_PASS,
+  [string]$Username = [System.Environment]::GetEnvironmentVariable('findas@findasacademy.in'),
+  [string]$Password = [System.Environment]::GetEnvironmentVariable('Zebra@789'),
   [string]$RemoteRoot = '',
   [ValidateSet('Changed', 'All')]
   [string]$Mode = 'Changed',
