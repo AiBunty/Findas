@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Detail | Findas Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --brand: #4169e1; --bg: #f6f8fe; --line: #dbe5fb; --text: #112341; --muted: #5c708f; --card: #ffffff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Plus Jakarta Sans", sans-serif; background: var(--bg); color: var(--text); }
+    .top { position: sticky; top: 0; z-index: 50; background: linear-gradient(90deg, #1F4D87 0%, #2563eb 100%); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); transition: all .3s ease; }
+    .top.scrolled { box-shadow: 0 4px 20px rgba(31,77,135,.3); }
+    .topin { max-width: 1200px; margin: auto; padding: 8px 20px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; min-height: 130px; }
+    @media (min-width: 761px) { .top { position: fixed; top: 0; left: 0; right: 0; width: 100%; } body { padding-top: 130px; } }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; font-weight: 800; font-family: "Space Grotesk", sans-serif; font-size: 1.4rem; flex-shrink: 0; color: #fff; }
+    .brand-logo-card { display: grid; place-items: center; width: auto; height: auto; background: transparent; border: none; border-radius: 0; }
+    .brand img { width: auto; height: clamp(56px, 6vw, 74px); max-width: min(240px, 35vw); border-radius: 0; border: none; object-fit: contain; object-position: center; background: transparent; box-shadow: none; transition: transform .3s ease; }
+    .brand:hover img { transform: scale(1.02); }
+    .nav { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+    .nav a { padding: 8px 14px; border-radius: 999px; text-decoration: none; color: rgba(255,255,255,0.85); font-weight: 600; font-size: .9rem; transition: all .2s ease; border: 1px solid transparent; }
+    .nav a:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .back-btn { color: rgba(255,255,255,0.85); text-decoration: none; border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 8px 14px; font-size: .86rem; font-weight: 700; transition: all .2s ease; }
+    .back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .login-btn { padding: 8px 14px; font-size: .9rem; background: #FF7A00; color: #fff; border-radius: 10px; border: 2px solid #FF7A00; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all .25s ease; font-weight: 700; cursor: pointer; }
+    .login-btn:hover { background: #E56D00; border-color: #E56D00; box-shadow: 0 4px 16px rgba(255,122,0,.25); }
+    .wrap { max-width: 1000px; margin: 22px auto; padding: 0 16px 40px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; box-shadow: 0 14px 32px rgba(17,35,65,0.08); }
+    .hero { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
+    .hero-image { width: 100%; height: 280px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); background: #eef3ff; }
+    .hero-content { display: flex; flex-direction: column; gap: 14px; }
+    .title { margin: 0; font-family: "Space Grotesk", sans-serif; font-size: 2rem; line-height: 1.2; color: #183866; }
+    .subtitle { margin: 0; color: var(--muted); line-height: 1.6; font-size: 1.05rem; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+    .pill { border: 1px solid #c8d8fa; background: #edf3ff; color: #214b83; font-size: .8rem; border-radius: 999px; padding: 6px 12px; font-weight: 700; }
+    .price { font-size: 1.6rem; font-weight: 800; color: #1f4d87; margin: 8px 0; }
+    .cta-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .cta { border: none; background: linear-gradient(90deg, #1f4d87, #2563eb); color: #fff; border-radius: 999px; font-weight: 800; padding: 12px 20px; cursor: pointer; font-size: .95rem; flex: 1; min-width: 160px; transition: all .2s ease; }
+    .cta:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(31,77,135,.25); }
+    .cta:disabled { cursor: not-allowed; opacity: .55; }
+    .cta.secondary { background: rgba(255,255,255,0.95); color: #1f4d87; border: 1px solid #1f4d87; }
+    .section { margin-top: 24px; }
+    .section h2 { margin: 0 0 14px; font-size: 1.3rem; color: #1f4d87; font-family: "Space Grotesk", sans-serif; }
+    .section ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; color: #29496f; }
+    .section li { margin: 0; line-height: 1.6; }
+    .section p { margin: 0; line-height: 1.7; color: #5c708f; white-space: pre-wrap; word-wrap: break-word; }
+    .error { color: #a31717; font-weight: 700; }
+    .loading { text-align: center; padding: 40px; color: #5c708f; }
+    .spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(31,77,135,.2); border-top-color: #1f4d87; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 0 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .site-footer { background: linear-gradient(90deg, #071a34 0%, #1f4d93 55%, #4169e1 100%); color: rgba(255,255,255,.8); margin-top: 60px; }
+    .footer-main { max-width: 1200px; margin: auto; padding: 50px 20px 30px; display: grid; grid-template-columns: 1.3fr 1fr 1fr 1.2fr; gap: 40px; }
+    .footer-col h4 { color: #fff; font-family: "Space Grotesk", sans-serif; font-size: 1.05rem; margin-bottom: 16px; position: relative; padding-bottom: 10px; }
+    .footer-col h4::after { content: ""; position: absolute; bottom: 0; left: 0; width: 30px; height: 3px; background: #1F4D87; border-radius: 3px; }
+    .footer-about { display: flex; flex-direction: column; gap: 12px; }
+    .footer-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-family: "Space Grotesk", sans-serif; font-size: 1.2rem; color: #fff; }
+    .footer-logo img { width: auto; height: 50px; max-width: 180px; object-fit: contain; background: transparent; }
+    .footer-about p { font-size: .9rem; color: rgba(255,255,255,.6); line-height: 1.6; margin: 0; }
+    .footer-links, .footer-contact { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .footer-links a { color: rgba(255,255,255,.6); text-decoration: none; font-size: .9rem; transition: all .2s ease; }
+    .footer-links a:hover { color: #FF7A00; transform: translateX(4px); }
+    .footer-contact li { display: flex; align-items: flex-start; gap: 10px; color: rgba(255,255,255,.6); font-size: .9rem; }
+    .footer-contact a { color: rgba(255,255,255,.6); text-decoration: none; transition: color .2s ease; }
+    .footer-contact a:hover { color: #FF7A00; }
+    .footer-social { display: flex; gap: 10px; margin-top: 8px; }
+    .footer-social a { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); display: grid; place-items: center; transition: all .25s ease; }
+    .footer-social a:hover { background: #1F4D87; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(31,77,135,.3); }
+    .footer-social svg { width: 18px; height: 18px; fill: rgba(255,255,255,.7); }
+    .footer-social a:hover svg { fill: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.08); max-width: 1200px; margin: auto; padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .footer-bottom p { margin: 0; font-size: .84rem; color: rgba(255,255,255,.4); }
+    .dcore-footer { background: linear-gradient(90deg, #071a34 0%, #1f4d93 55%, #4169e1 100%); padding: 1rem; text-align: center; font-size: .8rem; color: rgba(255,255,255,.5); }
+    .dcore-footer a { color: #FF7A00; text-decoration: none; font-weight: 500; }
+    @media (max-width: 860px) { .hero { grid-template-columns: 1fr; } .hero-image { height: 240px; } .title { font-size: 1.6rem; } .card { padding: 16px; } .footer-main { grid-template-columns: 1fr 1fr; gap: 32px; } }
+    @media (max-width: 600px) { .topin { padding: 8px 12px; min-height: auto; } body { padding-top: 100px; } .nav { display: none; } .brand img { height: 48px; } .hero { gap: 12px; } .hero-image { height: 180px; } .title { font-size: 1.1rem; } .price { font-size: 1.2rem; } .cta { padding: 10px 14px; font-size: .8rem; } .section h2 { font-size: 1rem; } .footer-main { grid-template-columns: 1fr; gap: 24px; padding: 32px 16px 20px; } }
+  </style>
+</head>
+<body>
+  <header class="top" id="topNav">
+    <div class="topin">
+      <a href="index.html" class="brand">
+        <span class="brand-logo-card"><img id="siteLogo" alt="Logo" src="" hidden></span>
+        <span id="siteName">Findas Academy</span>
+      </a>
+      <a href="index.html" class="back-btn">← Back to Home</a>
+      <nav class="nav" style="margin-left: auto;">
+        <a href="index.html#courses">Courses</a>
+        <a href="index.html#webinars">Webinars</a>
+        <a href="index.html#digital-products">Digital Products</a>
+        <a href="index.html#membership">Membership</a>
+        <a class="login-btn" href="https://community.findasacademy.in/" target="_blank" rel="noopener noreferrer">Member Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="content">
+    <section class="card">
+      <div class="loading"><div class="spinner"></div><p>Loading product details...</p></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div class="footer-col">
+        <div class="footer-about">
+          <div class="footer-logo"><img id="footerLogo" alt="Logo" src="" hidden><span id="footerBrandName">Findas Academy</span></div>
+          <p id="footerAboutText">Empowering financial freedom through expert-led courses, webinars, and personal coaching.</p>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="index.html#courses">Courses</a></li>
+          <li><a href="index.html#webinars">Webinars</a></li>
+          <li><a href="index.html#digital-products">Digital Products</a></li>
+          <li><a href="index.html#membership">Membership</a></li>
+          <li><a href="index.html#gallery">Gallery</a></li>
+          <li><a href="index.html#reviews">Reviews</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul class="footer-contact">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span id="footerPhone">+91-XXXXXXXXXX</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a id="footerEmail" href="">contact@findasacademy.in</a></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="footerAddress">Pune, Maharashtra, India</span></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <div class="footer-social">
+          <a data-social="instagram" href="" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+          <a data-social="facebook" href="" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+          <a data-social="youtube" href="" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+          <a data-social="twitter" href="" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24"><path d="M18.901 2H22l-6.77 7.737L23.2 22h-6.24l-4.88-6.27L6.4 22H3.3l7.24-8.273L.8 2h6.4l4.41 5.735L18.901 2z"/></svg></a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p id="footerCopyright">&copy; 2026 Findas Academy. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <footer class="dcore-footer">
+    Created by <a href="https://dcoresystems.com" target="_blank" rel="noopener noreferrer">Dcore Systems LLP</a>
+  </footer>
+
+  <script>
+    const API_BASE = (window.PHP_API_BASE || '/api').replace(/\/$/, '');
+    function qs(id) { return typeof id === 'string' ? (id.startsWith('#') || id.startsWith('.') ? document.querySelector(id) : document.getElementById(id)) : id; }
+    function esc(v) { return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#39;"); }
+    function money(v) { const n=Number(v); return Number.isNaN(n)?"":new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(n); }
+    function parseDate(v) { if(!v)return null; const d=new Date(v); return Number.isNaN(d.getTime())?null:d; }
+    function fmtDate(d) { if(!d)return""; return new Intl.DateTimeFormat("en-IN",{dateStyle:"medium",timeStyle:"short"}).format(d); }
+    function urlParam(name) { const p=new URLSearchParams(window.location.search); return String(p.get(name)||"").trim(); }
+    async function apiGet(path) { const res=await fetch(API_BASE+path,{headers:{Accept:"application/json"}}); const payload=await res.json().catch(()=>({})); if(!res.ok||payload.ok===false)throw new Error((payload&&payload.error)||("HTTP "+res.status)); return payload.data; }
+    function openInNewTab(url) { const target=String(url||"").trim(); if(!target)return false; const newTab=window.open(target,"_blank","noopener,noreferrer"); if(!newTab)window.location.href=target; return true; }
+    function listFromText(v) { return String(v||"").split(/\||\n/).map(x=>x.trim()).filter(Boolean); }
+    function renderError(m) { const c=qs("content"); if(c)c.innerHTML='<section class="card"><p class="error">'+esc(m||"Unable to load details.")+"</p></section>"; }
+    function buildHero(item,type) { const img=item.thumbnail_url||item.banner_url||item.image_url||item.image||"",sub=item.subtitle||item.description||"",px=item.price_inr!=null?money(item.price_inr):"",lab=type==="webinar"?(item.primary_cta_text||"Enroll Now"):(type==="membership"?"Join Membership":(type==="course"?"Enroll Now":"Buy Now")),pmt=item.payment_link||item.redirect_url||""; const meta=[]; if(item.category)meta.push(item.category); if(item.language)meta.push(item.language); if(item.period&&type==="membership")meta.push(item.period); if(item.platform&&type==="webinar")meta.push(item.platform); if(item.start_datetime_local&&type==="webinar")meta.push("Starts: "+fmtDate(parseDate(item.start_datetime_local))); const end=type==="webinar"&&parseDate(item.end_datetime_local)&&Date.now()>parseDate(item.end_datetime_local).getTime(),isFree=item.is_free,dis=end||(!pmt&&!isFree); let h='<section class="card hero"><div>'; h+=img?'<img class="hero-image" src="'+esc(img)+'" alt="'+esc(item.title||"Product")+'">':'<img class="hero-image" src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'640\' height=\'420\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%23eef3ff\'/%3E%3C/svg%3E">'; h+='</div><div class="hero-content"><h1 class="title">'+esc(item.title||"Product")+"</h1>"; if(sub)h+='<p class="subtitle">'+esc(sub)+"</p>"; if(meta.length)h+='<div class="meta">'+meta.map(m=>'<span class="pill">'+esc(m)+"</span>").join("")+"</div>"; if(px)h+='<div class="price">'+esc(px)+"</div>"; h+='<div class="cta-group"><button id="ctaBtn" class="cta" '+(dis?"disabled":"")+">"+esc(end?"Event Ended":lab)+"</button>"; if(type==="membership"&&pmt)h+='<a  href="index.html#membership" class="cta secondary">View All Plans</a>'; h+="</div></div></section>"; return h; }
+    function sectionCard(title,html) { return '<section class="card section">'+(title?'<h2>'+esc(title)+"</h2>":"")+'<div>'+html+"</div></section>"; }
+    async function loadBranding() { try { const cfg=await apiGet("/site-config").catch(()=>({})),ast=await apiGet("/site-assets").catch(()=>({})),logo=ast&&(ast.navbar_logo_url||ast.footer_logo_url)||"",name=cfg&&cfg.site_name||"Findas Academy"; if(logo){const i=qs("siteLogo"),f=qs("footerLogo"); if(i){i.src=logo;i.hidden=false;}if(f){f.src=logo;f.hidden=false;}} if(qs("siteName"))qs("siteName").textContent=name; if(qs("footerBrandName"))qs("footerBrandName").textContent=name; if(qs("footerCopyright"))qs("footerCopyright").textContent="© 2026 "+name+". All rights reserved."; if(cfg.footer_about_text&&qs("footerAboutText"))qs("footerAboutText").textContent=cfg.footer_about_text; if(cfg.footer_phone&&qs("footerPhone"))qs("footerPhone").textContent=cfg.footer_phone; if(cfg.footer_address&&qs("footerAddress"))qs("footerAddress").textContent=cfg.footer_address; if(cfg.footer_email&&qs("footerEmail")){qs("footerEmail").href="mailto:"+cfg.footer_email;qs("footerEmail").textContent=cfg.footer_email;} const soc={instagram:cfg.footer_social_instagram,facebook:cfg.footer_social_facebook,youtube:cfg.footer_social_youtube,twitter:cfg.footer_social_twitter,whatsapp:cfg.footer_social_whatsapp}; for(const [s,u]of Object.entries(soc)){const l=document.querySelector("[data-social=\""+s+"\"]"); if(l&&u)l.href=u;} } catch(e){} }
+    async function getMembershipById(id) { const rows=await apiGet("/membership"); const list=Array.isArray(rows)?rows:[],match=list.find(x=>String(x.plan_id||"").trim()===String(id||"").trim()); return match||null; }
+    async function loadDetail() { const type=urlParam("type").toLowerCase(),slug=urlParam("slug"); if(!["course","webinar","digital","membership"].includes(type)||!slug){renderError("Invalid detail URL.");return;} try { let h="",link=""; if(type==="course"){const p=await apiGet("/course-details/"+encodeURIComponent(slug)),c=p&&p.course?p.course:null; if(!c)throw new Error("Course not found."); link=String(c.payment_link||c.redirect_url||"").trim(); h+=buildHero(c,"course"); const bl=Array.isArray(p.blocks)?p.blocks:[],byT=n=>bl.filter(b=>String(b.block_type||"").trim()===n),bull=(n,t)=>{const r=byT(n); if(!r.length)return""; const ln=r.map(x=>listFromText((x.items||x.body||"").trim())).reduce((a,b)=>a.concat(b),[]); return ln.length?sectionCard(t,"<ul>"+ln.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>"):""}; const ab=byT("about"); if(ab.length){const tx=ab.map(x=>String(x.body||"").trim()).filter(Boolean).join("\n\n"); if(tx)h+=sectionCard("Course Description","<p>"+esc(tx)+"</p>");} h+=bull("learn","What You Will Learn"); h+=bull("highlights","Who This Is For"); h+=bull("outcomes","Key Outcomes"); h+=bull("faq","FAQ"); } if(type==="digital"){const p=await apiGet("/digital-product-details/"+encodeURIComponent(slug)),d=p&&p.product?p.product:null; if(!d)throw new Error("Digital product not found."); link=String(d.payment_link||d.redirect_url||"").trim(); h+=buildHero(d,"digital"); const sec=Array.isArray(p.sections)?p.sections:[]; sec.forEach(s=>{const t=String(s.heading||s.title||"").trim(),b=String(s.content||s.body||"").trim(); if(!t&&!b)return; h+=sectionCard(t||"Details","<p>"+esc(b)+"</p>");});} if(type==="webinar"){const p=await apiGet("/webinar-details/"+encodeURIComponent(slug)),w=p&&p.webinar?p.webinar:null; if(!w)throw new Error("Webinar not found."); link=String(w.payment_link||w.redirect_url||"").trim(); h+=buildHero(w,"webinar"); const bl=Array.isArray(p.blocks)?p.blocks:[],c=Array.isArray(p.cards)?p.cards:[],ov=bl.find(b=>String(b.block_type||"").trim()==="overview"); if(ov&&ov.body)h+=sectionCard("Overview","<p>"+esc(ov.body)+"</p>"); if(c.length)h+=sectionCard("Key Takeaways","<ul>"+c.map(x=>"<li>"+esc(x.title||x.body||"")+"</li>").join("")+"</ul>");} if(type==="membership"){const pl=await getMembershipById(slug); if(!pl)throw new Error("Plan not found."); link=String(pl.payment_link||"").trim(); h+=buildHero(pl,"membership"); const f=listFromText(pl.features),a=listFromText(pl.target_audience),b=listFromText(pl.benefits); if(f.length)h+=sectionCard("What Is Included","<ul>"+f.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>"); if(a.length)h+=sectionCard("Best For","<ul>"+a.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>"); if(b.length)h+=sectionCard("Key Benefits","<ul>"+b.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>");} qs("content").innerHTML=h||'<section class="card"><p class="error">No details found.</p></section>'; const btn=qs("ctaBtn"); if(btn&&link){btn.addEventListener("click",e=>{e.preventDefault();openInNewTab(link);});btn.style.cursor="pointer";} } catch(e){renderError(e&&e.message?e.message:"Unable to load details.");} }
+    window.addEventListener("scroll",()=>{const nav=qs("topNav"); if(nav){if(window.scrollY>10){nav.classList.add("scrolled");}else{nav.classList.remove("scrolled");}}});
+    document.addEventListener("DOMContentLoaded",async()=>{await loadBranding(); await loadDetail();});
+  </script>
+</body>
+</html>
