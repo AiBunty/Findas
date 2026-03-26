@@ -49,6 +49,73 @@ router.get('/admin/:resource', requireAuth, async (req, res, next) => {
   }
 });
 
+router.post('/admin/:resource', requireAuth, async (req, res, next) => {
+  try {
+    const table = PUBLIC_TABLE_MAP[req.params.resource];
+    if (!table) {
+      return res.status(404).json({ ok: false, error: 'Unknown admin resource' });
+    }
+    const body = req.body || {};
+    const cols = Object.keys(body).filter(k => body[k] !== undefined && body[k] !== null);
+    if (cols.length === 0) {
+      return res.status(400).json({ ok: false, error: 'No fields to insert' });
+    }
+    const colsSql = cols.map(c => `\`${c}\``).join(', ');
+    const vals = cols.map(c => body[c]);
+    const phSql = cols.map(() => '?').join(', ');
+    const sql = `INSERT INTO ${table} (${colsSql}) VALUES (${phSql})`;
+    const result = await query(sql, vals);
+    return res.status(201).json({ ok: true, data: { id: result.insertId } });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.put('/admin/:resource/:id', requireAuth, async (req, res, next) => {
+  try {
+    const table = PUBLIC_TABLE_MAP[req.params.resource];
+    if (!table) {
+      return res.status(404).json({ ok: false, error: 'Unknown admin resource' });
+    }
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid id' });
+    }
+    const body = req.body || {};
+    const cols = Object.keys(body).filter(k => body[k] !== undefined && body[k] !== null);
+    if (cols.length === 0) {
+      return res.status(400).json({ ok: false, error: 'No fields to update' });
+    }
+    const setParts = cols.map(c => `\`${c}\` = ?`);
+    const vals = cols.map(c => body[c]);
+    vals.push(id);
+    setParts.push('`updated_at` = NOW()');
+    const sql = `UPDATE ${table} SET ${setParts.join(', ')} WHERE id = ?`;
+    await query(sql, vals);
+    const rows = await query(`SELECT * FROM ${table} WHERE id = ?`, [id]);
+    return res.json({ ok: true, data: rows[0] || null });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.delete('/admin/:resource/:id', requireAuth, async (req, res, next) => {
+  try {
+    const table = PUBLIC_TABLE_MAP[req.params.resource];
+    if (!table) {
+      return res.status(404).json({ ok: false, error: 'Unknown admin resource' });
+    }
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid id' });
+    }
+    await query(`DELETE FROM ${table} WHERE id = ?`, [id]);
+    return res.json({ ok: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.get('/:resource', async (req, res, next) => {
   try {
     const table = PUBLIC_TABLE_MAP[req.params.resource];
