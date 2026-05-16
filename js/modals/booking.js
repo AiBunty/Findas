@@ -6,22 +6,36 @@ function renderBookingModal(data) {
 
   const embed = el('div', 'booking-embed');
   const iframe = document.createElement('iframe');
-  iframe.src = 'https://admin.aibunty.com/u2/76687/-free-seminar-to-mint?isEmbeded=1';
+  iframe.src = String((data && data.calendar_url) || DEFAULT_BOOKING_EMBED_URL);
   iframe.style.border = 'none';
   iframe.style.width = '100%';
   iframe.style.height = '600px';
   iframe.title = 'Book a Call';
   iframe.loading = 'lazy';
+  iframe.addEventListener('load', () => {
+    if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
+  });
   embed.appendChild(iframe);
   card.appendChild(embed);
 
   const actions = el('div', 'booking-actions');
+  const fullPageBtn = el('button', 'btn b1', 'Open Full Booking Page');
+  fullPageBtn.addEventListener('click', () => {
+    const bookingPageUrl = typeof window.resolveBookingPageUrl === 'function'
+      ? window.resolveBookingPageUrl()
+      : String((data && data.booking_page_url) || 'book-a-call.html');
+    window.location.href = bookingPageUrl;
+  });
   const closeBtn = el('button', 'btn b2', 'Close');
   closeBtn.addEventListener('click', closeModal);
+  actions.appendChild(fullPageBtn);
   actions.appendChild(closeBtn);
   card.appendChild(actions);
 
   D.mContent.appendChild(card);
+  setTimeout(() => {
+    if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
+  }, 12000);
 }
 
 function renderBookingForm(container, source, triggerBtn) {
@@ -142,5 +156,6 @@ async function openBookingModal() {
     clearEl(D.mContent);
     D.mTitle.textContent = 'Book a Call';
     D.mContent.appendChild(el('p', 'section-body', 'Booking unavailable.'));
+    if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
   }
 }

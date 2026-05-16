@@ -72,6 +72,7 @@ async function runPhpApi(name, params) {
         hero_button_2_text: hero.button_text_2 || '',
         hero_button_2_url: hero.button_url_2 || '',
         hero_video_url: hero.video_url || '',
+        booking_page_url: siteConfig.booking_page_url || 'book-a-call.html',
         founder_title: about.founder_title || '',
         founder_paragraph_1: about.paragraph_1 || '',
         founder_paragraph_2: about.paragraph_2 || '',
@@ -82,6 +83,8 @@ async function runPhpApi(name, params) {
         loading_logo_url: assets.loading_logo_url || '',
         favicon_url: assets.favicon_url || '',
         gallery_enabled: contact.gallery_enabled,
+        faq_heading: footerValue('faq_heading') || 'Frequently Asked Questions',
+        faq_subheading: footerValue('faq_subheading') || 'Common Questions',
         footer_brand_name: footerValue('footer_brand_name'),
         footer_about_text: footerValue('footer_about_text'),
         footer_quick_links_title: footerValue('footer_quick_links_title'),
@@ -98,8 +101,9 @@ async function runPhpApi(name, params) {
         footer_quick_link_6: footerValue('footer_quick_link_6'),
         footer_quick_link_url_6: footerValue('footer_quick_link_url_6'),
         footer_contact_title: footerValue('footer_contact_title'),
-        footer_phone: footerValue('footer_phone') || contact.phone || '',
-        footer_address: footerValue('footer_address') || contact.address || '',
+        footer_phone: (String(contact.phone || '').trim()) || footerValue('footer_phone') || '',
+        footer_email: (String(contact.email || '').trim()) || footerValue('footer_email') || '',
+        footer_address: (String(contact.address || '').trim()) || footerValue('footer_address') || '',
         footer_social_title: footerValue('footer_social_title'),
         footer_social_instagram: footerValue('footer_social_instagram'),
         footer_social_facebook: footerValue('footer_social_facebook'),
@@ -127,6 +131,8 @@ async function runPhpApi(name, params) {
       return phpList('academy-roadmap');
     case 'getAcademyCommunityPosts':
       return phpList('academy-community');
+    case 'getAcademyConfig':
+      return phpSingleton('academy');
     case 'getGalleryImages':
       return phpList('gallery-images');
     case 'getShortReviews':
@@ -138,7 +144,9 @@ async function runPhpApi(name, params) {
     case 'getWhoFor':
       return phpList('who-for');
     case 'getBookingPage':
-      return {};
+      return {
+        booking_page_url: (await phpSingleton('site-config')).booking_page_url || 'book-a-call.html'
+      };
     case 'saveBookingConfirmation':
       return { saved: false, mode: 'client-only' };
     case 'getCourseDetails': {

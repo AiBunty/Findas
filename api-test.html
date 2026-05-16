@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Findas API Test Console</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --line: #334155;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      color: var(--text);
+      background: radial-gradient(circle at top right, #1e293b, var(--bg));
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0b1220;
+      color: var(--text);
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    button {
+      cursor: pointer;
+      background: #1d4ed8;
+      border-color: #1e40af;
+      transition: transform .05s ease;
+    }
+
+    button:active { transform: translateY(1px); }
+
+    .btn-danger { background: var(--danger); border-color: #b91c1c; }
+    .btn-secondary { background: #334155; border-color: #475569; }
+
+    .resource-title {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .actions .full { grid-column: 1 / -1; }
+
+    .status {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status.ok { color: var(--accent); }
+    .status.err { color: var(--danger); }
+
+    #log {
+      white-space: pre-wrap;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.4;
+      max-height: 340px;
+      overflow: auto;
+      background: #020617;
+    }
+
+    .banner {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid var(--line);
+      color: var(--warn);
+      background: rgba(245, 158, 11, 0.12);
+    }
+  </style>
+</head>
+<body>
+  <h1>Findas API Test Console</h1>
+  <p>Use this page to test API connectivity and MySQL CRUD for each section.</p>
+
+  <div class="card" style="margin-bottom: 16px;">
+    <h2 class="resource-title">Connection + Login</h2>
+    <div class="row">
+      <div>
+        <label for="baseUrl">Base URL</label>
+        <input id="baseUrl" value="" />
+      </div>
+      <div>
+        <label for="token">JWT Token (auto-filled after login)</label>
+        <input id="token" value="" />
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label for="healthPath">Health Path</label>
+        <input id="healthPath" value="/api/health" />
+      </div>
+      <div>
+        <label for="loginPath">Login Path</label>
+        <input id="loginPath" value="/api/auth/login" />
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label for="username">Admin Email/Username</label>
+        <input id="username" value="admin@findas.in" />
+      </div>
+      <div>
+        <label for="password">Admin Password</label>
+        <input id="password" type="password" value="admin123" />
+      </div>
+    </div>
+    <div class="actions" style="max-width: 520px;">
+      <button id="btnHealth">Check /health</button>
+      <button id="btnLogin">Login /auth/login</button>
+      <button id="btnUseStoredToken" class="btn-secondary">Use Stored Admin Token</button>
+      <button id="btnAuthDiag" class="btn-secondary">Run Auth Diagnostics</button>
+      <button id="btnClearLog" class="btn-secondary full">Clear Log</button>
+    </div>
+    <div id="globalStatus" class="status"></div>
+    <div class="banner">Hero write test is intentionally excluded to avoid content changes on production.</div>
+  </div>
+
+  <div id="resourceGrid" class="grid"></div>
+
+  <div class="card">
+    <h2 class="resource-title">Request / Response Log</h2>
+    <textarea id="log" readonly></textarea>
+  </div>
+
+  <script>
+    const resources = [
+      { key: 'courses', label: 'Courses', payload: { title: 'API Test Course', description: 'Created from API tester', is_active: 1, order: 999 } },
+      { key: 'webinars', label: 'Webinars', payload: { title: 'API Test Webinar', description: 'Created from API tester', is_active: 1, order: 999 } },
+      { key: 'digital-products', label: 'Digital Products', payload: { title: 'API Test Product', description: 'Created from API tester', is_active: 1, order: 999 } },
+      { key: 'membership', label: 'Membership', payload: { title: 'API Test Plan', description: 'Created from API tester', is_active: 1, order: 999 } },
+      // Keep academy resources read-only in tester to avoid accidental homepage content override.
+      { key: 'academy-sections', label: 'Academy Sections', readOnly: true, payload: { title: 'API Test Section', description: 'Created from API tester', icon_emoji: 'A', is_active: 1, order: 999 } },
+      { key: 'academy-community', label: 'Academy Community', readOnly: true, payload: { post_type: 'announcement', content: 'Created from API tester', author: 'API Tester', is_active: 1, order: 999 } }
+    ];
+
+    const state = { createdIds: {} };
+
+    const baseUrlEl = document.getElementById('baseUrl');
+    const tokenEl = document.getElementById('token');
+    const healthPathEl = document.getElementById('healthPath');
+    const loginPathEl = document.getElementById('loginPath');
+    const logEl = document.getElementById('log');
+    const globalStatusEl = document.getElementById('globalStatus');
+
+    baseUrlEl.value = window.location.origin;
+
+    function now() {
+      return new Date().toISOString().replace('T', ' ').slice(0, 19);
+    }
+
+    function appendLog(title, data) {
+      const section = '[' + now() + '] ' + title + '\n' + (typeof data === 'string' ? data : JSON.stringify(data, null, 2)) + '\n\n';
+      logEl.value = section + logEl.value;
+    }
+
+    function setStatus(element, message, ok) {
+      element.className = 'status ' + (ok ? 'ok' : 'err');
+      element.textContent = message;
+    }
+
+    function getBaseUrl() {
+      return (baseUrlEl.value || '').replace(/\/$/, '');
+    }
+
+    function getHeaders(useAuth) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (useAuth) {
+        const token = tokenEl.value.trim();
+        if (token) headers.Authorization = 'Bearer ' + token;
+      }
+      return headers;
+    }
+
+    async function callApi(method, path, body, useAuth) {
+      const response = await fetch(getBaseUrl() + path, {
+        method,
+        headers: getHeaders(useAuth),
+        body: body ? JSON.stringify(body) : undefined
+      });
+
+      const text = await response.text();
+      let parsed = text;
+      try { parsed = JSON.parse(text); } catch (_e) {}
+      return { status: response.status, body: parsed };
+    }
+
+    function loadStoredAdminToken() {
+      const existing = localStorage.getItem('findas_admin_token') || '';
+      if (existing) {
+        tokenEl.value = existing;
+        setStatus(globalStatusEl, 'Loaded token from localStorage (findas_admin_token)', true);
+        appendLog('Loaded token from localStorage', { key: 'findas_admin_token', length: existing.length });
+        return true;
+      }
+      setStatus(globalStatusEl, 'No stored admin token found in localStorage', false);
+      appendLog('No stored token found', { key: 'findas_admin_token' });
+      return false;
+    }
+
+    async function checkHealth() {
+      try {
+        const path = (healthPathEl.value || '/api/health').trim();
+        const result = await callApi('GET', path, null, false);
+        const ok = result.status === 200;
+        setStatus(globalStatusEl, 'Health: HTTP ' + result.status, ok);
+        appendLog('GET ' + path, result);
+      } catch (err) {
+        setStatus(globalStatusEl, 'Health failed: ' + err.message, false);
+        appendLog('GET health error', String(err));
+      }
+    }
+
+    async function login() {
+      try {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const preferredPath = (loginPathEl.value || '/api/auth/login').trim() || '/api/auth/login';
+        const fallbackPath = preferredPath === '/api/auth/login' ? '/auth/login' : '/api/auth/login';
+
+        const attempts = [
+          { path: preferredPath, body: { email: username, password } },
+          { path: preferredPath, body: { username, password } },
+          { path: fallbackPath, body: { email: username, password } },
+          { path: fallbackPath, body: { username, password } }
+        ];
+
+        let result = null;
+        let usedAttempt = null;
+        for (const attempt of attempts) {
+          const current = await callApi('POST', attempt.path, attempt.body, false);
+          appendLog('Login attempt', { path: attempt.path, payloadShape: Object.keys(attempt.body), result: current });
+          if (current.status === 200 && current.body && current.body.ok && current.body.token) {
+            result = current;
+            usedAttempt = attempt;
+            break;
+          }
+          if (!result) {
+            result = current;
+            usedAttempt = attempt;
+          }
+        }
+
+        const ok = result.status === 200 && result.body && result.body.ok && result.body.token;
+
+        if (ok) {
+          tokenEl.value = result.body.token || '';
+          setStatus(globalStatusEl, 'Login successful via ' + usedAttempt.path, true);
+        } else {
+          tokenEl.value = '';
+          setStatus(globalStatusEl, 'Login failed after all route/payload attempts', false);
+        }
+        appendLog('POST login final', { preferredPath, fallbackPath, usedAttempt, result });
+      } catch (err) {
+        setStatus(globalStatusEl, 'Login error: ' + err.message, false);
+        appendLog('POST login error', String(err));
+      }
+    }
+
+    async function runAuthDiagnostics() {
+      appendLog('Auth diagnostics start', {
+        baseUrl: getBaseUrl(),
+        healthPath: (healthPathEl.value || '/api/health').trim(),
+        loginPath: (loginPathEl.value || '/api/auth/login').trim()
+      });
+
+      await checkHealth();
+      await login();
+
+      if (tokenEl.value.trim()) {
+        const meResult = await callApi('GET', '/api/auth/me', null, true).catch(e => ({ status: 0, body: String(e) }));
+        appendLog('GET /api/auth/me (diagnostic)', meResult);
+      }
+    }
+
+    function getPayloadTextarea(resourceKey) {
+      return document.getElementById('payload-' + resourceKey);
+    }
+
+    function getIdInput(resourceKey) {
+      return document.getElementById('id-' + resourceKey);
+    }
+
+    function getStatusEl(resourceKey) {
+      return document.getElementById('status-' + resourceKey);
+    }
+
+    function readPayload(resourceKey) {
+      const raw = getPayloadTextarea(resourceKey).value.trim();
+      if (!raw) return {};
+      return JSON.parse(raw);
+    }
+
+    function setCreatedId(resourceKey, id) {
+      if (!id) return;
+      state.createdIds[resourceKey] = id;
+      getIdInput(resourceKey).value = String(id);
+    }
+
+    async function testPublicGet(resourceKey) {
+      const statusEl = getStatusEl(resourceKey);
+      try {
+        const result = await callApi('GET', '/api/' + resourceKey, null, false);
+        const ok = result.status === 200 && result.body && result.body.ok;
+        setStatus(statusEl, 'Public GET: HTTP ' + result.status, ok);
+        appendLog('GET /api/' + resourceKey, result);
+      } catch (err) {
+        setStatus(statusEl, 'Public GET failed: ' + err.message, false);
+        appendLog('GET /api/' + resourceKey + ' error', String(err));
+      }
+    }
+
+    async function testAdminGet(resourceKey) {
+      const statusEl = getStatusEl(resourceKey);
+      try {
+        if (!tokenEl.value.trim()) {
+          setStatus(statusEl, 'Admin GET blocked: missing token (login first)', false);
+          appendLog('Admin GET blocked', { resource: resourceKey, reason: 'missing token' });
+          return;
+        }
+        const result = await callApi('GET', '/api/admin/' + resourceKey, null, true);
+        const ok = result.status === 200 && result.body && result.body.ok;
+        setStatus(statusEl, 'Admin GET: HTTP ' + result.status, ok);
+        appendLog('GET /api/admin/' + resourceKey, result);
+      } catch (err) {
+        setStatus(statusEl, 'Admin GET failed: ' + err.message, false);
+        appendLog('GET /api/admin/' + resourceKey + ' error', String(err));
+      }
+    }
+
+    function findResource(resourceKey) {
+      return resources.find(r => r.key === resourceKey) || null;
+    }
+
+    async function testCreate(resourceKey) {
+      const statusEl = getStatusEl(resourceKey);
+      try {
+        const resource = findResource(resourceKey);
+        if (resource && resource.readOnly) {
+          setStatus(statusEl, 'POST disabled for protected resource in tester', false);
+          appendLog('POST blocked (protected resource)', { resource: resourceKey });
+          return;
+        }
+        if (!tokenEl.value.trim()) {
+          setStatus(statusEl, 'POST blocked: missing token (login first)', false);
+          appendLog('POST blocked', { resource: resourceKey, reason: 'missing token' });
+          return;
+        }
+        const payload = readPayload(resourceKey);
+        const result = await callApi('POST', '/api/admin/' + resourceKey, payload, true);
+        const id = result && result.body && result.body.data ? result.body.data.id : null;
+        if (id) setCreatedId(resourceKey, id);
+        const ok = result.status === 201 && result.body && result.body.ok;
+        setStatus(statusEl, 'POST: HTTP ' + result.status + (id ? ', id=' + id : ''), ok);
+        appendLog('POST /api/admin/' + resourceKey, { payload, result });
+      } catch (err) {
+        setStatus(statusEl, 'POST failed: ' + err.message, false);
+        appendLog('POST /api/admin/' + resourceKey + ' error', String(err));
+      }
+    }
+
+    async function testUpdate(resourceKey) {
+      const statusEl = getStatusEl(resourceKey);
+      try {
+        const resource = findResource(resourceKey);
+        if (resource && resource.readOnly) {
+          setStatus(statusEl, 'PUT disabled for protected resource in tester', false);
+          appendLog('PUT blocked (protected resource)', { resource: resourceKey });
+          return;
+        }
+        if (!tokenEl.value.trim()) {
+          setStatus(statusEl, 'PUT blocked: missing token (login first)', false);
+          appendLog('PUT blocked', { resource: resourceKey, reason: 'missing token' });
+          return;
+        }
+        const id = parseInt(getIdInput(resourceKey).value, 10);
+        if (!id) throw new Error('Provide valid ID to update');
+        const payload = readPayload(resourceKey);
+        const result = await callApi('PUT', '/api/admin/' + resourceKey + '/' + id, payload, true);
+        const ok = result.status === 200 && result.body && result.body.ok;
+        setStatus(statusEl, 'PUT: HTTP ' + result.status + ', id=' + id, ok);
+        appendLog('PUT /api/admin/' + resourceKey + '/' + id, { payload, result });
+      } catch (err) {
+        setStatus(statusEl, 'PUT failed: ' + err.message, false);
+        appendLog('PUT /api/admin/' + resourceKey + ' error', String(err));
+      }
+    }
+
+    async function testDelete(resourceKey) {
+      const statusEl = getStatusEl(resourceKey);
+      try {
+        const resource = findResource(resourceKey);
+        if (resource && resource.readOnly) {
+          setStatus(statusEl, 'DELETE disabled for protected resource in tester', false);
+          appendLog('DELETE blocked (protected resource)', { resource: resourceKey });
+          return;
+        }
+        if (!tokenEl.value.trim()) {
+          setStatus(statusEl, 'DELETE blocked: missing token (login first)', false);
+          appendLog('DELETE blocked', { resource: resourceKey, reason: 'missing token' });
+          return;
+        }
+        const id = parseInt(getIdInput(resourceKey).value, 10);
+        if (!id) throw new Error('Provide valid ID to delete');
+        const result = await callApi('DELETE', '/api/admin/' + resourceKey + '/' + id, null, true);
+        const ok = result.status === 200 && result.body && result.body.ok;
+        setStatus(statusEl, 'DELETE: HTTP ' + result.status + ', id=' + id, ok);
+        appendLog('DELETE /api/admin/' + resourceKey + '/' + id, result);
+      } catch (err) {
+        setStatus(statusEl, 'DELETE failed: ' + err.message, false);
+        appendLog('DELETE /api/admin/' + resourceKey + ' error', String(err));
+      }
+    }
+
+    function renderResourceCard(resource) {
+      const grid = document.getElementById('resourceGrid');
+      const card = document.createElement('div');
+      card.className = 'card';
+      const writeDisabled = resource.readOnly ? 'disabled' : '';
+      card.innerHTML = `
+        <h2 class="resource-title">${resource.label}</h2>
+        ${resource.readOnly ? '<div class="banner" style="margin-bottom:8px;">Protected in tester: GET only</div>' : ''}
+        <label for="payload-${resource.key}">Payload (JSON)</label>
+        <textarea id="payload-${resource.key}"></textarea>
+        <label for="id-${resource.key}">Record ID (for PUT/DELETE)</label>
+        <input id="id-${resource.key}" placeholder="Auto-filled after POST" />
+        <div class="actions">
+          <button id="btn-public-${resource.key}">Public GET</button>
+          <button id="btn-admin-${resource.key}">Admin GET</button>
+          <button id="btn-post-${resource.key}" ${writeDisabled}>POST</button>
+          <button id="btn-put-${resource.key}" ${writeDisabled}>PUT</button>
+          <button id="btn-del-${resource.key}" class="btn-danger full" ${writeDisabled}>DELETE</button>
+        </div>
+        <div id="status-${resource.key}" class="status"></div>
+      `;
+      grid.appendChild(card);
+
+      document.getElementById('payload-' + resource.key).value = JSON.stringify(resource.payload, null, 2);
+      document.getElementById('btn-public-' + resource.key).addEventListener('click', () => testPublicGet(resource.key));
+      document.getElementById('btn-admin-' + resource.key).addEventListener('click', () => testAdminGet(resource.key));
+      document.getElementById('btn-post-' + resource.key).addEventListener('click', () => testCreate(resource.key));
+      document.getElementById('btn-put-' + resource.key).addEventListener('click', () => testUpdate(resource.key));
+      document.getElementById('btn-del-' + resource.key).addEventListener('click', () => testDelete(resource.key));
+    }
+
+    resources.forEach(renderResourceCard);
+
+    document.getElementById('btnHealth').addEventListener('click', checkHealth);
+    document.getElementById('btnLogin').addEventListener('click', login);
+    document.getElementById('btnUseStoredToken').addEventListener('click', loadStoredAdminToken);
+    document.getElementById('btnAuthDiag').addEventListener('click', runAuthDiagnostics);
+    document.getElementById('btnClearLog').addEventListener('click', () => {
+      logEl.value = '';
+      globalStatusEl.textContent = '';
+      globalStatusEl.className = 'status';
+    });
+
+    // Best effort: preload existing admin session token if user is already logged in elsewhere.
+    loadStoredAdminToken();
+  </script>
+</body>
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book a Free Call | Findas Academy</title>
+  <link rel="icon" id="pageFavicon" href="">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #071a34;
+      --blue: #1f4d93;
+      --royal: #4169e1;
+      --gold: #efc918;
+      --ink: #17375f;
+      --muted: #5d708d;
+      --card: rgba(255, 255, 255, 0.92);
+      --line: rgba(31, 77, 147, 0.12);
+      --page: linear-gradient(135deg, #eef4ff 0%, #f8fbff 50%, #eef3ff 100%);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--ink);
+      background: var(--page);
+    }
+
+    .page-shell {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--navy);
+      text-decoration: none;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+    }
+
+    .brand img {
+      width: auto;
+      height: 58px;
+      max-width: 180px;
+      object-fit: contain;
+      background: transparent;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid var(--line);
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .intro-card,
+    .booking-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: 0 24px 60px rgba(31, 77, 147, 0.14);
+      backdrop-filter: blur(16px);
+    }
+
+    .intro-card {
+      padding: 30px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .intro-card::after {
+      content: '';
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      right: -80px;
+      top: -80px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(65, 105, 225, .14), transparent 70%);
+    }
+
+    .kicker {
+      margin: 0 0 12px;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1.02;
+      letter-spacing: -.04em;
+      color: var(--navy);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .intro-copy {
+      margin: 0 0 22px;
+      color: var(--muted);
+      line-height: 1.72;
+      font-size: 1rem;
+    }
+
+    .affirmations {
+      display: grid;
+      gap: 12px;
+    }
+
+    .affirmation {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(65, 105, 225, .06);
+      border: 1px solid rgba(65, 105, 225, .08);
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .booking-card {
+      padding: 18px;
+      position: relative;
+      min-height: 760px;
+      overflow: hidden;
+    }
+
+    .calendar-shell {
+      position: relative;
+      width: 100%;
+      min-height: 720px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(236,242,255,.88));
+      border: 1px solid rgba(31, 77, 147, .08);
+    }
+
+    .calendar-frame {
+      width: 100%;
+      height: 720px;
+      border: 0;
+      opacity: 0;
+      transition: opacity .4s ease;
+    }
+
+    .calendar-frame.is-ready {
+      opacity: 1;
+    }
+
+    .loader-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      background: linear-gradient(135deg, rgba(238, 244, 255, .97), rgba(250, 252, 255, .98));
+      transition: opacity .4s ease, visibility .4s ease;
+      z-index: 2;
+    }
+
+    .loader-overlay.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-card {
+      max-width: 480px;
+      text-align: center;
+      display: grid;
+      gap: 18px;
+      place-items: center;
+    }
+
+    .loader-ring {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 4px solid rgba(31, 77, 147, .16);
+      border-top-color: var(--gold);
+      border-right-color: var(--gold);
+      animation: spin 1.05s linear infinite;
+      box-shadow: 0 0 26px rgba(31, 77, 147, .12);
+    }
+
+    .loader-title {
+      margin: 0;
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .loader-subtext {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .quote-box {
+      padding: 18px 18px 16px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.84);
+      border: 1px solid rgba(31, 77, 147, .08);
+      width: 100%;
+      box-shadow: 0 12px 30px rgba(31, 77, 147, .08);
+    }
+
+    .quote-mark {
+      margin: 0 0 4px;
+      font-size: 2rem;
+      line-height: 1;
+      color: rgba(31, 77, 147, .28);
+    }
+
+    .quote-text {
+      margin: 0;
+      min-height: 54px;
+      color: var(--ink);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .quote-author {
+      margin: 10px 0 0;
+      font-size: .84rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .calendar-note {
+      margin: 16px 4px 0;
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.6;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .booking-card {
+        min-height: 680px;
+      }
+
+      .calendar-shell,
+      .calendar-frame {
+        min-height: 640px;
+        height: 640px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-shell {
+        padding: 20px 14px 36px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .intro-card,
+      .booking-card {
+        border-radius: 22px;
+      }
+
+      .calendar-shell,
+      .calendar-frame {
+        min-height: 580px;
+        height: 580px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="topbar">
+      <a href="index.html" class="brand" aria-label="Findas Academy Home">
+        <img id="brandLogo" src="" alt="Findas Academy" hidden>
+      </a>
+      <a href="index.html" class="back-link">Back to Home</a>
+    </div>
+
+    <section class="hero">
+      <article class="intro-card">
+        <p class="kicker">Book a Free Call</p>
+        <h1>Make one calm decision that moves your money life forward.</h1>
+        <p class="intro-copy">Choose a convenient time and speak with clarity, not pressure. This is a focused conversation to help you take the next wise step in your financial journey.</p>
+        <div class="affirmations">
+          <div class="affirmation">Good decisions grow faster when they are taken with patience and clarity.</div>
+          <div class="affirmation">Small disciplined steps can create extraordinary financial confidence over time.</div>
+          <div class="affirmation">You do not need urgency to move forward. You need alignment, consistency, and the right next action.</div>
+        </div>
+      </article>
+
+      <article class="booking-card">
+        <div class="calendar-shell">
+          <div class="loader-overlay" id="loaderOverlay" aria-hidden="false">
+            <div class="loader-card">
+              <div class="loader-ring"></div>
+              <p class="kicker" id="loaderKicker">Guided by Clarity</p>
+              <p class="loader-title" id="loaderTitle">Preparing your booking calendar</p>
+              <p class="loader-subtext" id="loaderSubtext">A thoughtful pause while we open your next financial conversation.</p>
+              <div class="quote-box">
+                <p class="quote-mark">"</p>
+                <p class="quote-text" id="quoteText">Do not save what is left after spending, but spend what is left after saving.</p>
+                <p class="quote-author" id="quoteAuthor">Warren Buffett</p>
+              </div>
+            </div>
+          </div>
+          <iframe
+            id="bookingFrame"
+            class="calendar-frame"
+            src="https://admin.aibunty.com/u2/76687/-free-seminar-to-mint?isEmbeded=1"
+            title="Book a Free Call"
+            loading="lazy"></iframe>
+        </div>
+        <p class="calendar-note">If the calendar takes longer than expected, give it a moment. We keep the page visible and graceful while the scheduler finishes loading.</p>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    const PHP_API_BASE = (window.FINDAS_PHP_API_BASE || '/api').replace(/\/$/, '');
+    const DEFAULT_BRAND_LOGO = '';
+    const experiences = [
+      {
+        kicker: 'Guided by Clarity',
+        title: 'Preparing your booking calendar',
+        subtext: 'A thoughtful pause while we open your next financial conversation.',
+        quote: 'Do not save what is left after spending, but spend what is left after saving.',
+        author: 'Warren Buffett'
+      },
+      {
+        kicker: 'Grace in Motion',
+        title: 'Opening a calm space to plan forward',
+        subtext: 'Consistency and patience can do more than urgency ever will.',
+        quote: 'Financial freedom is available to those who learn about it and work for it.',
+        author: 'Robert Kiyosaki'
+      },
+      {
+        kicker: 'Quiet Discipline',
+        title: 'Loading your next wise step',
+        subtext: 'Your future often changes through one well-timed, well-considered action.',
+        quote: 'Beware of little expenses. A small leak will sink a great ship.',
+        author: 'Benjamin Franklin'
+      },
+      {
+        kicker: 'Built with Patience',
+        title: 'Aligning your booking experience',
+        subtext: 'Steady decisions create strong financial foundations.',
+        quote: 'The stock market is a device for transferring money from the impatient to the patient.',
+        author: 'Warren Buffett'
+      }
+    ];
+
+    const loader = document.getElementById('loaderOverlay');
+    const frame = document.getElementById('bookingFrame');
+    const loaderKicker = document.getElementById('loaderKicker');
+    const loaderTitle = document.getElementById('loaderTitle');
+    const loaderSubtext = document.getElementById('loaderSubtext');
+    const quoteText = document.getElementById('quoteText');
+    const quoteAuthor = document.getElementById('quoteAuthor');
+    const brandLogo = document.getElementById('brandLogo');
+    const pageFavicon = document.getElementById('pageFavicon');
+
+    async function applyAdminManagedBranding() {
+      try {
+        const response = await fetch(`${PHP_API_BASE}/site-assets`, {
+          headers: { Accept: 'application/json' }
+        });
+        if (!response.ok) return;
+        const payload = await response.json().catch(() => null);
+        const data = payload && payload.ok ? payload.data || {} : {};
+        const navbarLogo = String(data.navbar_logo_url || '').trim() || DEFAULT_BRAND_LOGO;
+        const faviconUrl = String(data.favicon_url || '').trim() || navbarLogo;
+
+        if (brandLogo) {
+          if (navbarLogo) {
+            brandLogo.src = navbarLogo;
+            brandLogo.hidden = false;
+          } else {
+            brandLogo.hidden = true;
+          }
+        }
+        if (pageFavicon) {
+          pageFavicon.href = faviconUrl;
+        }
+      } catch (_err) {
+        if (brandLogo) {
+          brandLogo.hidden = true;
+        }
+      }
+    }
+
+    let experienceIndex = 0;
+    const timer = setInterval(() => {
+      experienceIndex = (experienceIndex + 1) % experiences.length;
+      const entry = experiences[experienceIndex];
+      loaderKicker.textContent = entry.kicker;
+      loaderTitle.textContent = entry.title;
+      loaderSubtext.textContent = entry.subtext;
+      quoteText.textContent = entry.quote;
+      quoteAuthor.textContent = entry.author;
+    }, 2600);
+
+    function hideLoader() {
+      clearInterval(timer);
+      loader.classList.add('is-hidden');
+      loader.setAttribute('aria-hidden', 'true');
+      frame.classList.add('is-ready');
+    }
+
+    applyAdminManagedBranding();
+    frame.addEventListener('load', hideLoader);
+    setTimeout(hideLoader, 12000);
+  </script>
+</body>
+</html>

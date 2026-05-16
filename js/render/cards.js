@@ -7,6 +7,7 @@ function keep(item) {
 function card(item, type) {
   const a = document.createElement('article');
   a.className = 'card';
+  if (type === 'webinar') a.classList.add('webinar-card');
   a.tabIndex = 0;
   a.setAttribute('role', 'button');
   a.dataset.type = type;
@@ -49,10 +50,11 @@ function card(item, type) {
   }
   if (type === 'webinar') {
     const p = past(item);
+    const dt = item.startAt ? fmtDate(item.startAt, item.tz) : 'Live session';
     badge.className = 'badge ' + (p ? 'bpast' : 'bup');
     badge.textContent = p ? 'Event Ended' : 'Upcoming';
     price.textContent = item.isFree ? 'Free' : money(item.price);
-    sub.textContent = item.subtitle || (item.startAt ? fmtDate(item.startAt, item.tz) : 'Live session');
+    sub.textContent = item.subtitle || dt;
   }
   if (type === 'membership') {
     badge.className = 'badge ' + (item.recommended ? 'bup' : 'bdef');
@@ -65,6 +67,44 @@ function card(item, type) {
   body.appendChild(title);
   body.appendChild(sub);
   body.appendChild(meta);
+
+  if (type === 'webinar') {
+    const when = document.createElement('div');
+    when.className = 'webinar-when';
+    when.textContent = item.startAt ? fmtDate(item.startAt, item.tz) : 'Date to be announced';
+
+    const foot = document.createElement('div');
+    foot.className = 'webinar-foot';
+
+    const left = document.createElement('div');
+    left.className = 'webinar-foot-left';
+
+    const platform = document.createElement('span');
+    platform.className = 'webinar-platform';
+    platform.textContent = item.platform || 'Live Webinar';
+    left.appendChild(platform);
+
+    if (item.hostImg) {
+      const host = document.createElement('div');
+      host.className = 'webinar-host';
+      const hostImg = document.createElement('img');
+      hostImg.src = item.hostImg;
+      hostImg.alt = item.title || 'Host';
+      hostImg.loading = 'lazy';
+      host.appendChild(hostImg);
+      left.appendChild(host);
+    }
+
+    const cta = document.createElement('span');
+    cta.className = 'webinar-cta-btn';
+    cta.textContent = item.cta || 'Register';
+
+    foot.appendChild(left);
+    foot.appendChild(cta);
+    body.appendChild(when);
+    body.appendChild(foot);
+  }
+
   a.appendChild(media);
   a.appendChild(body);
   return a;

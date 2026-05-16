@@ -22,6 +22,7 @@ const API_CACHEABLE_METHODS = {
   getAcademyAfter: true,
   getAcademyRoadmap: true,
   getAcademyCommunityPosts: true,
+  getAcademyConfig: true,
   getBookingPage: true,
   getCourseDetails: true,
   getDigitalProductDetails: true,

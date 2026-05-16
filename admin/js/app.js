@@ -58,11 +58,12 @@ function clearDataCache() {
 function invalidateCache(path) {
   if (!path) return;
   delete state.sectionDataCache[path];
+  const normalizedPath = String(path).split('?')[0];
   if (
-    path === '/api/admin/courses' ||
-    path === '/api/admin/webinars' ||
-    path === '/api/admin/digital-products' ||
-    path === '/api/admin/membership'
+    normalizedPath === '/api/admin/courses' || normalizedPath.startsWith('/api/admin/courses/') ||
+    normalizedPath === '/api/admin/webinars' || normalizedPath.startsWith('/api/admin/webinars/') ||
+    normalizedPath === '/api/admin/digital-products' || normalizedPath.startsWith('/api/admin/digital-products/') ||
+    normalizedPath === '/api/admin/membership' || normalizedPath.startsWith('/api/admin/membership/')
   ) {
     state.existingSlugOptions = null;
   }
@@ -190,8 +191,8 @@ function parseMultilineUrls(value) {
   return out;
 }
 
-async function getExistingSlugOptions() {
-  if (Array.isArray(state.existingSlugOptions)) {
+async function getExistingSlugOptions(forceRefresh = false) {
+  if (!forceRefresh && Array.isArray(state.existingSlugOptions)) {
     return state.existingSlugOptions;
   }
 
@@ -202,17 +203,31 @@ async function getExistingSlugOptions() {
     api('/api/admin/membership')
   ]);
 
-  const seen = new Set();
-  const options = [];
+  const optionsBySlug = new Map();
   function pushRows(rows, typeLabel, slugKey) {
-    (Array.isArray(rows) ? rows : []).forEach((row) => {
-      const slug = String(row[slugKey || 'slug'] || '').trim();
-      if (!slug || seen.has(slug)) return;
-      seen.add(slug);
-      const title = String(row.title || '').trim();
-      const suffix = title ? ` - ${title}` : '';
-      options.push({ value: slug, label: `${slug} (${typeLabel})${suffix}` });
-    });
+    (Array.isArray(rows) ? rows : [])
+      .slice()
+      .sort((a, b) => Number(b.id || 0) - Number(a.id || 0))
+      .forEach((row) => {
+        const slug = String(row[slugKey || 'slug'] || '').trim();
+        if (!slug) return;
+
+        const title = String(row.title || '').trim();
+        const suffix = title ? ` - ${title}` : '';
+        const nextType = String(typeLabel || '').trim();
+
+        if (!optionsBySlug.has(slug)) {
+          optionsBySlug.set(slug, { value: slug, label: `${slug} (${nextType})${suffix}`, types: new Set([nextType]) });
+          return;
+        }
+
+        const existing = optionsBySlug.get(slug);
+        existing.types.add(nextType);
+        if (title) {
+          const typeList = Array.from(existing.types).join(', ');
+          existing.label = `${slug} (${typeList}) - ${title}`;
+        }
+      });
   }
 
   pushRows(coursesRes.data, 'Course');
@@ -220,6 +235,7 @@ async function getExistingSlugOptions() {
   pushRows(digitalRes.data, 'Digital');
   pushRows(membershipRes.data, 'Membership', 'plan_id');
 
+  const options = Array.from(optionsBySlug.values()).map((item) => ({ value: item.value, label: item.label }));
   options.sort((a, b) => a.value.localeCompare(b.value));
   state.existingSlugOptions = options;
   return options;
@@ -238,11 +254,11 @@ async function hydrateDynamicFieldOptions(form, cfg, row) {
   const slugFields = cfg.fields.filter((f) => f.type === 'slug-multiselect');
   if (!slugFields.length) return;
 
+  // Always fetch the latest slug list so review tabs reflect newly created/renamed products instantly.
+  const options = await getExistingSlugOptions(true);
   for (const field of slugFields) {
     const selectNode = form.elements[field.name];
     if (!selectNode) continue;
-
-    const options = await getExistingSlugOptions();
     selectNode.innerHTML = options.map((opt) => `<option value="${escapeHtml(opt.value)}">${escapeHtml(opt.label)}</option>`).join('');
     setMultiSelectValues(selectNode, row ? row[field.name] : '');
   }
@@ -258,7 +274,7 @@ const sectionModeConfigs = {
     review: ['slug', 'category', 'language', 'thumbnail_url', 'redirect_url', 'payment_link', 'price_inr', 'order', 'is_active']
   },
   webinars: {
-    content: ['title', 'subtitle', 'host_name', 'host_image_url', 'platform', 'timezone', 'start_datetime_local', 'end_datetime_local', 'primary_cta_text'],
+    content: ['title', 'subtitle', 'host_name', 'host_image_url', 'platform', 'timezone', 'start_datetime_local', 'end_datetime_local', 'primary_cta_text', 'body_video_url'],
     review: ['slug', 'banner_url', 'payment_link', 'price_inr', 'is_free', 'order', 'is_active']
   },
   'digital-products': {
@@ -512,7 +528,7 @@ async function syncSimpleWebinarsContent(slug, values) {
   const [blocksRes, cardsRes] = await Promise.all([api(blocksEndpoint), api(cardsEndpoint)]);
   const blocks = Array.isArray(blocksRes.data) ? blocksRes.data : [];
   const cards = Array.isArray(cardsRes.data) ? cardsRes.data : [];
-  const managed = new Set(['overview', 'who_for', 'faq']);
+  const managed = new Set(['overview', 'who_for', 'outcomes', 'faq', 'key_points']);
 
   await deleteRowsByFilter(blocksEndpoint, blocks, (r) => String(r.webinar_slug || '').trim() === slug && managed.has(String(r.block_type || '').trim()));
   await deleteRowsByFilter(cardsEndpoint, cards, (r) => String(r.webinar_slug || '').trim() === slug);
@@ -540,6 +556,25 @@ async function syncSimpleWebinarsContent(slug, values) {
       order: 2
     });
   }
+  if (String(values.outcome || '').trim()) {
+    outBlocks.push({
+      webinar_slug: slug,
+      block_type: 'outcomes',
+      title: resolveSectionHeading(values.field3Label, defaultSimpleHeading('webinars', 'field3')),
+      bullets: normalizeListValueForStorage(values.outcome),
+      is_active: 1,
+      order: 3
+    });
+  }
+  if (String(values.whatLearn || '').trim()) {
+    outBlocks.push({
+      webinar_slug: slug,
+      block_type: 'key_points',
+      title: resolveSectionHeading(values.field1Label, defaultSimpleHeading('webinars', 'field1')),
+      is_active: 1,
+      order: 4
+    });
+  }
   if (String(values.goDeeper || '').trim()) {
     outBlocks.push({
       webinar_slug: slug,
@@ -547,7 +582,7 @@ async function syncSimpleWebinarsContent(slug, values) {
       title: resolveSectionHeading(values.faqLabel, defaultSimpleHeading('webinars', 'faq')),
       bullets: linePairsToFaqBullets(values.goDeeper),
       is_active: 1,
-      order: 3
+      order: 5
     });
   }
   await createRows(blocksEndpoint, outBlocks);
@@ -709,6 +744,13 @@ async function reverseHydrateWebinarsContent(slug) {
       if (type === 'who_for') {
         result.whoFor = normalizeListValueForEditor(block.bullets || '');
         result.field2Label = resolveSectionHeading(block.title, result.field2Label);
+      }
+      if (type === 'outcomes') {
+        result.outcome = normalizeListValueForEditor(block.bullets || '');
+        result.field3Label = resolveSectionHeading(block.title, result.field3Label);
+      }
+      if (type === 'key_points') {
+        result.field1Label = resolveSectionHeading(block.title, result.field1Label);
       }
       if (type === 'faq') {
         result.goDeeper = faqBulletsToLinePairs(block.bullets || '');
@@ -1053,7 +1095,7 @@ const simplifiedSectionConfigs = {
     },
     slugField: 'slug',
     imageField: 'banner_url',
-    imageLabel: 'Banner Image URL',
+    imageLabel: 'Banner Image Upload URL',
     imageHint: 'Recommended: 1600 x 900 px (16:9)'
   },
   'digital-products': {
@@ -1222,11 +1264,19 @@ function renderSimplifiedForm(section, record = null) {
         <!-- Image URL -->
         <label class="simplified-field" style="margin-top: 20px;">
           <span style="font-weight: 600; color: #333;">🖼️ ${escapeHtml(cfg.imageLabel)}</span>
-          <input type="url" name="${cfg.imageField}" placeholder="https://... (direct image URL)"
+             <input type="text" name="${cfg.imageField}" placeholder="https://... or uploaded image path"
                  value="${escapeHtml(String(record ? (record[cfg.imageField] || '') : ''))}"
                  style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
           <small style="color: #999;">Paste a direct image link (jpg/png/webp). ${escapeHtml(cfg.imageHint || 'Recommended: 1200 x 800 px (3:2)')}.</small>
         </label>
+        <div style="margin-top: 10px; padding: 12px; border: 1px dashed ${cfg.color}; border-radius: 6px; background: #ffffff;">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <input type="file" id="${formId}-${cfg.imageField}-file" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/svg+xml" ${!canWrite() ? 'disabled' : ''}>
+            <button type="button" id="${formId}-${cfg.imageField}-upload-btn" class="ghost-btn" ${!canWrite() ? 'disabled' : ''}>Upload Image</button>
+          </div>
+          <small style="color: #999; display:block; margin-top:8px;">Upload image to server and auto-fill this URL field.</small>
+          <img id="${formId}-${cfg.imageField}-preview" alt="Uploaded preview" style="display:none; margin-top:10px; width:100%; max-width:300px; border-radius:8px; border:1px solid #ddd;">
+        </div>
 
         <!-- Pricing & Payment Link -->
         <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 16px; align-items: start;">
@@ -1247,6 +1297,64 @@ function renderSimplifiedForm(section, record = null) {
         </div>
 
         ${section === 'webinars' ? `
+        <!-- Webinar Presenter & Platform -->
+        <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;">
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">👤 Host Name</span>
+            <input type="text" name="host_name" placeholder="e.g. Samir Machawe"
+                   value="${escapeHtml(String(record ? (record.host_name || '') : ''))}"
+                   style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          </label>
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">🖼️ Host Image Upload URL</span>
+                 <input type="text" name="host_image_url" placeholder="https://... or uploaded host image path"
+                   value="${escapeHtml(String(record ? (record.host_image_url || '') : ''))}"
+                   style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+            <div style="margin-top: 8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <input type="file" id="${formId}-host_image_url-file" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/svg+xml" ${!canWrite() ? 'disabled' : ''}>
+              <button type="button" id="${formId}-host_image_url-upload-btn" class="ghost-btn" ${!canWrite() ? 'disabled' : ''}>Upload Host Image</button>
+            </div>
+            <img id="${formId}-host_image_url-preview" alt="Host image preview" style="display:none; margin-top:10px; width:100%; max-width:160px; border-radius:50%; aspect-ratio:1/1; object-fit:cover; border:1px solid #ddd;">
+          </label>
+        </div>
+
+        <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;">
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">📺 Platform</span>
+            <input type="text" name="platform" placeholder="e.g. YouTube Live / Zoom"
+                   value="${escapeHtml(String(record ? (record.platform || '') : ''))}"
+                   style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          </label>
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">🕒 Timezone</span>
+            <input type="text" name="timezone" placeholder="e.g. Asia/Kolkata"
+                   value="${escapeHtml(String(record ? (record.timezone || '') : ''))}"
+                   style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+          </label>
+        </div>
+
+        <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;">
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">🔘 Register Button Label</span>
+            <input type="text" name="primary_cta_text" placeholder="e.g. Register Now"
+                   value="${escapeHtml(String(record ? (record.primary_cta_text || '') : ''))}"
+                   style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+            <small style="color: #999;">This controls the button text shown on webinar cards and detail page.</small>
+          </label>
+          <label class="simplified-field">
+            <span style="font-weight: 600; color: #333;">🎬 YouTube Video / Shorts URL</span>
+            <input type="url" name="body_video_url" placeholder="https://youtube.com/watch?v=... or /shorts/..."
+                   value="${escapeHtml(String(record ? (record.body_video_url || '') : ''))}"
+                   style="width: 100%; padding: 10px; font-size: 1em; border: 2px solid ${cfg.color}; border-radius: 4px; margin-top: 8px;">
+            <small style="color: #999;">Shown in webinar body on detail page as embedded video.</small>
+          </label>
+        </div>
+
+        <label class="simplified-field" style="margin-top: 12px; display: inline-flex; align-items: center; gap: 8px;">
+          <input type="checkbox" name="is_free" ${Number(record ? (record.is_free || 0) : 0) === 1 ? 'checked' : ''}>
+          <span style="font-weight: 600; color: #333;">Mark as Free Webinar</span>
+        </label>
+
         <!-- Webinar Dates -->
         <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;">
           <label class="simplified-field">
@@ -1303,6 +1411,143 @@ function splitInputLines(value) {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Failed to read selected image file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function splitDataUrlParts(dataUrl) {
+  const parts = String(dataUrl || '').split(',');
+  if (parts.length < 2) {
+    throw new Error('Invalid image data.');
+  }
+  const mimeMatch = String(parts[0]).match(/^data:([^;]+);base64$/i);
+  return {
+    mimeType: mimeMatch && mimeMatch[1] ? String(mimeMatch[1]).toLowerCase() : 'image/png',
+    base64Data: parts[1]
+  };
+}
+
+async function uploadAdminImageAsset(file, scope = 'general') {
+  const dataUrl = await readFileAsDataUrl(file);
+  const payload = splitDataUrlParts(dataUrl);
+  const res = await api('/api/admin/assets/upload', {
+    method: 'POST',
+    body: JSON.stringify({
+      scope,
+      fileName: String(file.name || 'upload-image'),
+      mimeType: payload.mimeType,
+      base64Data: payload.base64Data
+    })
+  });
+  const url = String(res && res.data && res.data.url || '').trim();
+  if (!url) {
+    throw new Error('Upload succeeded but no image URL was returned.');
+  }
+  return res.data;
+}
+
+function setupSimplifiedImageUpload({
+  form,
+  fieldName,
+  fileInputId,
+  uploadBtnId,
+  previewImgId,
+  statusEl,
+  uploadScope,
+  onAfterUpload
+}) {
+  if (!form || !fieldName) return () => {};
+
+  const fieldInput = form.elements[fieldName];
+  const fileInput = document.getElementById(fileInputId);
+  const uploadBtn = document.getElementById(uploadBtnId);
+  const previewImg = document.getElementById(previewImgId);
+
+  const syncPreview = () => {
+    if (!previewImg || !fieldInput) return;
+    const value = String(fieldInput.value || '').trim();
+    if (value) {
+      previewImg.src = value;
+      previewImg.style.display = 'block';
+    } else {
+      previewImg.removeAttribute('src');
+      previewImg.style.display = 'none';
+    }
+  };
+
+  if (fieldInput) {
+    fieldInput.addEventListener('input', syncPreview);
+    fieldInput.addEventListener('change', syncPreview);
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', () => {
+      const file = (fileInput.files && fileInput.files[0]) ? fileInput.files[0] : null;
+      if (!file) return;
+      const localUrl = URL.createObjectURL(file);
+      if (previewImg) {
+        previewImg.src = localUrl;
+        previewImg.style.display = 'block';
+      }
+      if (statusEl) {
+        statusEl.textContent = `Selected ${file.name}. Click upload to store and apply URL.`;
+        statusEl.style.color = '#1976d2';
+      }
+    });
+  }
+
+  if (uploadBtn && fileInput) {
+    uploadBtn.addEventListener('click', async () => {
+      if (!canWrite()) {
+        if (statusEl) {
+          statusEl.textContent = 'Read-only access.';
+          statusEl.style.color = '#d32f2f';
+        }
+        return;
+      }
+
+      const file = (fileInput.files && fileInput.files[0]) ? fileInput.files[0] : null;
+      if (!file) {
+        if (statusEl) {
+          statusEl.textContent = 'Choose an image file first.';
+          statusEl.style.color = '#d32f2f';
+        }
+        return;
+      }
+
+      try {
+        if (statusEl) {
+          statusEl.textContent = `Uploading ${file.name}...`;
+          statusEl.style.color = '#1976d2';
+        }
+        const uploaded = await uploadAdminImageAsset(file, uploadScope || 'general');
+        if (fieldInput) {
+          fieldInput.value = String(uploaded && uploaded.url || '').trim();
+        }
+        syncPreview();
+        if (typeof onAfterUpload === 'function') onAfterUpload(uploaded);
+        if (statusEl) {
+          statusEl.textContent = 'Image uploaded and URL applied to this form.';
+          statusEl.style.color = '#388e3c';
+        }
+      } catch (error) {
+        if (statusEl) {
+          statusEl.textContent = error.message;
+          statusEl.style.color = '#d32f2f';
+        }
+      }
+    });
+  }
+
+  syncPreview();
+  return syncPreview;
 }
 
 function formatInrPriceLabel(priceRaw, fallback = 'Free') {
@@ -1372,10 +1617,13 @@ function buildWebinarPreviewHtml({
   language,
   ctaHref,
   ctaDisabled,
+  ctaLabel,
   startValue,
   endValue,
   statusLabel,
   statusClass,
+  platform,
+  videoUrl,
   slug,
   field1,
   field2,
@@ -1398,9 +1646,11 @@ function buildWebinarPreviewHtml({
         <div class="simplified-preview-meta-row" style="margin-top: 0; color: #4d5b78; font-size: .82rem;">
           <span><strong>Start:</strong> ${escapeHtml(formatLocalDateTimeLabel(startValue))}</span>
           <span><strong>End:</strong> ${escapeHtml(formatLocalDateTimeLabel(endValue))}</span>
+          ${platform ? `<span><strong>Platform:</strong> ${escapeHtml(platform)}</span>` : ''}
           ${language ? `<span><strong>Language:</strong> ${escapeHtml(language)}</span>` : ''}
           <span><strong>Price:</strong> ${escapeHtml(priceLabel)}</span>
         </div>
+        ${videoUrl ? `<p style="margin: 0; color: #2f4f7f; font-size: .82rem;"><strong>Video:</strong> ${escapeHtml(videoUrl)}</p>` : ''}
         <p class="simplified-preview-description" style="margin-top: 0; color: #4d5b78; font-size: .88rem; line-height: 1.5;">${description || 'Add webinar summary to mirror the live website card preview.'}</p>
         ${helperList.length
           ? `<ul style="margin: 0; padding-left: 18px; display: grid; gap: 6px; color: #30496f; font-size: .85rem;">${helperList.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
@@ -1409,7 +1659,7 @@ function buildWebinarPreviewHtml({
           <span class="simplified-preview-slug">${escapeHtml(slug)}</span>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-weight: 800; font-size: .9rem; padding: 5px 12px; border-radius: 999px; background: linear-gradient(135deg, #1F4D87, #163a63); color: #fff;">${escapeHtml(priceLabel)}</span>
-            <a href="${ctaHref}" target="_blank" rel="noopener noreferrer" class="simplified-preview-cta ${ctaDisabled}">Register</a>
+            <a href="${ctaHref}" target="_blank" rel="noopener noreferrer" class="simplified-preview-cta ${ctaDisabled}">${escapeHtml(ctaLabel || 'Register')}</a>
           </div>
         </div>
       </div>
@@ -1538,6 +1788,9 @@ function buildSimplifiedModalPreviewHtml(section, form, cfg) {
   const imageUrl = getValue(cfg.imageField);
   const priceRaw = getValue('price_inr');
   const paymentLink = getValue('payment_link');
+  const webinarCtaText = getValue('primary_cta_text') || 'Register';
+  const webinarVideoUrl = getValue('body_video_url');
+  const webinarPlatform = getValue('platform');
   const language = getValue('language');
   const badge = getValue('badge');
   const field1 = splitInputLines(getValue('field1'));
@@ -1634,10 +1887,13 @@ function buildSimplifiedModalPreviewHtml(section, form, cfg) {
       language,
       ctaHref,
       ctaDisabled,
+      ctaLabel: webinarCtaText,
       startValue,
       endValue,
       statusLabel: timingStatus.label,
       statusClass: timingStatus.klass,
+      platform: webinarPlatform,
+      videoUrl: webinarVideoUrl,
       slug,
       field1,
       field2,
@@ -1770,6 +2026,8 @@ const sectionConfigs = {
       { name: 'email', label: 'Email', type: 'text' },
       { name: 'address', label: 'Address', type: 'textarea' },
       { name: 'gallery_enabled', label: 'Show Gallery Section On Website', type: 'checkbox' },
+      { name: 'faq_heading', label: 'FAQ Heading', type: 'text' },
+      { name: 'faq_subheading', label: 'FAQ Subheading', type: 'text' },
       { name: 'footer_brand_name', label: 'Footer Brand Name', type: 'text' },
       { name: 'footer_about_text', label: 'Footer About Text', type: 'textarea' },
       { name: 'footer_quick_links_title', label: 'Quick Links Title', type: 'text' },
@@ -1801,6 +2059,9 @@ const sectionConfigs = {
     kind: 'singleton',
     endpoint: '/api/admin/site-config',
     fields: [
+      { name: 'booking_page_url', label: 'Booking Page URL', type: 'text', placeholder: 'book-a-call.html' },
+      { name: 'faq_heading', label: 'FAQ Heading', type: 'text' },
+      { name: 'faq_subheading', label: 'FAQ Subheading', type: 'text' },
       { name: 'footer_brand_name', label: 'Footer Brand Name', type: 'text' },
       { name: 'footer_about_text', label: 'Footer About Text', type: 'textarea' },
       { name: 'footer_quick_links_title', label: 'Quick Links Title', type: 'text' },
@@ -1894,7 +2155,8 @@ const sectionConfigs = {
       { name: 'price_inr', label: 'Price (INR)', type: 'number', step: '0.01' },
       { name: 'is_free', label: 'Free Webinar', type: 'checkbox' },
       { name: 'payment_link', label: 'Primary CTA URL', type: 'text' },
-      { name: 'primary_cta_text', label: 'Primary CTA Text', type: 'text' },
+      { name: 'primary_cta_text', label: 'Register Button Label', type: 'text', placeholder: 'Register Now', helperText: 'This text appears on webinar cards and webinar detail CTA buttons.' },
+      { name: 'body_video_url', label: 'Body Video / Shorts URL', type: 'text', placeholder: 'https://youtube.com/watch?v=... or https://youtube.com/shorts/...' },
       { name: 'is_active', label: 'Active', type: 'checkbox' },
       { name: 'order', label: 'Order', type: 'number' }
     ]
@@ -1986,6 +2248,16 @@ const sectionConfigs = {
       { name: 'review_text', label: 'Review Text', type: 'textarea', required: true },
       { name: 'name', label: 'Reviewer Name', type: 'text' },
       { name: 'image_url', label: 'Image URL', type: 'text' },
+      { name: 'is_active', label: 'Active', type: 'checkbox' },
+      { name: 'order', label: 'Order', type: 'number' }
+    ]
+  },
+  faq: {
+    kind: 'collection',
+    endpoint: '/api/admin/faq',
+    fields: [
+      { name: 'question', label: 'Question', type: 'text', required: true },
+      { name: 'answer', label: 'Answer', type: 'textarea', required: true },
       { name: 'is_active', label: 'Active', type: 'checkbox' },
       { name: 'order', label: 'Order', type: 'number' }
     ]
@@ -2175,6 +2447,18 @@ function renderField(field, value = '') {
 
   const placeholder = field.placeholder || getDefaultPlaceholder(field);
 
+  // Detect image URL fields and embed upload controls
+  const isImgField = /^(image_url|thumbnail_url|banner_url|host_image_url|icon_url|founder_image_url|avatar_url|photo_url)$/.test(String(field.name || '').toLowerCase())
+    || (/(image|thumbnail|banner|avatar|photo|icon)/.test(String(field.name || '').toLowerCase()) && String(field.name || '').toLowerCase().endsWith('_url'));
+
+  const uploadRowHtml = isImgField && canWrite() ? `
+    <div class="adv-upload-row" data-adv-upload-for="${field.name}" style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">
+      <input type="file" id="adv-upload-file-${field.name}" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/svg+xml" style="font-size:13px;">
+      <button type="button" class="ghost-btn" id="adv-upload-btn-${field.name}" style="font-size:12px;padding:4px 10px;">Upload Image</button>
+      <img id="adv-upload-preview-${field.name}" alt="Image preview" style="display:none;max-height:80px;max-width:140px;border-radius:4px;border:1px solid #ddd;object-fit:cover;">
+    </div>
+  ` : '';
+
   return `
     <label class="field">
       <span>${field.label}</span>
@@ -2188,8 +2472,40 @@ function renderField(field, value = '') {
         ${!canWrite() ? 'disabled' : ''}
       >
       ${helperText ? `<small>${escapeHtml(helperText)}</small>` : ''}
+      ${uploadRowHtml}
     </label>
   `;
+}
+
+function wireAdvancedImageUploadControls(form, section) {
+  if (!form || !canWrite()) return () => {};
+  const syncFns = [];
+  const uploadRows = form.querySelectorAll('[data-adv-upload-for]');
+  const statusEl = form.querySelector('#collectionStatus') || form.querySelector('#formStatus') || null;
+  uploadRows.forEach((row) => {
+    const fieldName = String(row.dataset.advUploadFor || '');
+    if (!fieldName) return;
+    const isCircle = /host_image|avatar|photo/.test(fieldName);
+    const previewImg = document.getElementById(`adv-upload-preview-${fieldName}`);
+    if (previewImg && isCircle) {
+      previewImg.style.borderRadius = '50%';
+      previewImg.style.aspectRatio = '1/1';
+      previewImg.style.maxWidth = '80px';
+    }
+    const syncFn = setupSimplifiedImageUpload({
+      form,
+      fieldName,
+      fileInputId: `adv-upload-file-${fieldName}`,
+      uploadBtnId: `adv-upload-btn-${fieldName}`,
+      previewImgId: `adv-upload-preview-${fieldName}`,
+      statusEl,
+      uploadScope: `${section}-${fieldName}`,
+      onAfterUpload: () => {}
+    });
+    if (typeof syncFn === 'function') syncFns.push(syncFn);
+  });
+  const syncAll = () => syncFns.forEach((fn) => fn());
+  return syncAll;
 }
 
 function getFieldsByName(fields = []) {
@@ -2228,6 +2544,18 @@ function renderFooterEditorLayout(fields, values = {}) {
   const brandFields = [
     renderNamedField('footer_brand_name', { placeholder: 'Findas Academy' }),
     renderNamedField('footer_about_text', { placeholder: 'Write a short footer description that explains the brand promise.' })
+  ].filter(Boolean).join('');
+
+  const faqFields = [
+    renderNamedField('faq_heading', { placeholder: 'Frequently Asked Questions' }),
+    renderNamedField('faq_subheading', { placeholder: 'Common Questions' })
+  ].filter(Boolean).join('');
+
+  const bookingFields = [
+    renderNamedField('booking_page_url', {
+      placeholder: 'book-a-call.html',
+      helperText: 'Used by the hero Book Free Call button, the navbar Book a Call link, and the booking modal full-page button.'
+    })
   ].filter(Boolean).join('');
 
   const quickLinksTitle = renderNamedField('footer_quick_links_title', { placeholder: 'Quick Links' });
@@ -2318,6 +2646,36 @@ function renderFooterEditorLayout(fields, values = {}) {
           </section>
         ` : ''}
 
+        ${faqFields ? `
+          <section class="footer-editor-section">
+            <div class="editor-section-head">
+              <div>
+                <span class="editor-section-kicker">FAQ Section</span>
+                <h3>FAQ heading and subheading</h3>
+              </div>
+              <p>Control the FAQ title and chip text shown on the homepage without editing code.</p>
+            </div>
+            <div class="form-grid footer-form-grid">
+              ${faqFields}
+            </div>
+          </section>
+        ` : ''}
+
+        ${bookingFields ? `
+          <section class="footer-editor-section">
+            <div class="editor-section-head">
+              <div>
+                <span class="editor-section-kicker">Booking Navigation</span>
+                <h3>Booking page destination</h3>
+              </div>
+              <p>Set the page that all Book a Call actions should open across the homepage and booking modal.</p>
+            </div>
+            <div class="form-grid footer-form-grid">
+              ${bookingFields}
+            </div>
+          </section>
+        ` : ''}
+
         <section class="footer-editor-section footer-editor-section--wide">
           <div class="editor-section-head">
             <div>
@@ -2383,7 +2741,9 @@ function getImageFieldHint(field = {}) {
   const fieldName = String(field.name || '').toLowerCase();
   const fieldLabel = String(field.label || '').toLowerCase();
   const haystack = `${fieldName} ${fieldLabel}`;
-  if (!/(image|thumbnail|banner|logo|avatar|photo)/.test(haystack)) return '';
+  if (!/(image|thumbnail|banner|logo|avatar|photo|icon|favicon)/.test(haystack)) return '';
+  if (fieldName.includes('icon')) return 'Recommended image size: 512 x 512 px (1:1)';
+  if (fieldName.includes('favicon')) return 'Recommended image size: 512 x 512 px (1:1, PNG)';
   if (fieldName.includes('banner')) return 'Recommended image size: 1600 x 900 px (16:9)';
   if (fieldName.includes('thumbnail')) return 'Recommended image size: 1200 x 800 px (3:2)';
   if (fieldName.includes('host') || fieldName.includes('founder') || fieldName.includes('avatar') || fieldName.includes('photo')) {
@@ -3419,8 +3779,31 @@ async function renderSingletonSection(cfg) {
         <label class="field">
           <span>Upload Logo Image (stored in assets folder)</span>
           <input type="file" id="siteLogoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" ${!canWrite() ? 'disabled' : ''}>
-          <small>Uploading a logo will apply it site-wide for navbar, footer, and loading logo.</small>
+          <small>Preview and crop before upload. The final logo is saved as a square image and applied site-wide.</small>
         </label>
+        <div id="siteLogoCropTools" class="logo-crop-tools" hidden>
+          <div class="logo-crop-preview-wrap">
+            <canvas id="siteLogoCropCanvas" width="280" height="280" aria-label="Logo crop preview"></canvas>
+          </div>
+          <div class="logo-crop-controls">
+            <label class="field">
+              <span>Zoom</span>
+              <input type="range" id="siteLogoZoom" min="1" max="3" step="0.05" value="1" ${!canWrite() ? 'disabled' : ''}>
+            </label>
+            <label class="field">
+              <span>Horizontal</span>
+              <input type="range" id="siteLogoOffsetX" min="-100" max="100" step="1" value="0" ${!canWrite() ? 'disabled' : ''}>
+            </label>
+            <label class="field">
+              <span>Vertical</span>
+              <input type="range" id="siteLogoOffsetY" min="-100" max="100" step="1" value="0" ${!canWrite() ? 'disabled' : ''}>
+            </label>
+            <div class="logo-crop-meta">
+              <button type="button" id="siteLogoCropResetBtn" class="ghost-btn" ${!canWrite() ? 'disabled' : ''}>Reset Crop</button>
+              <small>The uploaded file is generated from this crop preview.</small>
+            </div>
+          </div>
+        </div>
         <div class="form-actions">
           <button type="button" id="siteLogoUploadBtn" ${!canWrite() ? 'disabled' : ''}>Upload And Apply Site-Wide</button>
           <p id="siteLogoUploadStatus" class="form-status"></p>
@@ -3578,6 +3961,8 @@ async function renderSingletonSection(cfg) {
 
   const form = document.getElementById('singletonForm');
   const status = document.getElementById('formStatus');
+
+  wireAdvancedImageUploadControls(form, state.section);
   
   // Use custom preview for academy section
   let updateAcademyPreview = null;
@@ -3645,6 +4030,174 @@ async function renderSingletonSection(cfg) {
     const fileInput = document.getElementById('siteLogoFile');
     const uploadBtn = document.getElementById('siteLogoUploadBtn');
     const uploadStatus = document.getElementById('siteLogoUploadStatus');
+    const cropTools = document.getElementById('siteLogoCropTools');
+    const cropCanvas = document.getElementById('siteLogoCropCanvas');
+    const zoomInput = document.getElementById('siteLogoZoom');
+    const offsetXInput = document.getElementById('siteLogoOffsetX');
+    const offsetYInput = document.getElementById('siteLogoOffsetY');
+    const cropResetBtn = document.getElementById('siteLogoCropResetBtn');
+
+    const cropState = {
+      image: null,
+      sourceDataUrl: '',
+      zoom: 1,
+      offsetX: 0,
+      offsetY: 0
+    };
+
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+    const getCropRect = () => {
+      if (!cropState.image) return null;
+      const image = cropState.image;
+      const imgW = image.naturalWidth || image.width;
+      const imgH = image.naturalHeight || image.height;
+      if (!imgW || !imgH) return null;
+
+      const minSide = Math.min(imgW, imgH);
+      const zoom = clamp(Number(cropState.zoom) || 1, 1, 3);
+      const cropSize = minSide / zoom;
+
+      const baseX = (imgW - cropSize) / 2;
+      const baseY = (imgH - cropSize) / 2;
+      const maxPanX = Math.max(0, (imgW - cropSize) / 2);
+      const maxPanY = Math.max(0, (imgH - cropSize) / 2);
+      const x = clamp(baseX + ((Number(cropState.offsetX) || 0) / 100) * maxPanX, 0, imgW - cropSize);
+      const y = clamp(baseY + ((Number(cropState.offsetY) || 0) / 100) * maxPanY, 0, imgH - cropSize);
+
+      return { x, y, size: cropSize };
+    };
+
+    const drawCropPreview = () => {
+      if (!cropCanvas) return;
+      const ctx = cropCanvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+      ctx.fillStyle = '#f3f6fd';
+      ctx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
+
+      if (!cropState.image) return;
+      const rect = getCropRect();
+      if (!rect) return;
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(
+        cropState.image,
+        rect.x,
+        rect.y,
+        rect.size,
+        rect.size,
+        0,
+        0,
+        cropCanvas.width,
+        cropCanvas.height
+      );
+    };
+
+    const buildCroppedDataUrl = (outputSize = 800) => {
+      if (!cropState.image) return null;
+      const rect = getCropRect();
+      if (!rect) return null;
+
+      const out = document.createElement('canvas');
+      out.width = outputSize;
+      out.height = outputSize;
+      const outCtx = out.getContext('2d');
+      if (!outCtx) return null;
+      outCtx.imageSmoothingEnabled = true;
+      outCtx.imageSmoothingQuality = 'high';
+      outCtx.drawImage(
+        cropState.image,
+        rect.x,
+        rect.y,
+        rect.size,
+        rect.size,
+        0,
+        0,
+        outputSize,
+        outputSize
+      );
+      return out.toDataURL('image/png');
+    };
+
+    const bindCropControls = () => {
+      if (!zoomInput || !offsetXInput || !offsetYInput) return;
+      const onControlInput = () => {
+        cropState.zoom = Number(zoomInput.value || 1);
+        cropState.offsetX = Number(offsetXInput.value || 0);
+        cropState.offsetY = Number(offsetYInput.value || 0);
+        drawCropPreview();
+      };
+
+      zoomInput.addEventListener('input', onControlInput);
+      offsetXInput.addEventListener('input', onControlInput);
+      offsetYInput.addEventListener('input', onControlInput);
+
+      if (cropResetBtn) {
+        cropResetBtn.addEventListener('click', () => {
+          zoomInput.value = '1';
+          offsetXInput.value = '0';
+          offsetYInput.value = '0';
+          cropState.zoom = 1;
+          cropState.offsetX = 0;
+          cropState.offsetY = 0;
+          drawCropPreview();
+        });
+      }
+    };
+
+    bindCropControls();
+
+    if (fileInput && cropTools) {
+      fileInput.addEventListener('change', async () => {
+        const file = (fileInput.files && fileInput.files[0]) ? fileInput.files[0] : null;
+        if (!file) {
+          cropState.image = null;
+          cropState.sourceDataUrl = '';
+          cropTools.hidden = true;
+          drawCropPreview();
+          return;
+        }
+
+        try {
+          const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.onerror = () => reject(new Error('Failed to read selected file'));
+            reader.readAsDataURL(file);
+          });
+
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error('Selected file is not a valid image'));
+            img.src = dataUrl;
+          });
+
+          cropState.image = img;
+          cropState.sourceDataUrl = dataUrl;
+          cropState.zoom = 1;
+          cropState.offsetX = 0;
+          cropState.offsetY = 0;
+
+          if (zoomInput) zoomInput.value = '1';
+          if (offsetXInput) offsetXInput.value = '0';
+          if (offsetYInput) offsetYInput.value = '0';
+
+          cropTools.hidden = false;
+          drawCropPreview();
+          uploadStatus.textContent = 'Preview loaded. Adjust crop, then upload.';
+        } catch (error) {
+          cropState.image = null;
+          cropState.sourceDataUrl = '';
+          cropTools.hidden = true;
+          drawCropPreview();
+          uploadStatus.textContent = error.message;
+        }
+      });
+    }
 
     if (uploadBtn && fileInput && uploadStatus) {
       uploadBtn.addEventListener('click', async () => {
@@ -3659,25 +4212,30 @@ async function renderSingletonSection(cfg) {
           return;
         }
 
-        uploadStatus.textContent = 'Uploading logo...';
+        uploadStatus.textContent = 'Preparing cropped logo...';
         try {
-          const dataUrl = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(String(reader.result || ''));
-            reader.onerror = () => reject(new Error('Failed to read selected file'));
-            reader.readAsDataURL(file);
-          });
+          const dataUrl = buildCroppedDataUrl(800);
+          if (!dataUrl) {
+            throw new Error('Unable to generate cropped preview. Please reselect image.');
+          }
 
           const parts = dataUrl.split(',');
           if (parts.length < 2) {
             throw new Error('Invalid file data');
           }
 
+          uploadStatus.textContent = 'Uploading logo...';
+
+          const croppedFileName = (() => {
+            const originalName = String(file.name || 'logo').replace(/\.[^.]+$/, '');
+            return `${originalName}-cropped.png`;
+          })();
+
           const uploaded = await api('/api/admin/assets/logo', {
             method: 'POST',
             body: JSON.stringify({
-              fileName: file.name,
-              mimeType: file.type,
+              fileName: croppedFileName,
+              mimeType: 'image/png',
               base64Data: parts[1]
             })
           });
@@ -3797,6 +4355,8 @@ async function renderCollectionSection(cfg) {
   const formTitle = document.getElementById('collectionFormTitle');
   const submitBtn = document.getElementById('collectionSubmitBtn');
   const cancelBtn = document.getElementById('collectionCancelBtn');
+
+  const syncAdvImagePreviews = wireAdvancedImageUploadControls(form, state.section);
   const cloneSelect = document.getElementById('cloneSourceId');
   const cloneBtn = document.getElementById('cloneSelectedBtn');
 
@@ -4005,6 +4565,7 @@ async function renderCollectionSection(cfg) {
     if (action === 'edit') {
       await hydrateDynamicFieldOptions(form, cfg, row);
       setCollectionFormRowValues(form, cfg, row);
+      syncAdvImagePreviews();
       if (showStructuredBuilder) {
         // Phase 3: Reverse hydration - load from child records
         const slug = String(row.slug || '').trim();
@@ -4162,6 +4723,29 @@ async function renderSimplifiedCollectionSection(section) {
   // Wire up slug auto-fill from title
   setupSimplifiedSlugAutoFill(`simplified-form-${section}`, simplifiedConfig.slugField, simplifiedConfig.color);
   const refreshSimplifiedPreview = setupSimplifiedPreviewModal(section, form, simplifiedConfig);
+  const syncImagePreviews = [];
+  syncImagePreviews.push(setupSimplifiedImageUpload({
+    form,
+    fieldName: simplifiedConfig.imageField,
+    fileInputId: `simplified-form-${section}-${simplifiedConfig.imageField}-file`,
+    uploadBtnId: `simplified-form-${section}-${simplifiedConfig.imageField}-upload-btn`,
+    previewImgId: `simplified-form-${section}-${simplifiedConfig.imageField}-preview`,
+    statusEl,
+    uploadScope: `${section}-${simplifiedConfig.imageField}`,
+    onAfterUpload: () => refreshSimplifiedPreview()
+  }));
+  if (section === 'webinars') {
+    syncImagePreviews.push(setupSimplifiedImageUpload({
+      form,
+      fieldName: 'host_image_url',
+      fileInputId: 'simplified-form-webinars-host_image_url-file',
+      uploadBtnId: 'simplified-form-webinars-host_image_url-upload-btn',
+      previewImgId: 'simplified-form-webinars-host_image_url-preview',
+      statusEl,
+      uploadScope: 'webinars-host-image',
+      onAfterUpload: () => refreshSimplifiedPreview()
+    }));
+  }
 
   if (cloneBtn && cloneSelect) {
     cloneBtn.addEventListener('click', async () => {
@@ -4260,12 +4844,22 @@ async function renderSimplifiedCollectionSection(section) {
       if (section === 'webinars') {
         if (form.elements.start_datetime_local) form.elements.start_datetime_local.value = String(sourceRecord.start_datetime_local || '');
         if (form.elements.end_datetime_local) form.elements.end_datetime_local.value = String(sourceRecord.end_datetime_local || '');
+        if (form.elements.host_name) form.elements.host_name.value = String(sourceRecord.host_name || '');
+        if (form.elements.host_image_url) form.elements.host_image_url.value = String(sourceRecord.host_image_url || '');
+        if (form.elements.platform) form.elements.platform.value = String(sourceRecord.platform || '');
+        if (form.elements.timezone) form.elements.timezone.value = String(sourceRecord.timezone || '');
+        if (form.elements.primary_cta_text) form.elements.primary_cta_text.value = String(sourceRecord.primary_cta_text || '');
+        if (form.elements.body_video_url) form.elements.body_video_url.value = String(sourceRecord.body_video_url || '');
+        if (form.elements.is_free) form.elements.is_free.checked = Number(sourceRecord.is_free || 0) === 1;
       }
 
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.textContent = '✚ Create';
       statusEl.textContent = `Cloned from #${sourceId}. Review and save as new.`;
       statusEl.style.color = '#388e3c';
+      syncImagePreviews.forEach((syncFn) => {
+        if (typeof syncFn === 'function') syncFn();
+      });
       refreshSimplifiedPreview();
     });
   }
@@ -4360,6 +4954,13 @@ async function renderSimplifiedCollectionSection(section) {
         const endDate = String(formData.get('end_datetime_local') || '').trim();
         if (startDate) payload.start_datetime_local = startDate;
         if (endDate) payload.end_datetime_local = endDate;
+        payload.host_name = String(formData.get('host_name') || '').trim();
+        payload.host_image_url = String(formData.get('host_image_url') || '').trim();
+        payload.platform = String(formData.get('platform') || '').trim();
+        payload.timezone = String(formData.get('timezone') || '').trim();
+        payload.primary_cta_text = String(formData.get('primary_cta_text') || '').trim();
+        payload.body_video_url = String(formData.get('body_video_url') || '').trim();
+        payload.is_free = formData.get('is_free') ? 1 : 0;
       }
 
       const cfg = sectionConfigs[section];
@@ -4511,12 +5112,22 @@ async function renderSimplifiedCollectionSection(section) {
       if (section === 'webinars') {
         if (form.elements.start_datetime_local) form.elements.start_datetime_local.value = String(record.start_datetime_local || '');
         if (form.elements.end_datetime_local) form.elements.end_datetime_local.value = String(record.end_datetime_local || '');
+        if (form.elements.host_name) form.elements.host_name.value = String(record.host_name || '');
+        if (form.elements.host_image_url) form.elements.host_image_url.value = String(record.host_image_url || '');
+        if (form.elements.platform) form.elements.platform.value = String(record.platform || '');
+        if (form.elements.timezone) form.elements.timezone.value = String(record.timezone || '');
+        if (form.elements.primary_cta_text) form.elements.primary_cta_text.value = String(record.primary_cta_text || '');
+        if (form.elements.body_video_url) form.elements.body_video_url.value = String(record.body_video_url || '');
+        if (form.elements.is_free) form.elements.is_free.checked = Number(record.is_free || 0) === 1;
       }
 
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.textContent = '💾 Update';
       statusEl.textContent = `Editing #${id}`;
       statusEl.style.color = '#666';
+      syncImagePreviews.forEach((syncFn) => {
+        if (typeof syncFn === 'function') syncFn();
+      });
       refreshSimplifiedPreview();
       return;
     }
@@ -4810,8 +5421,13 @@ async function renderPollsSection() {
               <div class="admin-item-actions">
                 <button class="mini-btn" data-act="toggle-responses" data-id="${escapeHtml(p.id)}">${isExpanded ? 'Hide Responses' : 'Show Responses'}</button>
                 <button class="mini-btn" data-act="edit-poll" data-id="${escapeHtml(p.id)}">Edit</button>
-                ${canWrite() && status !== 'ACTIVE' ? `<button class="mini-btn" data-act="set-status" data-id="${escapeHtml(p.id)}" data-status="ACTIVE">Activate</button>` : ''}
-                ${canWrite() && status !== 'CLOSED' ? `<button class="mini-btn" data-act="set-status" data-id="${escapeHtml(p.id)}" data-status="CLOSED">Close</button>` : ''}
+                ${canWrite() ? `
+                <label class="poll-active-toggle" title="${status === 'ACTIVE' ? 'Active – click to deactivate' : 'Inactive – click to activate'}">
+                  <button type="button" class="poll-toggle-btn ${status === 'ACTIVE' ? 'is-on' : 'is-off'}" data-act="toggle-active" data-id="${escapeHtml(p.id)}" aria-pressed="${status === 'ACTIVE' ? 'true' : 'false'}" aria-label="Toggle poll active state">
+                    <span class="poll-toggle-track"><span class="poll-toggle-thumb"></span></span>
+                  </button>
+                  <span class="poll-toggle-text">${status === 'ACTIVE' ? 'Active' : 'Inactive'}</span>
+                </label>` : `<span class="status-pill ${statusClass}">${escapeHtml(status)}</span>`}
                 ${canWrite() && status !== 'ARCHIVED' ? `<button class="mini-btn" data-act="set-status" data-id="${escapeHtml(p.id)}" data-status="ARCHIVED">Archive</button>` : ''}
                 ${canWrite() && options.length > 0 ? `<button class="mini-btn" data-act="test-vote" data-id="${escapeHtml(p.id)}">Test Vote</button>` : ''}
                 <button class="mini-btn" data-act="copy-link" data-id="${escapeHtml(p.id)}">Copy Link</button>
@@ -5100,6 +5716,19 @@ async function renderPollsSection() {
       form.elements.show_voters_publicly.checked = !!found.show_voters_publicly;
       formTitle.textContent = `Edit Poll ${found.id}`;
       status.textContent = 'Editing poll.';
+      return;
+    }
+
+    if (act === 'toggle-active') {
+      if (!canWrite()) return;
+      const currentStatus = normalizeStatus(found.status || 'CLOSED');
+      const nextStatus = currentStatus === 'ACTIVE' ? 'CLOSED' : 'ACTIVE';
+      const nextPolls = polls.map((p) => (String(p.id) === String(id) ? { ...p, status: nextStatus } : p));
+      try {
+        await savePollsAndRefresh(nextPolls, `${nextStatus === 'ACTIVE' ? 'Activating' : 'Deactivating'} poll...`);
+      } catch (error) {
+        status.textContent = error.message;
+      }
       return;
     }
 
@@ -5777,4 +6406,18 @@ el.logoutBtn.addEventListener('click', logout);
 
 applyRoleVisibility();
 updateCurrentUserBadge();
+
+// Load brand logo from site-assets for login page (no auth required)
+(async () => {
+  try {
+    const res = await fetch(API_BASE + '/api/site-assets', { headers: { Accept: 'application/json' } });
+    const json = await res.json();
+    const logoUrl = (json && json.data && (json.data.navbar_logo_url || json.data.footer_logo_url)) || '';
+    if (logoUrl) {
+      const img = document.getElementById('loginBrandLogo');
+      if (img) { img.src = logoUrl; img.hidden = false; }
+    }
+  } catch (_) {}
+})();
+
 bootstrapSession();

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landing Page Example</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #040816;
+      --card: #f7fbff;
+      --accent: #3ec8ff;
+      --accent-deep: #1f7cff;
+      --ink: #0f1d38;
+      --muted: #4b6289;
+      --line: rgba(18, 52, 109, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Space Grotesk', sans-serif;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(62, 200, 255, 0.34), transparent 34%),
+        radial-gradient(circle at 50% 120%, rgba(31, 124, 255, 0.24), transparent 36%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 28px;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .headline {
+      margin: 0 0 18px;
+      color: #84dcff;
+      text-align: center;
+      font-size: clamp(2rem, 4vw, 4rem);
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-shell {
+      position: relative;
+      border-radius: 34px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(62, 200, 255, 0.22), rgba(62, 200, 255, 0.05));
+      box-shadow:
+        0 24px 50px rgba(0, 0, 0, 0.55),
+        inset 0 0 0 1px rgba(62, 200, 255, 0.3);
+      overflow: hidden;
+    }
+
+    .hero-shell::before,
+    .hero-shell::after {
+      content: "";
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 999px;
+      filter: blur(42px);
+      z-index: 0;
+    }
+
+    .hero-shell::before {
+      background: rgba(62, 200, 255, 0.34);
+      left: -60px;
+      top: -30px;
+    }
+
+    .hero-shell::after {
+      background: rgba(31, 124, 255, 0.28);
+      right: -60px;
+      bottom: -60px;
+    }
+
+    .hero-card {
+      position: relative;
+      z-index: 1;
+      border-radius: 26px;
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      overflow: hidden;
+      min-height: 520px;
+    }
+
+    .hero-content {
+      padding: 42px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      color: #324027;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      padding: 8px 12px;
+      font-weight: 500;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.9rem, 2.8vw, 3rem);
+      line-height: 1.1;
+      margin: 0;
+      color: #182111;
+      max-width: 20ch;
+    }
+
+    h1 em {
+      color: var(--accent-deep);
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    .sub {
+      margin: 0;
+      max-width: 52ch;
+      color: #3f4d36;
+      line-height: 1.6;
+      font-size: 1rem;
+    }
+
+    .cta-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1f7cff, #0f43b8);
+      color: #f4faff;
+      box-shadow: 0 12px 24px rgba(24, 83, 196, 0.34);
+      min-width: 240px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(24, 83, 196, 0.44);
+    }
+
+    .scarcity {
+      font-size: 0.78rem;
+      color: #4f6391;
+      border-left: 3px solid #38bdf8;
+      padding-left: 8px;
+    }
+
+    .hero-visual {
+      position: relative;
+      background:
+        radial-gradient(circle at 70% 20%, rgba(62, 200, 255, 0.28), transparent 48%),
+        linear-gradient(165deg, #edf5ff, #f9fcff);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .speaker-panel {
+      width: 100%;
+      max-width: 440px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #ffffff, #eef6ff);
+      border: 1px solid rgba(20, 65, 143, 0.12);
+      box-shadow: 0 20px 30px rgba(20, 65, 143, 0.18);
+      padding: 24px;
+      transform: translateY(14px);
+    }
+
+    .speaker-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .avatar {
+      aspect-ratio: 1/1;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #d9ecff, #f3f9ff);
+      border: 1px solid rgba(31, 91, 181, 0.2);
+      display: grid;
+      place-items: center;
+      color: #1a4582;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .speaker-main {
+      border-radius: 14px;
+      border: 1px solid rgba(31, 91, 181, 0.18);
+      background: #f5faff;
+      padding: 14px;
+      color: #25416c;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .proof {
+      margin-top: 28px;
+      background: rgba(247, 251, 255, 0.98);
+      border: 1px solid rgba(62, 200, 255, 0.32);
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .proof h3 {
+      margin: 0 0 10px;
+      color: #222d19;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 500;
+    }
+
+    .logo-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(80px, 1fr));
+      gap: 12px;
+    }
+
+    .logo {
+      border: 1px solid rgba(31, 45, 18, 0.14);
+      border-radius: 10px;
+      padding: 10px;
+      color: #466495;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: #fbfdff;
+    }
+
+    @media (max-width: 920px) {
+      body {
+        padding: 14px;
+      }
+
+      .hero-card {
+        grid-template-columns: 1fr;
+        min-height: unset;
+      }
+
+      .hero-content {
+        padding: 28px 20px 20px;
+      }
+
+      .hero-visual {
+        padding: 10px 14px 22px;
+      }
+
+      .btn-primary {
+        min-width: 100%;
+      }
+
+      .logo-row {
+        grid-template-columns: repeat(2, minmax(110px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">Landing Page Example</p>
+    <h2 class="headline">Bold Webinar Conversion Hero</h2>
+
+    <section class="hero-shell">
+      <div class="hero-card">
+        <div class="hero-content">
+          <div class="meta-row">
+            <span class="pill">Live Online Workshop</span>
+            <span class="pill">120 Minutes</span>
+          </div>
+
+          <h1>
+            Copy this exact wealth strategy and build your
+            <em>long-term portfolio</em>
+          </h1>
+
+          <p class="sub">
+            This layout is inspired by high-converting webinar funnels: clear promise,
+            sharp social proof, one dominant action, and a premium visual frame.
+          </p>
+
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#">Reserve Free Seat</a>
+            <span class="scarcity">Only 306 seats available</span>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="speaker-panel">
+            <div class="speaker-grid">
+              <div class="avatar">Expert 1</div>
+              <div class="avatar">Host</div>
+              <div class="avatar">Expert 2</div>
+            </div>
+            <div class="speaker-main">
+              30+ years market experience, practical framework, and action steps for
+              beginners and professionals.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="proof">
+      <h3>As Featured In</h3>
+      <div class="logo-row">
+        <div class="logo">HORIZON</div>
+        <div class="logo">TikTok</div>
+        <div class="logo">Handelsblatt</div>
+        <div class="logo">ARD</div>
+        <div class="logo">OMR</div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

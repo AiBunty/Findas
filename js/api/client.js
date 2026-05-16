@@ -19,6 +19,7 @@ function localDataFor(name) {
   if (name === 'getAcademyAfter') return LOCAL_DATA.academy_after || null;
   if (name === 'getAcademyRoadmap') return LOCAL_DATA.academy_roadmap || null;
   if (name === 'getAcademyCommunityPosts') return LOCAL_DATA.academy_community_posts || null;
+  if (name === 'getAcademyConfig') return LOCAL_DATA.academy_config || null;
   return null;
 }
 

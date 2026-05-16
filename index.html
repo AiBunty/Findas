@@ -145,19 +145,20 @@
     .brand-logo-card {
       display: grid;
       place-items: center;
-      width: clamp(170px, 17vw, 220px);
-      height: clamp(58px, 6.5vw, 82px);
-      padding: 6px 10px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, .96);
-      border: 1px solid rgba(255, 255, 255, .5);
-      box-shadow: 0 8px 22px rgba(6, 17, 35, .22);
+      width: auto;
+      height: auto;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
       overflow: hidden
     }
 
     .brand img {
-      width: 100%;
-      height: 100%;
+      width: auto;
+      height: clamp(56px, 6vw, 74px);
+      max-width: min(240px, 35vw);
       border-radius: 0;
       border: none;
       object-fit: contain;
@@ -168,9 +169,15 @@
       display: block
     }
 
-    .brand:hover .brand-logo-card {
-      background: #fff;
-      border-color: rgba(255, 255, 255, .72)
+    .brand-logo-card,
+    .brand-logo-card img,
+    .footer-logo,
+    .footer-logo img,
+    #siteLogo,
+    #footerLogo {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
 
     .brand:hover img {
@@ -698,20 +705,17 @@
     }
 
     .typewriter-text {
-      opacity: 0;
-      border-right: 2px solid #4169E1;
-      padding-right: 4px;
-      display: inline-block;
+      opacity: 1;
+      border-right: none;
+      padding-right: 0;
+      display: block;
       white-space: pre-wrap;
       word-wrap: break-word;
-      max-width: 100%
+      max-width: 100%;
+      animation: none
     }
 
-    .typewriter-text.typing {
-      opacity: 1;
-      animation: blink-caret 0.75s step-end infinite
-    }
-
+    .typewriter-text.typing,
     .typewriter-text.typed {
       opacity: 1;
       border-right: none;
@@ -873,6 +877,115 @@
       box-shadow: 0 12px 24px rgba(31, 77, 135, .12);
       outline: none;
       border-color: rgba(31, 77, 135, .15)
+    }
+
+    .card.webinar-card {
+      background: linear-gradient(180deg, #ffffff 0%, #f4f9ff 56%, #e9f3ff 100%);
+      border-color: rgba(31, 124, 255, .26);
+      box-shadow: 0 18px 32px rgba(20, 70, 150, .18);
+    }
+
+    .card.webinar-card .media {
+      position: relative;
+      background:
+        radial-gradient(circle at 16% 16%, rgba(62, 200, 255, .28), transparent 46%),
+        radial-gradient(circle at 88% 12%, rgba(31, 124, 255, .2), transparent 44%),
+        linear-gradient(130deg, #e2f1ff 0%, #edf6ff 54%, #f8fcff 100%);
+    }
+
+    .card.webinar-card .media::after {
+      content: '';
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: rgba(7, 26, 52, .78);
+      box-shadow: 0 10px 20px rgba(7, 26, 52, .25), 0 0 0 2px rgba(255, 255, 255, .42);
+    }
+
+    .card.webinar-card .media::before {
+      content: '';
+      position: absolute;
+      right: 25px;
+      top: 24px;
+      z-index: 1;
+      width: 0;
+      height: 0;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      border-left: 10px solid #fff;
+    }
+
+    .webinar-when {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(62, 200, 255, .1);
+      border: 1px solid rgba(31, 124, 255, .2);
+      color: #1a4f93;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .2px;
+      line-height: 1.4;
+    }
+
+    .webinar-foot {
+      margin-top: 10px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(31, 77, 135, .24);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .webinar-foot-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .webinar-platform {
+      font-size: .76rem;
+      color: #12549f;
+      background: rgba(62, 200, 255, .12);
+      border: 1px solid rgba(31, 124, 255, .22);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .webinar-host {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, .95);
+      box-shadow: 0 4px 10px rgba(24, 83, 186, .25);
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #d9ecff;
+    }
+
+    .webinar-host img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .webinar-cta-btn {
+      font-size: .78rem;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, #1f7cff, #0d48bd);
+      border-radius: 999px;
+      padding: 7px 12px;
+      white-space: nowrap;
+      box-shadow: 0 8px 16px rgba(24, 83, 186, .34);
     }
 
     .card:hover::after,
@@ -1520,6 +1633,47 @@
     .loading-subtext {
       font-size: .9rem;
       color: #6b7280
+    }
+
+    .loading-kicker {
+      margin: 0;
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #FF7A00
+    }
+
+    .loading-quote-box {
+      max-width: 420px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(31, 77, 135, .08), rgba(65, 105, 225, .05));
+      border: 1px solid rgba(31, 77, 135, .08)
+    }
+
+    .loading-quote-mark {
+      margin: 0 0 6px;
+      font-size: 1.9rem;
+      line-height: 1;
+      color: rgba(31, 77, 135, .32)
+    }
+
+    .loading-quote {
+      margin: 0;
+      font-size: .98rem;
+      line-height: 1.7;
+      color: #16365f;
+      min-height: 54px;
+      transition: opacity .25s ease
+    }
+
+    .loading-author {
+      margin: 10px 0 0;
+      font-size: .82rem;
+      font-weight: 700;
+      color: #5a6d8a;
+      letter-spacing: .02em
     }
 
     /* Ã¢â€â‚¬Ã¢â€â‚¬ PAGE LOADER (Initial Data Loading) Ã¢â€â‚¬Ã¢â€â‚¬ */
@@ -2214,6 +2368,8 @@
       background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(245, 250, 255, .94));
       display: grid;
       gap: 10px;
+      align-content: start;
+      height: 100%;
       box-shadow: 0 8px 20px rgba(20, 46, 84, .08);
       transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
       overflow: hidden;
@@ -2243,6 +2399,46 @@
 
     .academy-roadmap-card h3 {
       font-size: 1.05rem;
+    }
+
+    .academy-community-card {
+      min-height: 250px;
+      grid-template-rows: minmax(48px, auto) minmax(0, 1fr) auto;
+      gap: 14px;
+    }
+
+    .academy-community-head {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .academy-community-type {
+      display: inline-flex;
+      align-items: center;
+      min-height: 40px;
+      max-width: 100%;
+      padding: 8px 14px;
+      line-height: 1.35;
+      white-space: normal;
+      text-align: left;
+    }
+
+    .academy-community-content {
+      margin: 0;
+      color: #425472;
+      line-height: 1.65;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 5;
+      line-clamp: 5;
+      overflow: hidden;
+    }
+
+    .academy-community-author {
+      margin-top: auto;
+      color: #1F4D87;
+      font-size: .92rem;
+      line-height: 1.4;
     }
 
     .academy-feature-icon {
@@ -2317,22 +2513,27 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
+      align-items: stretch;
     }
 
     .academy-tool-card {
       border: 1px solid rgba(31, 77, 135, .12);
       border-radius: 14px;
-      padding: 14px;
+      padding: 16px;
       background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(245, 250, 255, .94));
       box-shadow: 0 8px 18px rgba(20, 46, 84, .08);
-      display: grid;
-      gap: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 100%;
     }
 
     .academy-tool-card h4 {
       margin: 0;
       font-size: .98rem;
       color: #1F4D87;
+      line-height: 1.35;
+      min-height: 2.7em;
     }
 
     .academy-tool-card p {
@@ -2340,6 +2541,7 @@
       color: #425472;
       font-size: .93rem;
       line-height: 1.5;
+      flex: 1;
     }
 
     /* Ã¢â€â‚¬Ã¢â€â‚¬ GALLERY Ã¢â€â‚¬Ã¢â€â‚¬ */
@@ -2689,17 +2891,21 @@
     .host-row {
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 12px
+      gap: 12px;
+      margin: 8px 0 14px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(31, 77, 135, .16);
+      background: linear-gradient(135deg, rgba(31, 77, 135, .08), rgba(255, 255, 255, .96));
     }
 
     .host-circle {
-      width: 80px;
-      height: 80px;
+      width: 74px;
+      height: 74px;
       border-radius: 50%;
-      border: 3px solid #1F4D87;
+      border: 3px solid #ffffff;
       object-fit: cover;
-      box-shadow: 0 4px 16px rgba(31, 77, 135, .2)
+      box-shadow: 0 8px 20px rgba(31, 77, 135, .25)
     }
 
     /* Ã¢â€â‚¬Ã¢â€â‚¬ FOOTER Ã¢â€â‚¬Ã¢â€â‚¬ */
@@ -2755,14 +2961,15 @@
     }
 
     .footer-logo img {
-      width: 122px;
-      height: 46px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, .2);
+      width: auto;
+      height: 58px;
+      max-width: 180px;
+      border-radius: 0;
+      border: none;
       object-fit: contain;
       object-position: center;
-      background: rgba(255, 255, 255, .08);
-      padding: 4px 8px
+      background: transparent;
+      padding: 0
     }
 
     .footer-about p {
@@ -3389,9 +3596,14 @@
       }
 
       .brand-logo-card {
-        width: 140px;
+        width: auto;
+        height: auto;
+        padding: 0
+      }
+
+      .brand img {
         height: 52px;
-        padding: 4px 8px
+        max-width: 170px
       }
 
       .hero {
@@ -4416,7 +4628,7 @@
 
 <body>
   <!-- Page Loader (Initial Data Loading) -->
-  <div class="page-loader" id="pageLoader">
+  <div class="page-loader hide" id="pageLoader">
     <div class="page-loader-content">
       <div class="loader-logo" id="loaderLogo"></div>
       <div class="page-loader-spinner"></div>
@@ -4434,7 +4646,7 @@
     <div class="topin">
       <a href="https://findasacademy.in" class="brand" aria-label="Home">
         <span class="brand-logo-card">
-          <img id="siteLogo" alt="Site logo" src="https://storage.files-vault.com/uploads/1771482761-H0bNoWSgQU.jpg">
+          <img id="siteLogo" alt="Site logo" src="" hidden>
         </span>
         <span id="siteName">Findas Academy</span>
       </a>
@@ -4445,7 +4657,7 @@
         <a href="#webinars">Webinars</a>
         <a href="#digital-products">Digital Products</a>
         <a href="#membership">Membership</a>
-        <a href="#" id="bookingLink">Book a Call</a>
+        <a href="book-a-call.html" id="bookingLink">Book a Call</a>
         <a href="#gallery">Gallery</a>
         <a href="#reviews">Reviews</a>
         <a class="login-btn" id="memberLogin" href="https://community.findasacademy.in/" target="_blank"
@@ -4507,30 +4719,30 @@
       <div class="head">
         <h2>Findas Academy</h2>
       </div>
-      <p class="academy-intro">Learn what took decades of real-world experience to discover in a structured environment built for clarity, action, and growth. Your journey toward financial freedom begins here.</p>
+      <p class="academy-intro" id="academyIntroText">Learn what took decades of real-world experience to discover in a structured environment built for clarity, action, and growth. Your journey toward financial freedom begins here.</p>
       <div class="hero-ctas academy-cta-row">
-        <a href="#membership" class="btn b1">Join Findas Academy</a>
+        <a href="#membership" class="btn b1" id="academyPrimaryCta">Join Findas Academy</a>
       </div>
 
-      <div class="academy-split">
+      <div class="academy-split" id="academyIntroComparisonSection">
         <article class="academy-panel before-panel">
-          <h3>Before Joining</h3>
+          <h3 id="academyBeforeHeading">Before Joining</h3>
           <ul id="academyBeforeList" class="academy-list"></ul>
         </article>
         <article class="academy-panel after-panel">
-          <h3>After Joining</h3>
+          <h3 id="academyAfterHeading">After Joining</h3>
           <ul id="academyAfterList" class="academy-list"></ul>
         </article>
       </div>
 
-      <div class="head academy-subhead">
-        <h2>What You Get Inside</h2>
+      <div class="head academy-subhead" id="academyFeaturesSection">
+        <h2 id="academyFeaturesHeading">What You Get Inside</h2>
       </div>
       <div class="grid" id="academyFeaturesGrid"></div>
 
-      <div class="academy-tools section-card">
-        <h3 class="section-title">Digital Products &amp; Practical Tools</h3>
-        <p class="section-body">Knowledge alone does not create change. Action does. Use budgeting trackers, financial planning templates, goal planners, journaling tools, and habit-building frameworks to turn learning into results.</p>
+      <div class="academy-tools section-card" id="academyProductsSection">
+        <h3 class="section-title" id="academyProductsHeading">Digital Products &amp; Practical Tools</h3>
+        <p class="section-body" id="academyProductsDescription">Knowledge alone does not create change. Action does. Use budgeting trackers, financial planning templates, goal planners, journaling tools, and habit-building frameworks to turn learning into results.</p>
         <div class="academy-tools-grid">
           <article class="academy-tool-card">
             <h4>Budget & Cashflow Trackers</h4>
@@ -4547,14 +4759,14 @@
         </div>
       </div>
 
-      <div class="head academy-subhead">
-        <h2>Sneak Peek into the Community</h2>
+      <div class="head academy-subhead" id="academyCommunitySection">
+        <h2 id="academyCommunityHeading">Sneak Peek into the Community</h2>
       </div>
       <div class="grid" id="academyCommunityGrid"></div>
 
-      <div class="academy-steps section-card">
-        <h3 class="section-title">What Happens After You Join</h3>
-        <ol class="academy-steps-list">
+      <div class="academy-steps section-card" id="academyRoadmapSection">
+        <h3 class="section-title" id="academyRoadmapHeading">What Happens After You Join</h3>
+        <ol class="academy-steps-list" id="academyRoadmapItemsList">
           <li><strong>Step 1 - Introduce Yourself:</strong> Start in the Start Here and Say Hello channel and share your goals.</li>
           <li><strong>Step 2 - Begin Learning:</strong> Explore Book of the Month, Weekly Learning, and Daily Dose.</li>
           <li><strong>Step 3 - Build Your Systems:</strong> Apply trackers, planners, and habit systems daily.</li>
@@ -4563,21 +4775,21 @@
         </ol>
       </div>
 
-      <div class="head academy-subhead">
-        <h2>Findas Academy Growth Roadmap</h2>
+      <div class="head academy-subhead" id="academyGrowthRoadmapSection">
+        <h2 id="academyGrowthRoadmapHeading">Findas Academy Growth Roadmap</h2>
       </div>
       <div class="grid" id="academyRoadmapGrid"></div>
 
-      <div class="academy-tools section-card">
+      <div class="academy-tools section-card" id="academyWhoSection">
         <h3 class="section-title">Who Should Join</h3>
-        <p class="section-body">Entrepreneurs, employees, students, investors, business owners, and anyone committed to improving financial literacy and life systems.</p>
+        <p class="section-body" id="academyWhoShouldJoinText">Entrepreneurs, employees, students, investors, business owners, and anyone committed to improving financial literacy and life systems.</p>
       </div>
 
-      <div class="academy-tools section-card">
-        <h3 class="section-title">Membership &amp; Pricing</h3>
-        <p class="section-body">Simple membership with unlimited access to courses, channels, tools, challenges, and support. Every new member receives a 14-day free look period.</p>
+      <div class="academy-tools section-card" id="academyMembershipSection">
+        <h3 class="section-title" id="academyMembershipHeading">Membership &amp; Pricing</h3>
+        <p class="section-body" id="academyMembershipDescription">Simple membership with unlimited access to courses, channels, tools, challenges, and support. Every new member receives a 14-day free look period.</p>
         <div class="hero-ctas academy-cta-row">
-          <a href="#membership" class="btn b1">Join Findas Academy</a>
+          <a href="#membership" class="btn b1" id="academySecondaryCta">Join Findas Academy</a>
         </div>
       </div>
 
@@ -4636,7 +4848,7 @@
 
     <section class="sec" id="faq-section">
       <div class="head">
-        <h2>Frequently Asked Questions</h2><span class="chip">Common Questions</span>
+        <h2 id="faqHeading">Frequently Asked Questions</h2><span class="chip" id="faqSubheading">Common Questions</span>
       </div>
       <div class="faq-grid" id="faqGrid"></div>
     </section>
@@ -4648,7 +4860,7 @@
       <div class="footer-col">
         <div class="footer-about">
           <div class="footer-logo">
-            <img id="footerLogo" alt="Findas" src="">
+            <img id="footerLogo" alt="Findas" src="" hidden>
             <span id="footerBrandName">Findas Academy</span>
           </div>
           <p id="footerAboutText">Empowering financial freedom through expert-led courses, webinars, and personal coaching. Join thousands
@@ -4675,6 +4887,13 @@
                 d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
             <span id="footerPhone">Loading...</span>
+          </li>
+          <li id="footerEmailRow" style="display:none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <a id="footerEmail" href="" style="color:rgba(255,255,255,.6);text-decoration:none;"></a>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2">
@@ -4750,9 +4969,15 @@
   <div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
     <div class="loading-content">
       <div class="loading-spinner"></div>
+      <p class="loading-kicker" id="loadingKicker">Guided by Clarity</p>
       <div>
         <p class="loading-text" id="loadingText">Your Financial Guide is Opening</p>
-        <p class="loading-subtext">Please wait...</p>
+        <p class="loading-subtext" id="loadingSubtext">Please wait...</p>
+      </div>
+      <div class="loading-quote-box">
+        <p class="loading-quote-mark">"</p>
+        <p class="loading-quote" id="loadingQuote">Discipline is choosing what you want most over what you want now.</p>
+        <p class="loading-author" id="loadingAuthor">Anonymous</p>
       </div>
     </div>
   </div>
@@ -4934,19 +5159,19 @@
   <!-- Floating Go-to-Top Button -->
   <button class="scroll-to-top" id="scrollToTop" aria-label="Scroll to top" title="Back to top">&uarr;</button>
 
-  <script src="js/config.js"></script>
-  <script src="js/data/defaults.js"></script>
-  <script src="js/utils/dom.js"></script>
-  <script src="js/utils/format.js"></script>
-  <script src="js/api/cache.js"></script>
-  <script src="js/api/php-client.js"></script>
-  <script src="js/api/client.js"></script>
-  <script src="js/cart/manager.js"></script>
-  <script src="js/render/cards.js"></script>
-  <script src="js/render/sections.js"></script>
-  <script src="js/modals/core.js"></script>
-  <script src="js/modals/booking.js"></script>
-  <script src="js/modals/details.js"></script>
+  <script src="js/config.js?v=20260326b"></script>
+  <script src="js/data/defaults.js?v=20260326b"></script>
+  <script src="js/utils/dom.js?v=20260326b"></script>
+  <script src="js/utils/format.js?v=20260326b"></script>
+  <script src="js/api/cache.js?v=20260326b"></script>
+  <script src="js/api/php-client.js?v=20260326e"></script>
+  <script src="js/api/client.js?v=20260326b"></script>
+  <script src="js/cart/manager.js?v=20260326b"></script>
+  <script src="js/render/cards.js?v=20260516a"></script>
+  <script src="js/render/sections.js?v=20260326b"></script>
+  <script src="js/modals/core.js?v=20260326f"></script>
+  <script src="js/modals/booking.js?v=20260326g"></script>
+  <script src="js/modals/details.js?v=20260516a"></script>
   <script>
     const S = { settings: {}, courses: [], digital: [], webinars: [], plans: [], gallery: [], shortReviews: [], featuredReviews: [], faq: [], whoFor: [], academySections: [], academyBefore: [], academyAfter: [], academyRoadmap: [], academyCommunity: [], tab: 'upcoming', q: '', cart: [] };
     const DETAILS_CACHE = {}; // Cache for course/digital details to speed up repeated loads
@@ -4958,6 +5183,7 @@
       cGrid: qs('#coursesGrid'), wGrid: qs('#webinarsGrid'), dGrid: qs('#digitalGrid'), pGrid: qs('#membershipGrid'),
       gGrid: qs('#galleryGrid'),
       faqGrid: qs('#faqGrid'), whoGrid: qs('#whoGrid'),
+      faqHeading: qs('#faqHeading'), faqSubheading: qs('#faqSubheading'),
       academyFeaturesGrid: qs('#academyFeaturesGrid'), academyBeforeList: qs('#academyBeforeList'), academyAfterList: qs('#academyAfterList'),
       academyRoadmapGrid: qs('#academyRoadmapGrid'), academyCommunityGrid: qs('#academyCommunityGrid'),
       bookingLink: qs('#bookingLink'), heroCta: qs('#heroCta'),
@@ -4971,19 +5197,61 @@
       featured: qs('#featuredReviews'), shortReviews: qs('#shortReviews'),
       ov: qs('#ov'), modal: qs('#modal'), mTitle: qs('#mtitle'), mContent: qs('#mcontent'),
       db: qs('#db'), drawer: qs('#drawer'), cartCount: qs('#cartCount'), cartItems: qs('#cartItems'), cartTotal: qs('#cartTotal'), cartNote: qs('#cartNote'),
-      loadingOverlay: qs('#loadingOverlay'), loadingText: qs('#loadingText'),
+      loadingOverlay: qs('#loadingOverlay'), loadingText: qs('#loadingText'), loadingSubtext: qs('#loadingSubtext'), loadingKicker: qs('#loadingKicker'), loadingQuote: qs('#loadingQuote'), loadingAuthor: qs('#loadingAuthor'),
       scrollToTop: qs('#scrollToTop'),
       pageLoader: qs('#pageLoader'), pageLoaderText: qs('#pageLoader .page-loader-text'), loaderLogo: qs('#loaderLogo'),
       hostImg: qs('#hostImg'), footerPhone: qs('#footerPhone'), footerLogo: qs('#footerLogo'),
       footerBrandName: qs('#footerBrandName'), footerAboutText: qs('#footerAboutText'),
       footerQuickLinksTitle: qs('#footerQuickLinksTitle'), footerQuickLinks: qs('#footerQuickLinks'),
-      footerContactTitle: qs('#footerContactTitle'), footerAddress: qs('#footerAddress'),
+      footerContactTitle: qs('#footerContactTitle'), footerEmail: qs('#footerEmail'), footerAddress: qs('#footerAddress'),
       footerSocialTitle: qs('#footerSocialTitle'), footerSocialLinks: qs('#footerSocialLinks'),
       footerCopyright: qs('#footerCopyright'),
       termsOverlay: qs('#termsOverlay'), termsContent: qs('#termsContent'),
       privacyOverlay: qs('#privacyOverlay'), privacyContent: qs('#privacyContent')
     };
-    let mf = [], prev = null, mc = null, featuredIdx = 0, featuredTimer = null, countdownTimer = null, galleryFeaturedSlot = null, galleryIsMobile = null, heroVideoMuted = true;
+    let mf = [], prev = null, mc = null, featuredIdx = 0, featuredTimer = null, countdownTimer = null, galleryFeaturedSlot = null, galleryIsMobile = null, heroVideoMuted = true, loadingExperienceTimer = null, loadingExperienceIndex = 0;
+    const DEFAULT_BOOKING_PAGE_URL = 'book-a-call.html';
+    const DEFAULT_BOOKING_EMBED_URL = 'https://admin.aibunty.com/u2/76687/-free-seminar-to-mint?isEmbeded=1';
+    const LOADING_EXPERIENCES = [
+      {
+        kicker: 'Guided by Clarity',
+        title: 'Preparing your next financial step',
+        subtext: 'Calm progress compounds into meaningful results.',
+        quote: 'Do not save what is left after spending, but spend what is left after saving.',
+        author: 'Warren Buffett'
+      },
+      {
+        kicker: 'Built with Patience',
+        title: 'Opening a focused learning space',
+        subtext: 'Steady action is often the quietest form of confidence.',
+        quote: 'Financial freedom is available to those who learn about it and work for it.',
+        author: 'Robert Kiyosaki'
+      },
+      {
+        kicker: 'One Wise Step',
+        title: 'Loading your opportunity with care',
+        subtext: 'Every disciplined decision strengthens your future self.',
+        quote: 'Beware of little expenses. A small leak will sink a great ship.',
+        author: 'Benjamin Franklin'
+      },
+      {
+        kicker: 'Grace in Motion',
+        title: 'Setting up your financial momentum',
+        subtext: 'Clarity today creates freedom tomorrow.',
+        quote: 'The stock market is a device for transferring money from the impatient to the patient.',
+        author: 'Warren Buffett'
+      }
+    ];
+
+    function resolveBookingPageUrl() {
+      const configuredUrl = String((S.siteConfig && S.siteConfig.booking_page_url) || '').trim();
+      if (configuredUrl && configuredUrl !== '#') {
+        return configuredUrl;
+      }
+      return DEFAULT_BOOKING_PAGE_URL;
+    }
+
+    window.resolveBookingPageUrl = resolveBookingPageUrl;
 
     function setupHeroVideoMuteBtn() {
       if (!D.heroVideoMuteBtn || !D.heroVideoIframe) return;
@@ -5009,53 +5277,11 @@
 
     function setupTypewriterEffect() {
       const typewriterElements = document.querySelectorAll('.typewriter-text');
-      if (!typewriterElements.length) return;
-
-      function typeText(element, text, speed = 30) {
-        return new Promise((resolve) => {
-          element.textContent = '';
-          element.classList.add('typing');
-          element.style.opacity = '1';
-          let charIndex = 0;
-
-          function addChar() {
-            if (charIndex < text.length) {
-              element.textContent += text.charAt(charIndex);
-              charIndex++;
-              setTimeout(addChar, speed);
-            } else {
-              element.classList.remove('typing');
-              element.classList.add('typed');
-              resolve();
-            }
-          }
-
-          addChar();
-        });
-      }
-
-      async function typeSequence() {
-        for (let i = 0; i < typewriterElements.length; i++) {
-          const element = typewriterElements[i];
-          const text = element.textContent.trim();
-          await typeText(element, text, 30);
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-      }
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && entry.target.classList.contains('about-coach')) {
-            observer.disconnect();
-            typeSequence();
-          }
-        });
-      }, { threshold: 0.2 });
-
-      const aboutSection = document.querySelector('.about-coach');
-      if (aboutSection) {
-        observer.observe(aboutSection);
-      }
+      typewriterElements.forEach((element) => {
+        element.classList.remove('typing');
+        element.classList.add('typed');
+        element.style.opacity = '1';
+      });
     }
 
     function past(w) { return w.endAt ? Date.now() > w.endAt.getTime() : false }
@@ -5065,6 +5291,40 @@
       if (!D.pageLoaderText) return;
       D.pageLoaderText.textContent = String(msg || DEFAULT_PAGE_LOADER_TEXT);
     }
+    function applyLoadingExperience(headline, subline) {
+      const entry = LOADING_EXPERIENCES[loadingExperienceIndex % LOADING_EXPERIENCES.length];
+      if (D.loadingKicker) D.loadingKicker.textContent = entry.kicker;
+      if (D.loadingText) D.loadingText.textContent = headline || entry.title;
+      if (D.loadingSubtext) D.loadingSubtext.textContent = subline || entry.subtext;
+      if (D.loadingQuote) D.loadingQuote.textContent = entry.quote;
+      if (D.loadingAuthor) D.loadingAuthor.textContent = entry.author;
+    }
+
+    function startLoadingExperience(headline, subline) {
+      if (!D.loadingOverlay) return;
+      if (loadingExperienceTimer) {
+        clearInterval(loadingExperienceTimer);
+        loadingExperienceTimer = null;
+      }
+      loadingExperienceIndex = 0;
+      applyLoadingExperience(headline, subline);
+      D.loadingOverlay.classList.add('show');
+      D.loadingOverlay.setAttribute('aria-hidden', 'false');
+      loadingExperienceTimer = setInterval(() => {
+        loadingExperienceIndex = (loadingExperienceIndex + 1) % LOADING_EXPERIENCES.length;
+        applyLoadingExperience(headline, subline);
+      }, 2600);
+    }
+
+    function stopLoadingExperience() {
+      if (!D.loadingOverlay) return;
+      if (loadingExperienceTimer) {
+        clearInterval(loadingExperienceTimer);
+        loadingExperienceTimer = null;
+      }
+      D.loadingOverlay.classList.remove('show');
+      D.loadingOverlay.setAttribute('aria-hidden', 'true');
+    }
     function errText(e) {
       if (!e) return '';
       if (typeof e === 'string') return e;
@@ -5072,28 +5332,32 @@
       try { return JSON.stringify(e) } catch (x) { return String(e) }
     }
 
-    function normCourses(rows) { return (rows || []).map(r => ({ type: 'course', id: String(r.slug || '').trim(), title: String(r.title || ''), subtitle: String(r.subtitle || ''), category: String(r.category || ''), language: String(r.language || ''), price: n(r.price_inr), badge: String(r.badge || ''), students: String(r.students || ''), img: String(r.thumbnail_url || ''), link: String(r.payment_link || ''), redirect_url: String(r.redirect_url || '') })).filter(x => x.id) }
-    function normDigital(rows) { return (rows || []).map(r => ({ type: 'digital', id: String(r.slug || '').trim(), title: String(r.title || ''), subtitle: String(r.subtitle || ''), category: String(r.category || ''), language: String(r.language || ''), price: n(r.price_inr), badge: String(r.badge || ''), img: String(r.thumbnail_url || ''), link: String(r.payment_link || ''), redirect_url: String(r.redirect_url || '') })).filter(x => x.id) }
-    function normWebinars(rows) { return (rows || []).map(r => ({ type: 'webinar', id: String(r.slug || '').trim(), title: String(r.title || ''), subtitle: String(r.subtitle || ''), img: String(r.banner_url || ''), hostImg: String(r.host_image_url || ''), platform: String(r.platform || ''), startAt: parseDate(r.start_datetime_local), endAt: parseDate(r.end_datetime_local), tz: String(r.timezone || ''), price: n(r.price_inr), isFree: b(r.is_free), link: String(r.payment_link || ''), cta: String(r.primary_cta_text || 'Register') })).filter(x => x.id) }
-    function normPlans(rows) { return (rows || []).map(r => ({ type: 'membership', id: String(r.plan_id || '').trim(), title: String(r.title || ''), price: n(r.price_inr), period: String(r.period || ''), description: String(r.description || ''), img: String(r.image_url || r.image || ''), features: String(r.features || ''), target_audience: String(r.target_audience || ''), benefits: String(r.benefits || ''), recommended: b(r.recommended), link: String(r.payment_link || '') })).filter(x => x.id) }
+    function normCourses(rows) { return (rows || []).map(r => ({ type: 'course', id: String(r.slug || '').trim(), title: String(r.title || ''), subtitle: String(r.subtitle || ''), category: String(r.category || ''), language: String(r.language || ''), price: n(r.price_inr), badge: String(r.badge || ''), students: String(r.students || ''), img: String(r.thumbnail_url || ''), link: String(r.payment_link || ''), redirect_url: String(r.redirect_url || ''), page_url: String(r.page_url || '') })).filter(x => x.id) }
+    function normDigital(rows) { return (rows || []).map(r => ({ type: 'digital', id: String(r.slug || '').trim(), title: String(r.title || ''), subtitle: String(r.subtitle || ''), category: String(r.category || ''), language: String(r.language || ''), price: n(r.price_inr), badge: String(r.badge || ''), img: String(r.thumbnail_url || ''), link: String(r.payment_link || ''), redirect_url: String(r.redirect_url || ''), page_url: String(r.page_url || '') })).filter(x => x.id) }
+    function normWebinars(rows) { return (rows || []).map(r => ({ type: 'webinar', id: String(r.slug || '').trim(), title: String(r.title || ''), subtitle: String(r.subtitle || ''), img: String(r.banner_url || ''), hostImg: String(r.host_image_url || ''), platform: String(r.platform || ''), startAt: parseDate(r.start_datetime_local), endAt: parseDate(r.end_datetime_local), tz: String(r.timezone || ''), price: n(r.price_inr), isFree: b(r.is_free), link: String(r.payment_link || ''), cta: String(r.primary_cta_text || 'Register'), page_url: String(r.page_url || '') })).filter(x => x.id) }
+    function normPlans(rows) { return (rows || []).map(r => ({ type: 'membership', id: String(r.plan_id || '').trim(), title: String(r.title || ''), price: n(r.price_inr), period: String(r.period || ''), description: String(r.description || ''), img: String(r.image_url || r.image || ''), features: String(r.features || ''), target_audience: String(r.target_audience || ''), benefits: String(r.benefits || ''), recommended: b(r.recommended), link: String(r.payment_link || ''), page_url: String(r.page_url || '') })).filter(x => x.id) }
 
     function applyBrand() {
-      const navbarLogo = (S.siteConfig && S.siteConfig.navbar_logo_url) || 'https://storage.files-vault.com/uploads/1771482761-H0bNoWSgQU.jpg';
-      const footerLogoUrl = (S.siteConfig && S.siteConfig.footer_logo_url) || navbarLogo;
-      const loadingLogoUrl = (S.siteConfig && S.siteConfig.loading_logo_url) || navbarLogo;
-      const faviconUrl = (S.siteConfig && S.siteConfig.favicon_url) || 'https://storage.files-vault.com/images/20260219120135_original__media_3.webp';
+      const navbarLogo = String((S.siteConfig && S.siteConfig.navbar_logo_url) || '').trim();
+      const footerLogoUrl = String((S.siteConfig && S.siteConfig.footer_logo_url) || '').trim() || navbarLogo;
+      const loadingLogoUrl = String((S.siteConfig && S.siteConfig.loading_logo_url) || '').trim() || navbarLogo;
+      const faviconUrl = String((S.siteConfig && S.siteConfig.favicon_url) || '').trim() || navbarLogo;
       const logo = String(S.settings.site_logo_url || '').trim();
       const phone = String(S.settings.contact_phone || '').trim();
       const theme = String(S.settings.site_primary_color || S.settings.theme_color || '').trim();
       const name = String(S.settings.site_name || '').trim();
       const founderImageUrl = 'https://storage.files-vault.com/uploads/1772207760-dgdy7ilGGl.png';
       if (name) { D.name.textContent = name }
-      const brandLogoSrc = navbarLogo;
-      D.logo.src = brandLogoSrc; D.logo.hidden = false;
-      D.logo.addEventListener('load', adjustBrandLogoCard);
-      if (D.logo.complete) adjustBrandLogoCard();
-      if (D.footerLogo) D.footerLogo.src = footerLogoUrl;
-      if (D.loaderLogo) D.loaderLogo.style.backgroundImage = 'url(' + esc(loadingLogoUrl) + ')';
+      if (navbarLogo) {
+        D.logo.src = navbarLogo;
+        D.logo.hidden = false;
+        D.logo.addEventListener('load', adjustBrandLogoCard);
+        if (D.logo.complete) adjustBrandLogoCard();
+      } else {
+        D.logo.hidden = true;
+      }
+      if (D.footerLogo && footerLogoUrl) { D.footerLogo.src = footerLogoUrl; D.footerLogo.hidden = false; } else if (D.footerLogo) { D.footerLogo.hidden = true; }
+      if (D.loaderLogo) D.loaderLogo.style.backgroundImage = loadingLogoUrl ? ('url(' + esc(loadingLogoUrl) + ')') : '';
       if (faviconUrl) { let l = document.querySelector("link[rel='icon']"); if (!l) { l = document.createElement('link'); l.rel = 'icon'; document.head.appendChild(l) } l.href = faviconUrl }
       if (phone && D.phone) { D.phone.href = 'tel:' + phone.replace(/\s+/g, ''); D.phone.textContent = phone; D.phone.hidden = false; if (D.footerPhone) D.footerPhone.textContent = phone } else if (D.phone) D.phone.hidden = true;
       if (phone && D.footerPhone && !D.phone) D.footerPhone.textContent = phone;
@@ -5147,6 +5411,9 @@
       }
       if (S.siteConfig.hero_button_2_text && D.heroCta) {
         D.heroCta.textContent = S.siteConfig.hero_button_2_text;
+      }
+      if (D.bookingLink) {
+        D.bookingLink.href = resolveBookingPageUrl();
       }
       
       // Hero Video URL - Extract YouTube video ID
@@ -5232,6 +5499,13 @@
       }
       
       // Footer Section
+      if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'faq_heading') && D.faqHeading) {
+        D.faqHeading.textContent = String(S.siteConfig.faq_heading || 'Frequently Asked Questions');
+      }
+      if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'faq_subheading') && D.faqSubheading) {
+        D.faqSubheading.textContent = String(S.siteConfig.faq_subheading || 'Common Questions');
+      }
+
       if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_brand_name') && D.footerBrandName) {
         D.footerBrandName.textContent = String(S.siteConfig.footer_brand_name || '');
       }
@@ -5298,6 +5572,15 @@
       if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_address') && D.footerAddress) {
         D.footerAddress.textContent = String(S.siteConfig.footer_address || '');
       }
+      const footerEmailVal = String(S.siteConfig.footer_email || '').trim();
+      if (footerEmailVal) {
+        if (D.footerEmail) { D.footerEmail.href = 'mailto:' + footerEmailVal; D.footerEmail.textContent = footerEmailVal; }
+        const emailRow = document.getElementById('footerEmailRow');
+        if (emailRow) emailRow.style.display = '';
+      } else {
+        const emailRow = document.getElementById('footerEmailRow');
+        if (emailRow) emailRow.style.display = 'none';
+      }
       if (Object.prototype.hasOwnProperty.call(S.siteConfig, 'footer_social_title') && D.footerSocialTitle) {
         D.footerSocialTitle.textContent = String(S.siteConfig.footer_social_title || '');
       }
@@ -5360,29 +5643,172 @@
       });
     }
 
+    function parseJsonArraySafe(value, fallback) {
+      if (Array.isArray(value)) return value;
+      const raw = String(value || '').trim();
+      if (!raw) return Array.isArray(fallback) ? fallback : [];
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : (Array.isArray(fallback) ? fallback : []);
+      } catch (_err) {
+        return Array.isArray(fallback) ? fallback : [];
+      }
+    }
+
+    function parseLines(value, keyName, fallbackItems) {
+      const raw = String(value || '').trim();
+      if (!raw) return fallbackItems || [];
+      return raw.split(/\r?\n/).map(line => String(line || '').trim()).filter(Boolean).map((text) => ({ [keyName]: text }));
+    }
+
+    function toggleDisplayByBool(id, enabled) {
+      const node = document.getElementById(id);
+      if (!node) return;
+      node.style.display = enabled ? '' : 'none';
+    }
+
+    function asBool(value, fallbackValue) {
+      if (value === undefined || value === null || value === '') return !!fallbackValue;
+      return !(value === false || value === 0 || value === '0' || String(value).toLowerCase() === 'false');
+    }
+
+    function setTextIfPresent(id, value) {
+      const node = document.getElementById(id);
+      if (!node) return;
+      const text = String(value || '').trim();
+      if (!text) return;
+      node.textContent = text;
+    }
+
+    function setLinkIfPresent(id, textValue, hrefValue) {
+      const node = document.getElementById(id);
+      if (!node) return;
+      const text = String(textValue || '').trim();
+      const href = String(hrefValue || '').trim();
+      if (text) node.textContent = text;
+      if (href) node.setAttribute('href', href);
+    }
+
+    function renderAcademyRoadmapItemsList(items) {
+      const list = document.getElementById('academyRoadmapItemsList');
+      if (!list) return;
+      const rows = Array.isArray(items) ? items : [];
+      if (!rows.length) return;
+
+      list.innerHTML = '';
+      rows.forEach((item, index) => {
+        const li = document.createElement('li');
+        const title = cleanDisplayText(String(item.stage_name || item.title || ('Step ' + (index + 1))).trim());
+        const desc = cleanDisplayText(String(item.description || '').trim());
+
+        const strong = document.createElement('strong');
+        strong.textContent = 'Step ' + (index + 1) + ' - ' + title + ':';
+        li.appendChild(strong);
+        if (desc) {
+          li.appendChild(document.createTextNode(' ' + desc));
+        }
+        list.appendChild(li);
+      });
+    }
+
+    function applyAcademyConfig(config) {
+      const cfg = config && typeof config === 'object' ? config : {};
+
+      const academyEnabled = asBool(cfg.is_enabled, true);
+      toggleDisplayByBool('academy', academyEnabled);
+
+      setTextIfPresent('academyIntroText', cfg.intro_text);
+      setTextIfPresent('academyBeforeHeading', cfg.before_heading);
+      setTextIfPresent('academyAfterHeading', cfg.after_heading);
+      setTextIfPresent('academyFeaturesHeading', cfg.features_intro);
+      setTextIfPresent('academyProductsHeading', cfg.products_heading);
+      setTextIfPresent('academyProductsDescription', cfg.products_description);
+      setTextIfPresent('academyCommunityHeading', cfg.community_heading);
+      setTextIfPresent('academyRoadmapHeading', cfg.roadmap_heading);
+      setTextIfPresent('academyGrowthRoadmapHeading', cfg.growth_roadmap_heading);
+      setTextIfPresent('academyWhoShouldJoinText', cfg.who_should_join_text);
+      setTextIfPresent('academyMembershipHeading', cfg.membership_heading);
+      setTextIfPresent('academyMembershipDescription', cfg.membership_description);
+      setLinkIfPresent('academyPrimaryCta', cfg.cta_button_text, cfg.cta_button_url);
+      setLinkIfPresent('academySecondaryCta', cfg.cta_button_text, cfg.cta_button_url);
+
+      toggleDisplayByBool('academyIntroComparisonSection', asBool(cfg.show_intro_comparison, true));
+      toggleDisplayByBool('academyFeaturesSection', asBool(cfg.show_features, true));
+      toggleDisplayByBool('academyFeaturesGrid', asBool(cfg.show_features, true));
+      toggleDisplayByBool('academyProductsSection', asBool(cfg.show_products, true));
+      toggleDisplayByBool('academyCommunitySection', asBool(cfg.show_community, true));
+      toggleDisplayByBool('academyCommunityGrid', asBool(cfg.show_community, true));
+      toggleDisplayByBool('academyRoadmapSection', asBool(cfg.show_roadmap, true));
+      toggleDisplayByBool('academyGrowthRoadmapSection', asBool(cfg.show_growth_roadmap, true));
+      toggleDisplayByBool('academyRoadmapGrid', asBool(cfg.show_growth_roadmap, true));
+      toggleDisplayByBool('academyWhoSection', asBool(cfg.show_who_should_join, true));
+      toggleDisplayByBool('academyMembershipSection', asBool(cfg.show_who_should_join, true));
+      toggleDisplayByBool('academyPrimaryCta', asBool(cfg.show_cta, true));
+      toggleDisplayByBool('academySecondaryCta', asBool(cfg.show_cta, true));
+
+      if (cfg.before_items !== undefined) {
+        S.academyBefore = parseLines(cfg.before_items, 'challenge', getDefaultAcademyBefore());
+      }
+      if (cfg.after_items !== undefined) {
+        S.academyAfter = parseLines(cfg.after_items, 'benefit', getDefaultAcademyAfter());
+      }
+      if (cfg.features_json !== undefined) {
+        S.academySections = parseJsonArraySafe(cfg.features_json, getDefaultAcademySections());
+      }
+      if (cfg.community_samples_json !== undefined) {
+        S.academyCommunity = parseJsonArraySafe(cfg.community_samples_json, getDefaultAcademyCommunityPosts());
+      }
+      if (cfg.roadmap_items_json !== undefined) {
+        const roadmapItems = parseJsonArraySafe(cfg.roadmap_items_json, getDefaultAcademyRoadmap());
+        renderAcademyRoadmapItemsList(roadmapItems);
+      }
+      if (cfg.growth_stages_json !== undefined) {
+        S.academyRoadmap = parseJsonArraySafe(cfg.growth_stages_json, getDefaultAcademyRoadmap());
+      } else if (cfg.roadmap_items_json !== undefined) {
+        S.academyRoadmap = parseJsonArraySafe(cfg.roadmap_items_json, getDefaultAcademyRoadmap());
+      }
+    }
+
+    async function fetchAcademyConfigDirect() {
+      try {
+        const response = await fetch(`${PHP_API_BASE}/academy`, { headers: { Accept: 'application/json' } });
+        if (!response.ok) return {};
+        const payload = await response.json().catch(() => ({}));
+        if (!payload || payload.ok === false || !payload.data || typeof payload.data !== 'object') {
+          return {};
+        }
+        return payload.data;
+      } catch (_err) {
+        return {};
+      }
+    }
+
     function adjustBrandLogoCard() {
       if (!D.logo) return;
       const card = D.logo.closest('.brand-logo-card');
       if (!card) return;
-      const w = D.logo.naturalWidth || 0;
-      const h = D.logo.naturalHeight || 0;
-      if (!w || !h) return;
-      const ratio = w / h;
-      const mobile = window.matchMedia('(max-width:760px)').matches;
-      const targetH = mobile ? 52 : 68;
-      const minW = mobile ? 120 : 150;
-      const maxW = mobile ? 180 : 240;
-      const targetW = Math.max(minW, Math.min(maxW, Math.round(targetH * ratio)));
-      card.style.width = targetW + 'px';
-      card.style.height = targetH + 'px';
+      card.style.width = 'auto';
+      card.style.height = 'auto';
+    }
+
+    function resolveProductPageUrl(item, type, id) {
+      const raw = item && item.page_url ? String(item.page_url).trim() : '';
+      const from = encodeURIComponent(window.location.href || 'index.html');
+      if (raw) {
+        const hasQuery = raw.includes('?');
+        return raw + (hasQuery ? '&' : '?') + 'from=' + from;
+      }
+      const safeType = encodeURIComponent(String(type || '').trim());
+      const safeSlug = encodeURIComponent(String(id || '').trim());
+      return 'product-detail.html?type=' + safeType + '&slug=' + safeSlug + '&from=' + from;
     }
 
     function openDetails(type, id) {
-      const i = by(type, id); if (!i) return; mc = { type, id };
-      if (type === 'membership') { openMembershipDetails(i.id); return; }
-      if (type === 'digital') { openDigitalDetails(i.id); return; }
-      if (type === 'webinar') { openWebinarDetails(i.id); return; }
-      if (type === 'course') { openCourseDetails(i.id); return; }
+      const i = by(type, id);
+      if (!i) return;
+      const targetUrl = resolveProductPageUrl(i, type, i.id || id);
+      if (!targetUrl) return;
+      window.location.href = targetUrl;
     }
 
     function setModalLoading() {
@@ -5549,14 +5975,17 @@
 
     function handleCourseOrProductPurchase(item, options = {}) {
       if (!item) return;
+      const directLink = String(item.link || '').trim();
       const paymentLink = String(item.payment_link || '').trim();
       const redirectUrl = String(item.redirect_url || '').trim();
-      const target = paymentLink || redirectUrl;
+      const target = directLink || paymentLink || redirectUrl;
 
-      // For all sections, open buy links inside the modal checkout container.
+      // Open purchase/enroll links in a new browser tab as requested.
       if (target) {
-        const title = String(item.type || '').toLowerCase() === 'membership' ? 'Join Membership' : 'Buy Now';
-        openPaymentModal(title, target);
+        const newTab = window.open(target, '_blank', 'noopener,noreferrer');
+        if (!newTab) {
+          window.location.href = target;
+        }
       }
     }
     function openTermsModal() {
@@ -5629,7 +6058,12 @@
         if (x === 'dec') { adj(a.dataset.id, a.dataset.type, -1); return }
         if (x === 'rm') { del(a.dataset.id, a.dataset.type); return }
         if (x === 'modal-add') { if (!mc) return; const i = by(mc.type, mc.id); if (i && (i.type === 'course' || i.type === 'digital')) addCart(i); return }
-        if (x === 'modal-link') { if (!mc) return; const i = by(mc.type, mc.id); if (i && i.link) openPaymentModal('Buy Now', String(i.link)); return }
+        if (x === 'modal-link') {
+          if (!mc) return;
+          const i = by(mc.type, mc.id);
+          if (i) handleCourseOrProductPurchase(i, { directRedirect: true });
+          return;
+        }
       }
       if (e.target === D.ov) { closeModal(); return }
       if (e.target === D.termsOverlay) { closeTermsModal(); return }
@@ -5673,17 +6107,17 @@
       if (D.bookingLink) {
         D.bookingLink.addEventListener('click', (e) => {
           e.preventDefault();
-          openBookingModal();
+          window.location.href = resolveBookingPageUrl();
         });
       }
       if (D.heroCta) {
         D.heroCta.addEventListener('click', () => {
-          const heroBtn2Url = S.siteConfig.hero_button_2_url;
-          if (heroBtn2Url && heroBtn2Url.trim() && heroBtn2Url.trim() !== '#') {
-            window.location.href = heroBtn2Url.trim();
-          } else {
-            openBookingModal();
+          const heroBtn2Url = String(S.siteConfig.hero_button_2_url || '').trim();
+          if (heroBtn2Url && heroBtn2Url !== '#booking' && heroBtn2Url !== '#') {
+            window.location.href = heroBtn2Url;
+            return;
           }
+          window.location.href = resolveBookingPageUrl();
         });
       }
       let resizeTimer = null;
@@ -5826,11 +6260,7 @@
     async function init() {
       bind(); loadCart(); renderCart();
       setupSectionCollapsibles();
-      // Show page loader while fetching data
-      if (D.pageLoader) {
-        setPageLoaderText(DEFAULT_PAGE_LOADER_TEXT);
-        D.pageLoader.classList.remove('hide');
-      }
+      // Keep initial page loader hidden to avoid blocking homepage on load.
       try {
         if (!LOCAL_DATA) {
           console.info('Using PHP API base:', PHP_API_BASE);
@@ -5860,21 +6290,33 @@
           run('getFeaturedReviews'),
           run('getFAQ')
         ]);
-        const [academySections, academyBefore, academyAfter, academyRoadmap, academyCommunity] = await Promise.all([
+        const [academySections, academyBefore, academyAfter, academyRoadmap, academyCommunity, academyConfigCandidate] = await Promise.all([
           runOptional('getAcademySections', []),
           runOptional('getAcademyBefore', []),
           runOptional('getAcademyAfter', []),
           runOptional('getAcademyRoadmap', []),
-          runOptional('getAcademyCommunityPosts', [])
+          runOptional('getAcademyCommunityPosts', []),
+          runOptional('getAcademyConfig', {})
         ]);
+        let academyConfig = academyConfigCandidate && typeof academyConfigCandidate === 'object' ? academyConfigCandidate : {};
+        if (!Object.keys(academyConfig).length) {
+          academyConfig = await fetchAcademyConfigDirect();
+        }
+        const looksLikeApiTestSections = Array.isArray(academySections)
+          && academySections.length === 1
+          && String((academySections[0] && academySections[0].title) || '').trim().toLowerCase() === 'api test section'
+          && String((academySections[0] && academySections[0].description) || '').trim().toLowerCase() === 'created from api tester';
         S.courses = normCourses(c); S.digital = normDigital(d); S.webinars = normWebinars(w); S.plans = normPlans(p);
         S.gallery = g || []; S.shortReviews = sr || []; S.featuredReviews = fr || [];
         S.faq = faq || getDefaultFAQ();
-        S.academySections = academySections && academySections.length ? academySections : getDefaultAcademySections();
+        S.academySections = academySections && academySections.length && !looksLikeApiTestSections
+          ? academySections
+          : getDefaultAcademySections();
         S.academyBefore = academyBefore && academyBefore.length ? academyBefore : getDefaultAcademyBefore();
         S.academyAfter = academyAfter && academyAfter.length ? academyAfter : getDefaultAcademyAfter();
         S.academyRoadmap = academyRoadmap && academyRoadmap.length ? academyRoadmap : getDefaultAcademyRoadmap();
         S.academyCommunity = academyCommunity && academyCommunity.length ? academyCommunity : getDefaultAcademyCommunityPosts();
+        applyAcademyConfig(academyConfig || {});
         clearErr();
         preloadFeaturedImages(S.featuredReviews);
         render();

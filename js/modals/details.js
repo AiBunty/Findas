@@ -208,7 +208,14 @@ function renderWebinarDetails(payload) {
     cta.textContent = 'Event Ended';
     cta.disabled = true;
   } else if (webinar.payment_link) {
-    cta.addEventListener('click', () => openPaymentModal('Enroll Now', String(webinar.payment_link)));
+    cta.addEventListener('click', () => {
+      const target = String(webinar.payment_link || '').trim();
+      if (!target) return;
+      const newTab = window.open(target, '_blank', 'noopener,noreferrer');
+      if (!newTab) {
+        window.location.href = target;
+      }
+    });
   } else {
     cta.disabled = true;
   }
@@ -223,11 +230,16 @@ function renderWebinarDetails(payload) {
   D.mContent.appendChild(layout);
 
   const byType = (type) => blocks.filter(b => String(b.block_type || '').trim() === type);
+  const keyPointsHeadingBlock = byType('key_points')[0] || null;
+  const keyPointsHeading = String(
+    keyPointsHeadingBlock && (keyPointsHeadingBlock.title || keyPointsHeadingBlock.heading) || ''
+  ).trim() || 'Key Takeaways';
   addDynBlockSection(D.mContent, byType('overview'), 'text', 'Webinar Overview');
   addDynBlockSection(D.mContent, byType('who_for'), 'bullets', 'Who Should Attend');
+  addDynBlockSection(D.mContent, byType('outcomes'), 'bullets', "What You'll Know After");
   if (keyPoints.length) {
     const section = el('div', 'section-card');
-    section.appendChild(el('h4', 'section-title', 'Key Points'));
+    section.appendChild(el('h4', 'section-title', keyPointsHeading));
     const grid = el('div', 'for-you-grid');
     keyPoints.forEach(card => {
       const c = el('div', 'for-you-card');
@@ -312,22 +324,24 @@ function renderMembershipDetails(plan) {
   const content = el('div', 'mcontent');
   if (plan.period) content.appendChild(el('p', '', plan.period));
   content.appendChild(el('span', 'price', money(plan.price)));
-  const btn = el('button', 'btn b1', 'Enroll Now');
-  if (plan.link) {
-    btn.addEventListener('click', () => openPaymentModal('Enroll Now', String(plan.link)));
+  const btnRow = el('div', 'acts');
+  const btn = el('button', 'btn b1', 'Join Membership');
+  if (plan.link || plan.payment_link || plan.redirect_url) {
+    btn.addEventListener('click', () => handleCourseOrProductPurchase(plan, { directRedirect: true }));
   } else {
     btn.disabled = true;
   }
-  content.appendChild(btn);
+  btnRow.appendChild(btn);
+  content.appendChild(btnRow);
   layout.appendChild(mediaWrap);
   layout.appendChild(content);
   D.mContent.appendChild(layout);
   if (plan.features) {
-    const sec = renderMembershipBenefitSection('What\'s Included', plan.features, 'flip-cards');
+    const sec = renderMembershipBenefitSection('What\'s Included', plan.features, 'list');
     if (sec) D.mContent.appendChild(sec);
   }
   if (plan.target_audience) {
-    const sec = renderMembershipBenefitSection('Best For', plan.target_audience, 'flip-cards');
+    const sec = renderMembershipBenefitSection('Best For', plan.target_audience, 'list');
     if (sec) D.mContent.appendChild(sec);
   }
   if (plan.benefits) {
@@ -340,6 +354,16 @@ function renderMembershipDetails(plan) {
     section.appendChild(el('p', 'section-body', plan.description));
     D.mContent.appendChild(section);
   }
+
+  const ctaWrap = el('div', 'mcta');
+  const ctaBtn = el('button', 'btn b1', 'Join Membership');
+  if (!plan.link && !plan.payment_link && !plan.redirect_url) {
+    ctaBtn.disabled = true;
+  } else {
+    ctaBtn.addEventListener('click', () => handleCourseOrProductPurchase(plan, { directRedirect: true }));
+  }
+  ctaWrap.appendChild(ctaBtn);
+  D.mContent.appendChild(ctaWrap);
 }
 
 async function openCourseDetails(slug) {
@@ -350,12 +374,15 @@ async function openCourseDetails(slug) {
     const cacheKey = 'course_' + slug;
     if (DETAILS_CACHE[cacheKey]) {
       renderCourseDetails(DETAILS_CACHE[cacheKey]);
+      if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
       return;
     }
     const details = await run('getCourseDetails', { slug });
     DETAILS_CACHE[cacheKey] = details;
     renderCourseDetails(details);
+    if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
   } catch (e) {
+    if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
     showErr('Unable to load course details: ' + errText(e));
   }
 }
@@ -368,12 +395,15 @@ async function openDigitalDetails(slug) {
     const cacheKey = 'digital_' + slug;
     if (DETAILS_CACHE[cacheKey]) {
       renderDigitalDetails(DETAILS_CACHE[cacheKey]);
+      if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
       return;
     }
     const details = await run('getDigitalProductDetails', { slug });
     DETAILS_CACHE[cacheKey] = details;
     renderDigitalDetails(details);
+    if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
   } catch (e) {
+    if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
     showErr('Unable to load product details: ' + errText(e));
   }
 }
@@ -386,19 +416,22 @@ async function openWebinarDetails(slug) {
     const cacheKey = 'webinar_' + slug;
     if (DETAILS_CACHE[cacheKey]) {
       renderWebinarDetails(DETAILS_CACHE[cacheKey]);
+      if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
       return;
     }
     const details = await run('getWebinarDetails', { slug });
     DETAILS_CACHE[cacheKey] = details;
     renderWebinarDetails(details);
+    if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
   } catch (e) {
+    if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
     showErr('Unable to load webinar details: ' + errText(e));
   }
 }
 
 async function openMembershipDetails(planId) {
-  const plan = Array.isArray(S.membershipPlans)
-    ? S.membershipPlans.find((p) => String(p.id || '') === String(planId || ''))
+  const plan = Array.isArray(S.plans)
+    ? S.plans.find((p) => String(p.id || '') === String(planId || ''))
     : null;
   if (!plan) {
     showErr('Membership details not found.');
@@ -408,4 +441,5 @@ async function openMembershipDetails(planId) {
   setModalLoading();
   openModal();
   renderMembershipDetails(plan);
+  if (typeof stopLoadingExperience === 'function') stopLoadingExperience();
 }

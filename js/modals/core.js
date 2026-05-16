@@ -10,10 +10,8 @@ function openModal() {
     D.menu.setAttribute('aria-expanded', 'false');
     D.navBackdrop.classList.remove('show');
   }
-  // Show loading overlay
-  if (D.loadingOverlay) {
-    D.loadingOverlay.classList.add('show');
-    D.loadingOverlay.setAttribute('aria-hidden', 'false');
+  if (typeof startLoadingExperience === 'function') {
+    startLoadingExperience('Opening your financial guide', 'A calm, focused moment while we prepare the next view.');
   }
   prev = document.activeElement;
   D.ov.classList.add('on');
@@ -22,13 +20,6 @@ function openModal() {
   setF();
   D.modal.focus();
   document.addEventListener('keydown', onModalKey);
-  // Simulate content load - hide loading overlay after 0.8s
-  setTimeout(() => {
-    if (D.loadingOverlay) {
-      D.loadingOverlay.classList.remove('show');
-      D.loadingOverlay.setAttribute('aria-hidden', 'true');
-    }
-  }, 800);
 }
 
 function openPaymentModal(title, url) {
@@ -39,13 +30,8 @@ function openPaymentModal(title, url) {
     D.menu.setAttribute('aria-expanded', 'false');
     D.navBackdrop.classList.remove('show');
   }
-  // Show loading overlay
-  if (D.loadingOverlay) {
-    if (D.loadingText) {
-      D.loadingText.textContent = 'Opening Secure Checkout';
-    }
-    D.loadingOverlay.classList.add('show');
-    D.loadingOverlay.setAttribute('aria-hidden', 'false');
+  if (typeof startLoadingExperience === 'function') {
+    startLoadingExperience('Opening secure checkout', 'We are preparing a safe and seamless payment experience.');
   }
   const overlay = qs('.payment-overlay');
   const heading = overlay.querySelector('.payment-header h3');
@@ -69,16 +55,14 @@ function openPaymentModal(title, url) {
   document.body.classList.add('no');
   // Hide loading overlay after iframe loads
   iframe.onload = () => {
-    if (D.loadingOverlay) {
-      D.loadingOverlay.classList.remove('show');
-      D.loadingOverlay.setAttribute('aria-hidden', 'true');
+    if (typeof stopLoadingExperience === 'function') {
+      stopLoadingExperience();
     }
   };
   // Safety fallback in case iframe load event never arrives.
   setTimeout(() => {
-    if (D.loadingOverlay) {
-      D.loadingOverlay.classList.remove('show');
-      D.loadingOverlay.setAttribute('aria-hidden', 'true');
+    if (typeof stopLoadingExperience === 'function') {
+      stopLoadingExperience();
     }
   }, 12000);
 }
@@ -87,9 +71,8 @@ function closePaymentModal() {
   const overlay = qs('.payment-overlay');
   overlay.classList.remove('on');
   document.body.classList.remove('no');
-  if (D.loadingOverlay) {
-    D.loadingOverlay.classList.remove('show');
-    D.loadingOverlay.setAttribute('aria-hidden', 'true');
+  if (typeof stopLoadingExperience === 'function') {
+    stopLoadingExperience();
   }
 }
 
@@ -103,9 +86,8 @@ function closeModal() {
     clearInterval(countdownTimer);
     countdownTimer = null;
   }
-  if (D.loadingOverlay) {
-    D.loadingOverlay.classList.remove('show');
-    D.loadingOverlay.setAttribute('aria-hidden', 'true');
+  if (typeof stopLoadingExperience === 'function') {
+    stopLoadingExperience();
   }
   if (prev && prev.focus) prev.focus();
 }

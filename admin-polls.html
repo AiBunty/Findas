@@ -1,2872 +1,425 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Findas Polls - Admin</title>
-    <link rel="icon" href="https://storage.files-vault.com/images/20260219120306_original__media_177.webp" type="image/webp">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700&display=swap" rel="stylesheet">
-    <style>
-        /* ========================================
-           GLOBAL STYLES & RESET
-        ======================================== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --background: 210 20% 98%;
-            --foreground: 222 15% 15%;
-            --primary: 221 83% 53%;
-            --secondary: 160 60% 40%;
-            --accent: 28 90% 55%;
-
-            --primary-rgb: 79, 70, 229;
-            --secondary-rgb: 16, 185, 129;
-            --accent-rgb: 255, 149, 0;
-
-            /* Legacy support */
-            --bg-primary: hsl(var(--background));
-            --bg-secondary: hsl(210 20% 96%);
-            --bg-card: hsla(var(--background) / 0.65);
-            --bg-hover: hsl(210 20% 95%);
-            --accent-blue: hsl(var(--primary));
-            --accent-blue-dark: hsl(221 83% 45%);
-            --accent-green: hsl(var(--secondary));
-            --accent-red: #ef4444;
-            --accent-orange: hsl(var(--accent));
-            --text-primary: hsl(var(--foreground));
-            --text-secondary: hsl(222 15% 45%);
-            --border-color: hsla(var(--foreground) / 0.08);
-            --shadow: 0 10px 30px rgba(0,0,0,0.08);
-            --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
-
-            --text-hero: clamp(2.25rem, 2rem + 2.8vw, 4rem);
-            --text-h2: clamp(1.5rem, 1.2rem + 1.6vw, 2.25rem);
-            --text-h3: clamp(1.25rem, 1.1rem + 1vw, 1.75rem);
-            --text-base: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
-        }
-
-        .dark {
-            --background: 222 15% 10%;
-            --foreground: 210 40% 98%;
-            --primary: 221 83% 66%;
-            --secondary: 160 60% 45%;
-            --accent: 28 90% 60%;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            font-size: var(--text-base);
-            background: transparent;
-            color: hsl(var(--foreground));
-            min-height: 100vh;
-            line-height: 1.65;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Ensure main content area can grow */
-        header,
-        .container,
-        #adminPanel,
-        #toastContainer,
-        .page-atmosphere,
-        .grain-overlay {
-            flex-shrink: 0;
-        }
-
-        /* Atmospheric background with gradient mesh */
-        .page-atmosphere {
-            position: fixed;
-            inset: 0;
-            z-index: -2;
-            pointer-events: none;
-            background:
-                radial-gradient(60rem 40rem at 20% 10%, rgba(var(--primary-rgb),0.14), transparent 60%),
-                radial-gradient(40rem 28rem at 80% 80%, rgba(var(--secondary-rgb),0.12), transparent 60%),
-                radial-gradient(36rem 24rem at 10% 80%, rgba(var(--accent-rgb),0.10), transparent 60%),
-                hsl(var(--background));
-        }
-
-        /* Grain texture overlay */
-        .grain-overlay {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: -1;
-            opacity: 0.035;
-            mix-blend-mode: soft-light;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0.4'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-            background-size: 300px 300px;
-        }
-
-        /* ========================================
-           HEADER
-        ======================================== */
-        header {
-            background: hsla(var(--background) / 0.75);
-            border-bottom: 1px solid hsla(var(--foreground) / 0.08);
-            padding: 1.25rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo {
-            height: 45px;
-            width: auto;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-        }
-
-        .header-title {
-            font-family: 'Manrope', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: hsl(var(--primary));
-            letter-spacing: -0.02em;
-        }
-
-        .logout-btn {
-            background: var(--accent-red);
-            color: white;
-            border: none;
-            padding: 0.5rem 1.5rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .logout-btn:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
-        }
-
-        /* ========================================
-           LOGIN OVERLAY
-        ======================================== */
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: hsla(var(--background) / 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-
-        .login-overlay.hidden {
-            display: none;
-        }
-
-        .login-box {
-            background: hsla(var(--background) / 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid hsla(var(--foreground) / 0.08);
-            text-align: center;
-            max-width: 420px;
-            width: 90%;
-            animation: fadeInScale 0.4s ease;
-            position: relative;
-        }
-
-        .login-box::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            border-radius: inherit;
-            box-shadow: inset 0 1px 0 hsla(var(--foreground) / 0.08);
-        }
-
-        @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .login-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            margin: 0 auto 1.5rem;
-            border: 5px solid hsl(var(--primary));
-            box-shadow: 0 8px 20px hsla(var(--primary-rgb), 0.25);
-            object-fit: cover;
-            animation: fadeInScale 0.5s ease 0.1s both;
-        }
-
-        .login-box h2 {
-            font-family: 'Manrope', sans-serif;
-            margin-bottom: 0.5rem;
-            color: hsl(var(--foreground));
-            font-size: var(--text-h3);
-            letter-spacing: -0.02em;
-        }
-
-        .login-box p {
-            color: hsla(var(--foreground) / 0.7);
-            margin-bottom: 2rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-            text-align: left;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: hsla(var(--foreground) / 0.7);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 0.75rem;
-            background: hsla(var(--background) / 0.5);
-            border: 1px solid hsla(var(--foreground) / 0.15);
-            border-radius: 8px;
-            color: hsl(var(--foreground));
-            font-size: 1rem;
-            transition: all 180ms ease;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: hsl(var(--primary));
-            box-shadow: 0 0 0 3px hsla(var(--primary-rgb) / 0.15);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .login-btn:hover {
-            background: var(--accent-blue-dark);
-            transform: translateY(-2px);
-        }
-
-        .login-error {
-            color: var(--accent-red);
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
-
-        /* ========================================
-           MAIN CONTENT
-        ======================================== */
-        .container {
-            max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-        }
-
-        .admin-layout {
-            display: grid;
-            grid-template-columns: 400px 1fr;
-            gap: 2rem;
-        }
-
-        @media (max-width: 1024px) {
-            .admin-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ========================================
-           CARDS
-        ======================================== */
-        /* Glass card effect */
-        .card {
-            background: hsla(var(--background) / 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: 1px solid hsla(var(--foreground) / 0.08);
-            transition: box-shadow 0.3s ease;
-            position: relative;
-        }
-
-        .card::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            border-radius: inherit;
-            box-shadow: inset 0 1px 0 hsla(var(--foreground) / 0.08);
-        }
-
-        .card:hover {
-            box-shadow: var(--shadow-lg);
-        }
-
-        .card h2 {
-            font-family: 'Manrope', sans-serif;
-            margin-bottom: 1.5rem;
-            color: hsl(var(--primary));
-            font-size: var(--text-h3);
-            letter-spacing: -0.02em;
-            line-height: 1.1;
-        }
-
-        /* ========================================
-           KPI SECTION
-        ======================================== */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .kpi-item {
-            background: hsla(var(--background) / 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            padding: 1rem;
-            border-radius: 10px;
-            text-align: center;
-            border: 1px solid hsla(var(--foreground) / 0.08);
-            transition: all 200ms ease;
-        }
-
-        .kpi-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-        }
-
-        .kpi-value {
-            font-family: 'Manrope', sans-serif;
-            font-size: 2rem;
-            font-weight: 700;
-            color: hsl(var(--primary));
-        }
-
-        .kpi-label {
-            color: hsla(var(--foreground) / 0.6);
-            font-size: 0.85rem;
-            margin-top: 0.25rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        /* ========================================
-           FORM ELEMENTS
-        ======================================== */
-        .form-group textarea {
-            width: 100%;
-            padding: 0.75rem;
-            background: hsla(var(--background) / 0.5);
-            border: 1px solid hsla(var(--foreground) / 0.15);
-            border-radius: 8px;
-            color: hsl(var(--foreground));
-            font-size: 1rem;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 80px;
-            transition: all 180ms ease;
-        }
-
-        .form-group select {
-            width: 100%;
-            padding: 0.75rem;
-            background: hsla(var(--background) / 0.5);
-            border: 1px solid hsla(var(--foreground) / 0.15);
-            border-radius: 8px;
-            color: hsl(var(--foreground));
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 180ms ease;
-        }
-
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: hsl(var(--primary));
-            box-shadow: 0 0 0 3px hsla(var(--primary-rgb) / 0.15);
-        }
-
-        /* Toggle Switch */
-        .toggle-group {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem;
-            background: hsla(var(--background) / 0.5);
-            border: 1px solid hsla(var(--foreground) / 0.08);
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            transition: all 180ms ease;
-        }
-
-        .toggle-group:hover {
-            background: hsla(var(--background) / 0.7);
-        }
-
-        .toggle-label {
-            color: hsl(var(--foreground));
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 50px;
-            height: 26px;
-            background: hsla(var(--foreground) / 0.15);
-            border-radius: 13px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .toggle-switch.active {
-            background: hsl(var(--secondary));
-            box-shadow: 0 0 0 3px hsla(var(--secondary-rgb) / 0.15);
-        }
-
-        .toggle-slider {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.3s;
-        }
-
-        .toggle-switch.active .toggle-slider {
-            transform: translateX(24px);
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.95rem;
-        }
-
-        .btn-primary {
-            background: hsl(var(--primary));
-            color: white;
-            box-shadow: 0 0 0 rgba(var(--primary-rgb),0);
-        }
-
-        .btn-primary:hover {
-            background: hsl(221 83% 45%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(var(--primary-rgb),0.28);
-        }
-
-        .btn-success {
-            background: hsl(var(--secondary));
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: hsl(160 60% 35%);
-            box-shadow: 0 8px 20px rgba(var(--secondary-rgb),0.25);
-        }
-
-        .btn-danger {
-            background: var(--accent-red);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-
-        .btn-warning {
-            background: hsl(var(--accent));
-            color: white;
-        }
-
-        .btn-warning:hover {
-            background: hsl(28 90% 50%);
-            box-shadow: 0 8px 20px rgba(var(--accent-rgb),0.25);
-        }
-
-        .btn-secondary {
-            background: hsla(var(--background) / 0.5);
-            color: hsl(var(--foreground));
-            border: 1px solid hsla(var(--foreground) / 0.15);
-        }
-
-        .btn-secondary:hover {
-            background: hsla(var(--foreground) / 0.05);
-            border-color: hsla(var(--foreground) / 0.2);
-        }
-
-        .btn-small {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.85rem;
-        }
-
-        .btn-block {
-            width: 100%;
-        }
-
-        /* ========================================
-           POLL LIST
-        ======================================== */
-        .filter-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .poll-card {
-            background: hsla(var(--background) / 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid hsla(var(--foreground) / 0.08);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .poll-card::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            border-radius: inherit;
-            box-shadow: inset 0 1px 0 hsla(var(--foreground) / 0.08);
-        }
-
-        .poll-card:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-2px);
-        }
-
-        .poll-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 1rem;
-        }
-
-        .poll-question {
-            font-family: 'Manrope', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: hsl(var(--foreground));
-            flex: 1;
-            letter-spacing: -0.01em;
-        }
-
-        .status-pill {
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-left: 1rem;
-        }
-
-        .status-active {
-            background: hsla(var(--secondary-rgb), 0.15);
-            color: hsl(var(--secondary));
-        }
-
-        .status-closed {
-            background: hsla(var(--accent-rgb), 0.15);
-            color: hsl(var(--accent));
-        }
-
-        .status-archived {
-            background: hsla(var(--foreground) / 0.1);
-            color: hsla(var(--foreground) / 0.6);
-        }
-
-        .poll-meta {
-            color: hsla(var(--foreground) / 0.6);
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-        }
-
-        .poll-meta span {
-            margin-right: 1rem;
-        }
-
-        .poll-results {
-            margin: 1rem 0;
-        }
-
-        .result-item {
-            margin-bottom: 0.75rem;
-        }
-
-        .result-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.25rem;
-            font-size: 0.9rem;
-        }
-
-        .result-bar-container {
-            width: 100%;
-            height: 10px;
-            background: hsla(var(--foreground) / 0.08);
-            border-radius: 9999px;
-            overflow: hidden;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .result-bar {
-            height: 100%;
-            background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--secondary)));
-            border-radius: 9999px;
-            transition: width 900ms cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .result-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .poll-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-top: 1rem;
-        }
-
-        /* Voters Section */
-        .voters-section {
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .voters-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .voters-header h4 {
-            font-family: 'Manrope', sans-serif;
-            color: hsl(var(--primary));
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .voter-search {
-            width: 200px;
-            padding: 0.4rem 0.8rem;
-            background: hsla(var(--background) / 0.5);
-            border: 1px solid hsla(var(--foreground) / 0.15);
-            border-radius: 8px;
-            color: hsl(var(--foreground));
-            font-size: 0.85rem;
-            transition: all 180ms ease;
-        }
-
-        .voter-search:focus {
-            outline: none;
-            border-color: hsl(var(--primary));
-            box-shadow: 0 0 0 3px hsla(var(--primary-rgb) / 0.15);
-        }
-
-        .voters-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        .voters-table th {
-            text-align: left;
-            padding: 0.5rem;
-            color: hsla(var(--foreground) / 0.6);
-            font-weight: 600;
-            border-bottom: 1px solid hsla(var(--foreground) / 0.08);
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-        }
-
-        .voters-table td {
-            padding: 0.5rem;
-            border-bottom: 1px solid hsla(var(--foreground) / 0.05);
-        }
-
-        .voters-table tr:hover {
-            background: hsla(var(--foreground) / 0.03);
-        }
-
-        .no-voters {
-            color: hsla(var(--foreground) / 0.5);
-            font-style: italic;
-            text-align: center;
-            padding: 1rem;
-        }
-
-        /* ========================================
-           PUBLIC VOTING PAGE
-        ======================================== */
-        .voting-container {
-            max-width: 600px;
-            margin: 3rem auto;
-            padding: 0 1rem;
-        }
-
-        .voting-card {
-            background: hsla(var(--background) / 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 20px;
-            padding: 2.5rem;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid hsla(var(--foreground) / 0.08);
-            animation: fadeInScale 0.4s ease;
-            position: relative;
-        }
-
-        .voting-card::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            border-radius: inherit;
-            box-shadow: inset 0 1px 0 hsla(var(--foreground) / 0.08);
-        }
-
-        .voting-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .voting-header .logo {
-            height: 55px;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-        }
-
-        .voting-header-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 3px solid var(--accent-blue);
-            object-fit: cover;
-            margin-left: auto;
-            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
-        }
-
-        .voting-header h1 {
-            color: var(--accent-blue);
-            font-size: 1.5rem;
-        }
-
-        .voting-question {
-            font-family: 'Manrope', sans-serif;
-            font-size: var(--text-h2);
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: hsl(var(--foreground));
-            line-height: 1.1;
-            letter-spacing: -0.02em;
-        }
-
-        .voting-info {
-            color: hsla(var(--foreground) / 0.7);
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
-        }
-
-        .voting-options {
-            margin: 2rem 0;
-        }
-
-        /* Ripple effect on voting options */
-        .voting-option {
-            background: hsla(var(--background) / 0.5);
-            border: 2px solid hsla(var(--foreground) / 0.10);
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 0.75rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .voting-option::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(var(--primary-rgb),0.25) 0%, rgba(var(--primary-rgb),0.12) 40%, transparent 70%);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-            pointer-events: none;
-        }
-
-        .voting-option.clicked::before {
-            width: 500px;
-            height: 500px;
-            animation: rippleOut 600ms ease-out;
-        }
-
-        @keyframes rippleOut {
-            to { width: 500px; height: 500px; opacity: 0; }
-        }
-
-        .voting-option:hover:not(.disabled) {
-            border-color: hsl(var(--primary));
-            background: hsla(var(--foreground) / 0.04);
-            transform: translateX(8px);
-            box-shadow: 0 4px 12px hsla(var(--primary-rgb), 0.15);
-        }
-
-        .voting-option.selected {
-            border-color: hsl(var(--primary));
-            background: linear-gradient(135deg, hsla(var(--primary-rgb), 0.08), hsla(var(--primary-rgb), 0.12));
-            box-shadow: 0 4px 12px hsla(var(--primary-rgb), 0.2);
-            transform: scale(1.02);
-        }
-
-        .voting-option.disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .option-label {
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .submit-vote-btn {
-            width: 100%;
-            padding: 1rem;
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 1rem;
-        }
-
-        .submit-vote-btn:hover:not(:disabled) {
-            background: var(--accent-blue-dark);
-            transform: translateY(-2px);
-        }
-
-        .submit-vote-btn:disabled {
-            background: var(--bg-hover);
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        .recent-voters {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .recent-voters h3 {
-            font-family: 'Manrope', sans-serif;
-            color: hsl(var(--primary));
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-        }
-
-        .voter-item {
-            background: hsla(var(--background) / 0.5);
-            border: 1px solid hsla(var(--foreground) / 0.08);
-            padding: 0.75rem;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 200ms ease;
-        }
-
-        .voter-item:hover {
-            background: hsla(var(--foreground) / 0.04);
-        }
-
-        .voter-name {
-            font-weight: 600;
-        }
-
-        .voter-choice {
-            color: hsla(var(--foreground) / 0.6);
-            font-size: 0.9rem;
-        }
-
-        /* ========================================
-           FOOTER
-        ======================================== */
-        footer {
-            background: hsla(var(--background) / 0.75);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid hsla(var(--foreground) / 0.08);
-            padding: 1rem;
-            margin-top: auto;
-            text-align: center;
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        footer::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, hsla(var(--primary-rgb), 0.3), transparent);
-        }
-
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            font-size: 0.8rem;
-            color: hsla(var(--foreground) / 0.6);
-        }
-
-        .footer-logo {
-            width: 80px;
-            height: auto;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 0.5rem;
-            opacity: 0.7;
-        }
-
-        .footer-text {
-            display: inline;
-        }
-
-        .footer-text a {
-            color: hsl(var(--primary));
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .footer-text a:hover {
-            color: hsl(var(--secondary));
-        }
-
-        /* ========================================
-           MODAL
-        ======================================== */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: hsla(var(--background) / 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-
-        .modal-overlay.hidden {
-            display: none;
-        }
-
-        .modal {
-            background: hsla(var(--background) / 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 16px;
-            padding: 2rem;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid hsla(var(--foreground) / 0.08);
-            animation: fadeInScale 0.3s ease;
-            position: relative;
-        }
-
-        .modal::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            border-radius: inherit;
-            box-shadow: inset 0 1px 0 hsla(var(--foreground) / 0.08);
-        }
-
-        .modal h3 {
-            font-family: 'Manrope', sans-serif;
-            color: hsl(var(--primary));
-            margin-bottom: 1rem;
-            font-size: var(--text-h3);
-            letter-spacing: -0.02em;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        /* ========================================
-           TOAST NOTIFICATIONS
-        ======================================== */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 99999;
-        }
-
-        .toast {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-left: 4px solid var(--accent-blue);
-            border-radius: 8px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 0.5rem;
-            box-shadow: var(--shadow);
-            min-width: 300px;
-            animation: slideIn 0.3s ease;
-        }
-
-        .toast.success {
-            border-left-color: var(--accent-green);
-        }
-
-        .toast.error {
-            border-left-color: var(--accent-red);
-        }
-
-        .toast.warning {
-            border-left-color: var(--accent-orange);
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        /* ========================================
-           SUCCESS MESSAGE
-        ======================================== */
-        .success-message {
-            background: hsla(var(--secondary-rgb), 0.1);
-            border: 1px solid hsl(var(--secondary));
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-top: 1rem;
-            animation: fadeInScale 0.3s ease;
-        }
-
-        .success-message h3 {
-            font-family: 'Manrope', sans-serif;
-            color: hsl(var(--secondary));
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.01em;
-        }
-
-        .voting-link {
-            background: hsla(var(--background) / 0.5);
-            padding: 0.75rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-            word-break: break-all;
-            font-family: 'Monaco', 'Courier New', monospace;
-            color: hsl(var(--primary));
-            border: 1px solid hsla(var(--foreground) / 0.15);
-        }
-
-        /* Thank You Message */
-        .thank-you-message {
-            background: linear-gradient(135deg, hsla(var(--secondary-rgb), 0.1), hsla(var(--secondary-rgb), 0.05));
-            border: 2px solid hsl(var(--secondary));
-            border-radius: 16px;
-            padding: 2rem;
-            text-align: center;
-            margin: 2rem 0;
-            animation: fadeInScale 0.5s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .thank-you-message::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            border-radius: inherit;
-            box-shadow: inset 0 1px 0 hsla(var(--secondary-rgb) / 0.2);
-        }
-
-        .thank-you-message h3 {
-            font-family: 'Manrope', sans-serif;
-            color: hsl(var(--secondary));
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            letter-spacing: -0.02em;
-        }
-
-        .thank-you-icon {
-            font-size: 2rem;
-            animation: celebrate 0.6s ease;
-        }
-
-        @keyframes celebrate {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            25% { transform: scale(1.2) rotate(-10deg); }
-            75% { transform: scale(1.2) rotate(10deg); }
-        }
-
-        .thank-you-message p {
-            color: hsla(var(--foreground) / 0.7);
-            margin-top: 0.5rem;
-        }
-
-        .success-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        /* ========================================
-           IMPORT/EXPORT SECTION
-        ======================================== */
-        .import-export {
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .import-export h3 {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .import-export-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-        }
-
-        .file-input-wrapper input[type=file] {
-            position: absolute;
-            left: -9999px;
-        }
-
-        /* ========================================
-           UTILITIES
-        ======================================== */
-        .hidden {
-            display: none !important;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .mt-1 { margin-top: 0.5rem; }
-        .mt-2 { margin-top: 1rem; }
-        .mb-1 { margin-bottom: 0.5rem; }
-        .mb-2 { margin-bottom: 1rem; }
-
-        /* ========================================
-           RESPONSIVE
-        ======================================== */
-        @media (max-width: 768px) {
-            header {
-                padding: 1rem;
-            }
-
-            .header-title {
-                font-size: 1.2rem;
-            }
-
-            .container {
-                padding: 0 1rem;
-            }
-
-            .kpi-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .poll-actions {
-                flex-direction: column;
-            }
-
-            .poll-actions .btn {
-                width: 100%;
-            }
-
-            .voter-search {
-                width: 100%;
-            }
-
-            .voters-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Findas – Poll</title>
+  <link rel="icon" id="faviconLink" href="https://storage.files-vault.com/images/20260219120306_original__media_177.webp" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f6f8fe;
+      --card: rgba(255,255,255,0.98);
+      --line: rgba(7,26,52,0.10);
+      --text: #071a34;
+      --muted: #4d5b78;
+      --brand: #4169E1;
+      --brand2: #2B66C2;
+      --ok: #10b981;
+      --bad: #ef4444;
+      --warn: #f59e0b;
+      --r: 14px;
+      --glow: 0 0 0 3px rgba(65,105,225,.22);
+      --shadow-sm: 0 2px 8px rgba(7,26,52,.07);
+      --shadow-md: 0 6px 24px rgba(7,26,52,.11);
+      --shadow-lg: 0 12px 40px rgba(7,26,52,.14);
+    }
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
+    body { font-family: 'Plus Jakarta Sans','Segoe UI',sans-serif; color: var(--text); background: var(--bg); min-height: 100vh; }
+    h1,h2,h3,h4 { font-family: 'Space Grotesk','Plus Jakarta Sans',sans-serif; letter-spacing: -0.02em; }
+    a { color: inherit; text-decoration: none; }
+    button,input,textarea { font: inherit; }
+    img { max-width: 100%; display: block; }
+
+    /* NAVBAR */
+    .top { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: linear-gradient(90deg,#1F4D87 0%,#2563eb 100%); border-bottom: 1px solid rgba(255,255,255,0.1); box-shadow: 0 2px 16px rgba(31,77,135,.25); }
+    .topin { max-width: 900px; margin: auto; padding: 10px 20px; display: flex; align-items: center; gap: 14px; min-height: 70px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-family: 'Space Grotesk',sans-serif; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em; color: #fff; }
+    .brand img { height: 46px; width: auto; }
+    body { padding-top: 70px; }
+    .page-wrap { max-width: 680px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+
+    /* STATES */
+    .state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3.5rem 1.5rem; text-align: center; gap: 1rem; }
+    .state-icon { font-size: 3rem; line-height: 1; }
+    .state-title { font-size: 1.45rem; font-weight: 700; color: var(--text); }
+    .state-text { color: var(--muted); font-size: 1rem; max-width: 340px; }
+    .state.error .state-title { color: var(--bad); }
+    .state.closed .state-title { color: var(--warn); }
+
+    /* POLL CARD */
+    .poll-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow-md); border: 1px solid var(--line); overflow: hidden; }
+    .poll-card-header { padding: 1.75rem 2rem 1.25rem; border-bottom: 1px solid var(--line); }
+    .poll-eyebrow { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.65rem; border-radius: 99px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
+    .status-badge.active { background: rgba(16,185,129,0.12); color: #059669; }
+    .status-badge.active::before { content:''; width:7px; height:7px; border-radius:50%; background:#10b981; }
+    .poll-question { font-size: 1.45rem; font-weight: 700; line-height: 1.3; color: var(--text); margin-bottom: 0.5rem; }
+    .poll-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; font-size: 0.85rem; color: var(--muted); }
+    .poll-card-body { padding: 1.5rem 2rem; }
+
+    .already-voted-banner { display: flex; align-items: center; gap: 0.75rem; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; padding: 0.85rem 1.1rem; margin-bottom: 1.5rem; font-size: 0.92rem; color: #059669; font-weight: 600; }
+    .options-list { display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.5rem; }
+    .vote-option { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 1.15rem; border: 2px solid var(--line); border-radius: 10px; cursor: pointer; transition: border-color .2s,background .2s,transform .15s,box-shadow .2s; background: #fff; user-select: none; position: relative; overflow: hidden; }
+    .vote-option:hover { border-color: var(--brand); background: rgba(65,105,225,0.04); box-shadow: var(--shadow-sm); transform: translateX(4px); }
+    .vote-option.selected { border-color: var(--brand); background: rgba(65,105,225,0.07); box-shadow: var(--glow); transform: scale(1.01); }
+    .vote-option .radio { width: 20px; height: 20px; flex-shrink: 0; border: 2px solid var(--line); border-radius: 50%; transition: border-color .2s,background .2s; display: flex; align-items: center; justify-content: center; }
+    .vote-option.selected .radio { border-color: var(--brand); background: var(--brand); }
+    .vote-option.selected .radio::after { content:''; width:7px; height:7px; border-radius:50%; background:#fff; }
+    .vote-option .option-text { font-size: 1rem; font-weight: 500; flex: 1; }
+
+    .result-option { margin-bottom: 0.75rem; }
+    .result-label-row { display: flex; justify-content: space-between; font-size: 0.92rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .result-pct { color: var(--brand); font-weight: 700; }
+    .result-bar-wrap { height: 10px; background: rgba(65,105,225,0.1); border-radius: 99px; overflow: hidden; }
+    .result-bar-fill { height: 100%; background: linear-gradient(90deg,var(--brand),#60a5fa); border-radius: 99px; transition: width 0.7s cubic-bezier(.4,0,.2,1); }
+    .result-bar-fill.winner { background: linear-gradient(90deg,#059669,#34d399); }
+
+    .submit-btn { width: 100%; padding: 0.9rem 1.5rem; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: background .2s,transform .15s,box-shadow .2s; box-shadow: 0 4px 14px rgba(65,105,225,.35); }
+    .submit-btn:hover:not(:disabled) { background: var(--brand2); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(65,105,225,.4); }
+    .submit-btn:disabled { background: #c7d2e8; cursor: not-allowed; box-shadow: none; }
+
+    .voters-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+    .voters-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.85rem; color: var(--brand); }
+    .voter-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 0.45rem; background: rgba(65,105,225,0.05); font-size: 0.88rem; }
+    .voter-name { font-weight: 600; }
+    .voter-choice { color: var(--muted); }
+
+    .thank-you { background: linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.04)); border: 1.5px solid rgba(16,185,129,0.25); border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; }
+    .thank-you-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .thank-you h3 { color: #059669; font-size: 1.25rem; margin-bottom: 0.4rem; }
+    .thank-you p { color: var(--muted); font-size: 0.92rem; }
+
+    .modal-backdrop { position: fixed; inset: 0; z-index: 999; background: rgba(7,26,52,0.55); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; }
+    .modal-backdrop.hidden { display: none; }
+    .modal-box { background: #fff; border-radius: var(--r); padding: 2rem; width: 90%; max-width: 440px; box-shadow: var(--shadow-lg); }
+    .modal-box h3 { font-size: 1.25rem; margin-bottom: 0.35rem; color: var(--text); }
+    .modal-box p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.25rem; }
+    .modal-input { width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--line); border-radius: 8px; font-size: 1rem; outline: none; transition: border-color .2s; }
+    .modal-input:focus { border-color: var(--brand); box-shadow: var(--glow); }
+    .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; }
+    .modal-actions .submit-btn { flex: 1; padding: 0.75rem; font-size: 0.97rem; }
+    .cancel-btn { padding: 0.75rem 1.25rem; background: transparent; border: 2px solid var(--line); border-radius: 8px; font-size: 0.97rem; font-weight: 600; cursor: pointer; color: var(--muted); transition: border-color .2s,color .2s; }
+    .cancel-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+    .toast-container { position: fixed; top: 82px; right: 20px; z-index: 9999; }
+    .toast { min-width: 280px; padding: 0.85rem 1.25rem; background: #fff; border-radius: 10px; border-left: 4px solid var(--brand); box-shadow: var(--shadow-md); margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 500; animation: toastSlide 0.3s ease; }
+    .toast.success { border-left-color: var(--ok); }
+    .toast.error   { border-left-color: var(--bad); }
+    .toast.warning { border-left-color: var(--warn); }
+    @keyframes toastSlide { from { transform: translateX(120%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    @keyframes shimmer { from { background-position: -400px 0; } to { background-position: 400px 0; } }
+    .skeleton { height: 1em; border-radius: 6px; background: linear-gradient(90deg,#e8edf5 25%,#f2f5fb 50%,#e8edf5 75%); background-size: 800px 100%; animation: shimmer 1.4s infinite; }
+    .hidden { display: none !important; }
+    @media (max-width: 540px) {
+      .poll-card-header,.poll-card-body { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .poll-question { font-size: 1.25rem; }
+    }
+  </style>
 </head>
 <body>
-    <!--
-    ====================================================================
-    FINDAS POLLS - ADMIN PANEL
-    ====================================================================
-    
-    HOW TO CHANGE CREDENTIALS:
-    1. Change the hardcoded username/password in the JavaScript at line ~1100
-    2. Or update the SHA-256 hash constant at line ~1050
-    
-    HOW TO RUN:
-    1. Open this file in any modern web browser (Chrome, Firefox, Safari, Edge)
-    2. Login with credentials: admin / 11223344
-    
-    HOW TO SHARE VOTING LINK:
-    1. Create a poll in the admin panel
-    2. Copy the voting link shown after creation
-    3. Share the link with voters (works with file:// or hosted URL)
-    
-    ====================================================================
-    -->
-
-    <!-- Atmosphere layers -->
-    <div class="page-atmosphere" aria-hidden="true"></div>
-    <div class="grain-overlay" aria-hidden="true"></div>
-
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Login Overlay -->
-    <div class="login-overlay hidden" id="loginOverlay">
-        <div class="login-box">
-            <img src="https://storage.files-vault.com/images/20260219120135_original__media_3.webp" 
-                 alt="Admin" 
-                 class="login-avatar">
-            <h2>Admin Login</h2>
-            <p>Please enter your credentials to continue</p>
-            <form id="loginForm" onsubmit="return false;">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="login-btn">Login</button>
-                <div class="login-error hidden" id="loginError">Invalid credentials</div>
-            </form>
-        </div>
+  <nav class="top">
+    <div class="topin">
+      <a href="/" class="brand" id="navBrand">
+        <img id="navLogo" src="" alt="Findas" hidden>
+        <span id="brandNameText">Findas</span>
+      </a>
     </div>
+  </nav>
 
-    <!-- Header -->
-    <header id="mainHeader" class="hidden">
-        <div class="header-left">
-            <img src="https://storage.files-vault.com/images/20260219120306_original__media_177.webp" 
-                 alt="Findas" 
-                 class="logo">
-            <h1 class="header-title" id="headerTitle">Polls Admin</h1>
-        </div>
-        <div class="header-right" style="display: flex; gap: 10px; align-items: center;">
-            <button class="logout-btn" id="logoutBtn">Logout</button>
-        </div>
-    </header>
+  <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Admin Panel -->
-    <div class="container hidden" id="adminPanel">
-        <div class="admin-layout">
-            <!-- Left Column: Create Poll -->
-            <div>
-                <div class="card">
-                    <h2>Create New Poll</h2>
-                    
-                    <!-- KPIs -->
-                    <div class="kpi-grid">
-                        <div class="kpi-item">
-                            <div class="kpi-value" id="kpiActive">0</div>
-                            <div class="kpi-label">Active</div>
-                        </div>
-                        <div class="kpi-item">
-                            <div class="kpi-value" id="kpiClosed">0</div>
-                            <div class="kpi-label">Closed</div>
-                        </div>
-                        <div class="kpi-item">
-                            <div class="kpi-value" id="kpiArchived">0</div>
-                            <div class="kpi-label">Archived</div>
-                        </div>
-                    </div>
-
-                    <form id="createPollForm">
-                        <div class="form-group">
-                            <label for="pollQuestion">Question</label>
-                            <textarea id="pollQuestion" placeholder="What is your question?" required></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="pollOptions">Options (one per line)</label>
-                            <textarea id="pollOptions" placeholder="Option 1&#10;Option 2&#10;Option 3" required rows="5"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="pollStatus">Status</label>
-                            <select id="pollStatus">
-                                <option value="ACTIVE">ACTIVE</option>
-                                <option value="CLOSED">CLOSED</option>
-                                <option value="ARCHIVED">ARCHIVED</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="pollEndsAt">End Date/Time (optional)</label>
-                            <input type="datetime-local" id="pollEndsAt">
-                        </div>
-
-                        <div class="toggle-group">
-                            <span class="toggle-label">Require Name before voting</span>
-                            <div class="toggle-switch" id="toggleRequireName">
-                                <div class="toggle-slider"></div>
-                            </div>
-                        </div>
-
-                        <div class="toggle-group">
-                            <span class="toggle-label">Show voter names publicly</span>
-                            <div class="toggle-switch" id="toggleShowVoters">
-                                <div class="toggle-slider"></div>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-block">Create Poll</button>
-                    </form>
-
-                    <div class="success-message hidden" id="createSuccess">
-                        <h3>✓ Poll Created Successfully!</h3>
-                        <p>Share this link with voters:</p>
-                        <div class="voting-link" id="createdVotingLink"></div>
-                        <div class="success-actions">
-                            <button class="btn btn-success btn-small" id="copyLinkBtn">Copy Link</button>
-                            <button class="btn btn-secondary btn-small" id="openVotingBtn">Open Voting Page</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Credentials Management -->
-                <div class="card" style="margin-top: 1rem;">
-                    <h3>Admin Settings</h3>
-                    <div class="form-group">
-                        <button class="btn btn-warning" onclick="showCredentialsModal()">Change Username & Password</button>
-                    </div>
-                </div>
-
-                <!-- Import/Export -->
-                <div class="card" style="margin-top: 1rem;">
-                    <div class="import-export">
-                        <h3>Data Management</h3>
-                        <div class="import-export-actions">
-                            <button class="btn btn-secondary btn-small" id="exportBtn">Export Polls</button>
-                            <div class="file-input-wrapper">
-                                <button class="btn btn-secondary btn-small">Import Polls</button>
-                                <input type="file" id="importFile" accept=".json">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Poll List -->
-            <div>
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="margin: 0;">Manage Polls</h2>
-                        <button class="action-btn" id="editWhatsAppBtn" style="background: #25D366; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 0.9rem;">
-                            Connect WA
-                        </button>
-                    </div>
-                    
-                    <div class="filter-section">
-                        <div class="form-group">
-                            <label for="filterStatus">Filter by Status</label>
-                            <select id="filterStatus">
-                                <option value="ALL">ALL</option>
-                                <option value="ACTIVE" selected>ACTIVE</option>
-                                <option value="CLOSED">CLOSED</option>
-                                <option value="ARCHIVED">ARCHIVED</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div id="pollsList"></div>
-                </div>
-            </div>
-        </div>
+  <main class="page-wrap">
+    <div id="loadingState">
+      <div class="poll-card" style="padding:2rem">
+        <div class="skeleton" style="width:55%;height:1.4rem;margin-bottom:1.25rem"></div>
+        <div class="skeleton" style="width:100%;height:1rem;margin-bottom:.6rem"></div>
+        <div class="skeleton" style="width:80%;height:1rem;margin-bottom:1.5rem"></div>
+        <div class="skeleton" style="width:100%;height:52px;border-radius:10px;margin-bottom:.65rem"></div>
+        <div class="skeleton" style="width:100%;height:52px;border-radius:10px;margin-bottom:.65rem"></div>
+        <div class="skeleton" style="width:100%;height:52px;border-radius:10px"></div>
+      </div>
     </div>
+    <div id="votingPanel" class="hidden"></div>
+    <div id="errorPanel" class="hidden"></div>
+  </main>
 
-    <!-- Public Voting Page -->
-    <div class="voting-container hidden" id="votingPanel">
-        <div class="voting-card">
-            <div class="voting-header">
-                <img src="https://storage.files-vault.com/images/20260219120306_original__media_177.webp" 
-                     alt="Findas" 
-                     class="logo">
-                <h1>Vote</h1>
-                <img src="https://storage.files-vault.com/images/20260219114820_original__media_171.webp" 
-                     alt="Host" 
-                     class="voting-header-avatar">
-            </div>
-
-            <div id="votingContent"></div>
-        </div>
+  <div class="modal-backdrop hidden" id="nameModal">
+    <div class="modal-box">
+      <h3>Enter Your Name</h3>
+      <p>This poll requires your name to participate.</p>
+      <input class="modal-input" type="text" id="voterNameInput" placeholder="Your name" autocomplete="off" minlength="2" maxlength="60">
+      <div class="modal-actions">
+        <button class="submit-btn" id="nameSubmitBtn">Submit Vote</button>
+        <button class="cancel-btn" id="nameCancelBtn">Cancel</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Name Input Modal -->
-    <div class="modal-overlay hidden" id="nameModal">
-        <div class="modal">
-            <h3>Enter Your Name</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-                This poll requires your name to vote.
-            </p>
-            <div class="form-group">
-                <label for="voterName">Your Name</label>
-                <input type="text" id="voterName" placeholder="Enter your name" minlength="2" required>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-primary" id="submitNameBtn" style="flex: 1;">Submit Vote</button>
-                <button class="btn btn-secondary" id="cancelNameBtn">Cancel</button>
-            </div>
-        </div>
-    </div>
+  <script>
+    /* ============================================================
+       FINDAS POLLS - PUBLIC VOTING PAGE
+       Poll management is handled exclusively via the Admin Panel.
+    ============================================================ */
 
-    <!-- Credentials Modal -->
-    <div class="modal-overlay hidden" id="credentialsModal">
-        <div class="modal">
-            <h3>Change Admin Credentials</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-                Update your admin username and password. Changes are saved to Google Sheets.
-            </p>
-            <div class="form-group">
-                <label for="newUsername">New Username</label>
-                <input type="text" id="newUsername" placeholder="Enter new username" minlength="3" required>
-            </div>
-            <div class="form-group">
-                <label for="newPassword">New Password</label>
-                <input type="password" id="newPassword" placeholder="Enter new password" minlength="4" required>
-            </div>
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" placeholder="Confirm new password" minlength="4" required>
-            </div>
-            <div id="credentialsError" style="color: var(--accent-red); margin-bottom: 1rem; display: none;"></div>
-            <div class="modal-actions">
-                <button class="btn btn-primary" id="saveCredentialsBtn" style="flex: 1;">Save Changes</button>
-                <button class="btn btn-secondary" id="cancelCredentialsBtn">Cancel</button>
-            </div>
-        </div>
-    </div>
+    const POLLS_API_KEY = window.FINDAS_POLLS_API_KEY || '851e995f-f691-4d8f-a630-5b3b83210eef';
 
-    <script>
-        // ========================================
-        // CONSTANTS & STATE
-        // ========================================
+    function resolveApiBase() {
+      const origin = window.location.origin;
+      const path = (window.location.pathname || '').toLowerCase();
+      return path.startsWith('/findas/') ? origin + '/findas/api' : origin + '/api';
+    }
+    const API_BASE = resolveApiBase();
 
-        const CREDENTIALS = {
-            USERNAME: 'admin',
-            PASSWORD: '11223344'
-        };
+    let allPolls = [];
+    let pendingVote = null;
+    let selectedOptionId = null;
 
-        function resolveApiBase() {
-            const origin = window.location.origin;
-            const path = (window.location.pathname || '').toLowerCase();
-            return path.startsWith('/findas/') ? `${origin}/findas/api` : `${origin}/api`;
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = String(str == null ? '' : str);
+      return d.innerHTML;
+    }
+
+    function toast(msg, type) {
+      type = type || 'info';
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'toast ' + type;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(function() {
+        t.style.transition = 'all .3s';
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(120%)';
+        setTimeout(function() { t.remove(); }, 350);
+      }, 3200);
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d)) return String(iso);
+      return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    async function loadBranding() {
+      try {
+        const res = await fetch(API_BASE + '/site-assets', { headers: { Accept: 'application/json' } });
+        const json = await res.json();
+        if (!json || !json.data) return;
+        var d = json.data;
+        var logoUrl = d.navbar_logo_url || d.footer_logo_url || '';
+        if (logoUrl) {
+          var img = document.getElementById('navLogo');
+          img.src = logoUrl; img.hidden = false;
         }
-
-        // Polls API (MySQL-backed)
-        const GOOGLE_SHEETS_CONFIG = {
-            DEPLOYMENT_URL: `${resolveApiBase()}/polls-api`,
-            API_KEY: window.FINDAS_POLLS_API_KEY || '851e995f-f691-4d8f-a630-5b3b83210eef',
-            ENABLED: true
-        };
-
-        // Pre-computed SHA-256 hash of "admin:11223344"
-        const VALID_HASH = '6c3e9c6e7f4d0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d';
-
-        // Default WhatsApp number
-        let adminWhatsAppNumber = '918766514883';
-
-        let currentRoute = '';
-        let isAuthenticated = false;
-        let polls = [];
-        let toggleStates = {
-            requireName: false,
-            showVoters: false
-        };
-        let pendingVote = null;
-
-        const STORAGE_KEYS = {
-            POLLS: 'findas_polls_v2',
-            AUTH: 'findas_admin_auth',
-            PASSWORD_HASH: 'findas_admin_hash',
-            WHATSAPP: 'findas_admin_whatsapp'
-        };
-
-        // ========================================
-        // UTILITY FUNCTIONS
-        // ========================================
-        function generateId() {
-            return 'poll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        if (d.brand_name) {
+          document.getElementById('brandNameText').textContent = d.brand_name;
+          document.title = d.brand_name + ' - Poll';
         }
-
-        function formatDate(isoString) {
-            if (!isoString) return '';
-            const date = new Date(isoString);
-            return date.toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+        if (d.favicon_url) {
+          document.getElementById('faviconLink').href = d.favicon_url;
         }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        // ========================================
-        // STORAGE FUNCTIONS
-        // ========================================
-        function loadPolls() {
-            try {
-                const data = localStorage.getItem(STORAGE_KEYS.POLLS);
-                polls = data ? JSON.parse(data) : [];
-            } catch (e) {
-                console.error('Error loading polls:', e);
-                polls = [];
-            }
-        }
-
-        async function loadPollsFromGoogleSheets() {
-            if (!GOOGLE_SHEETS_CONFIG.ENABLED) return false;
-            
-            try {
-                const url = `${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getAllPolls&apiKey=${encodeURIComponent(GOOGLE_SHEETS_CONFIG.API_KEY)}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data && data.success && Array.isArray(data.polls)) {
-                    polls = data.polls;
-                    localStorage.setItem(STORAGE_KEYS.POLLS, JSON.stringify(polls));
-                    console.log('✅ Polls loaded from Google Sheets');
-                    renderPollsList(); // Ensure UI updates
-                    return true;
-                }
-            } catch (e) {
-                console.warn('⚠️ Could not sync with Google Sheets, using local data:', e);
-            }
-            return false;
-        }
-
-        function savePolls() {
-            try {
-                localStorage.setItem(STORAGE_KEYS.POLLS, JSON.stringify(polls));
-                
-                // Also sync to Google Sheets if enabled
-                if (GOOGLE_SHEETS_CONFIG.ENABLED) {
-                    syncPollsToGoogleSheets();
-                }
-            } catch (e) {
-                console.error('Error saving polls:', e);
-                showToast('Error saving data', 'error');
-            }
-        }
-
-        async function syncPollsToGoogleSheets() {
-            if (!GOOGLE_SHEETS_CONFIG.ENABLED) return;
-            
-            try {
-                const payload = JSON.stringify({
-                    action: 'saveAllPolls',
-                    apiKey: GOOGLE_SHEETS_CONFIG.API_KEY,
-                    polls: polls
-                });
-
-                const response = await fetch(GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: payload
-                });
-                const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.error || 'Save failed');
-                }
-                
-                console.log('✅ Polls saved to MySQL API');
-                return true;
-            } catch (e) {
-                console.warn('⚠️ Could not sync polls to MySQL API:', e);
-            }
-            return false;
-        }
-
-        function getPoll(pollId) {
-            return polls.find(p => p.id === pollId);
-        }
-
-        // ========================================
-        // AUTHENTICATION
-        // ========================================
-        async function checkAuth() {
-            const authStatus = localStorage.getItem(STORAGE_KEYS.AUTH);
-            isAuthenticated = authStatus === '1';
-            
-            // Just update global state and header visibility here
-            // Don't force login overlay yet - let the router decide
-            if (isAuthenticated) {
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('mainHeader').classList.remove('hidden');
-            } else {
-                // Should not force removed hidden here, wait for route
-                document.getElementById('mainHeader').classList.add('hidden');
-            }
-
-            return isAuthenticated;
-        }
-
-        async function loadAdminCredentialsFromGoogleSheets() {
-            if (!GOOGLE_SHEETS_CONFIG.ENABLED) return false;
-            
-            // Optimisation: Check if we have cached credentials first to avoid blocking login
-            const cachedCreds = localStorage.getItem('findas_admin_creds_cache');
-            if (cachedCreds) {
-                try {
-                    const parsed = JSON.parse(cachedCreds);
-                    window.adminUsername = parsed.username;
-                    window.adminPasswordHash = parsed.passwordHash;
-                    // Keep fetching in background to update cache, but don't block return if we have cache
-                    // However, for security, we usually want fresh auth. 
-                    // Given the slowness, we'll return true immediately if cached, 
-                    // and let the network request update the global variables for next time.
-                    
-                    // Fire-and-forget update
-                    fetch(`${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getCredentials&apiKey=${encodeURIComponent(GOOGLE_SHEETS_CONFIG.API_KEY)}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success && data.credentials) {
-                                window.adminUsername = data.credentials.username;
-                                window.adminPasswordHash = data.credentials.passwordHash;
-                                localStorage.setItem('findas_admin_creds_cache', JSON.stringify(data.credentials));
-                            }
-                        })
-                        .catch(e => console.warn('Background creds update failed', e));
-
-                    console.log('✅ Credentials loaded from Cache (Background update started)');
-                    return true;
-                } catch(e) {
-                    localStorage.removeItem('findas_admin_creds_cache');
-                }
-            }
-
-            try {
-                const url = `${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getCredentials&apiKey=${encodeURIComponent(GOOGLE_SHEETS_CONFIG.API_KEY)}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.success && data.credentials) {
-                    window.adminUsername = data.credentials.username;
-                    window.adminPasswordHash = data.credentials.passwordHash;
-                    
-                    // Cache the credentials
-                    localStorage.setItem('findas_admin_creds_cache', JSON.stringify(data.credentials));
-                    
-                    console.log('✅ Credentials loaded from Google Sheets');
-                    return true;
-                }
-            } catch (e) {
-                console.warn('⚠️ Using default admin credentials:', e);
-                return false;
-            }
-        }
-
-        async function login(username, password) {
-            // Load credentials from Google Sheets when user logs in
-            if (GOOGLE_SHEETS_CONFIG.ENABLED) {
-                try {
-                    await loadAdminCredentialsFromGoogleSheets();
-                } catch (e) {
-                    console.log('Using local credentials');
-                }
-            }
-
-            // Check with default credentials first
-            if (username === CREDENTIALS.USERNAME && password === CREDENTIALS.PASSWORD) {
-                const hash = await sha256(`${username}:${password}`);
-                localStorage.setItem(STORAGE_KEYS.PASSWORD_HASH, hash);
-                localStorage.setItem(STORAGE_KEYS.AUTH, '1');
-                isAuthenticated = true;
-                
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('mainHeader').classList.remove('hidden');
-                document.getElementById('loginError').classList.add('hidden');
-                
-                navigateTo('#/admin');
-                return true;
-            }
-            
-            // If Google Sheets credentials differ, check them
-            if (GOOGLE_SHEETS_CONFIG.ENABLED && window.adminPasswordHash) {
-                const hash = await sha256(`${username}:${password}`);
-                if (username === CREDENTIALS.USERNAME && hash === window.adminPasswordHash) {
-                    localStorage.setItem(STORAGE_KEYS.PASSWORD_HASH, hash);
-                    localStorage.setItem(STORAGE_KEYS.AUTH, '1');
-                    isAuthenticated = true;
-                    
-                    document.getElementById('loginOverlay').classList.add('hidden');
-                    document.getElementById('mainHeader').classList.remove('hidden');
-                    document.getElementById('loginError').classList.add('hidden');
-                    
-                    navigateTo('#/admin');
-                    return true;
-                }
-            }
-            
-            return false;
-        }
-
-        function logout() {
-            localStorage.setItem(STORAGE_KEYS.AUTH, '0');
-            isAuthenticated = false;
-            document.getElementById('adminPanel').classList.add('hidden');
-            document.getElementById('votingPanel').classList.add('hidden');
-            document.getElementById('loginOverlay').classList.remove('hidden');
-            document.getElementById('mainHeader').classList.add('hidden');
-            showToast('Logged out successfully', 'success');
-            
-            // Redirect to Findas Academy after a brief delay
-            setTimeout(() => {
-                window.location.href = 'https://findasacademy.in';
-            }, 800);
-        }
-
-        // ========================================
-        // CREDENTIALS MANAGEMENT
-        // ========================================
-        function showCredentialsModal() {
-            document.getElementById('credentialsModal').classList.remove('hidden');
-            document.getElementById('newUsername').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmPassword').value = '';
-            document.getElementById('credentialsError').style.display = 'none';
-        }
-
-        function hideCredentialsModal() {
-            document.getElementById('credentialsModal').classList.add('hidden');
-        }
-
-        async function saveAdminCredentials() {
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const errorDiv = document.getElementById('credentialsError');
-
-            // Validation
-            if (!username || username.length < 3) {
-                errorDiv.textContent = 'Username must be at least 3 characters';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            if (!password || password.length < 4) {
-                errorDiv.textContent = 'Password must be at least 4 characters';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                errorDiv.textContent = 'Passwords do not match';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            if (!GOOGLE_SHEETS_CONFIG.ENABLED) {
-                showToast('Google Sheets sync is disabled', 'error');
-                return;
-            }
-
-            try {
-                // Hash the password
-                const passwordHash = await sha256(`${username}:${password}`);
-
-                // Send to Google Sheets using POST
-                const payload = JSON.stringify({
-                    action: 'updateAdminCredentials',
-                    apiKey: GOOGLE_SHEETS_CONFIG.API_KEY,
-                    username: username,
-                    passwordHash: passwordHash
-                });
-
-                const response = await fetch(GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL, {
-                    method: 'POST',
-                    body: payload,
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8'
-                    }
-                });
-
-                const responseText = await response.text();
-                
-                try {
-                    const result = JSON.parse(responseText);
-
-                    if (result.success) {
-                        // Update local credentials
-                        CREDENTIALS.USERNAME = username;
-                        window.adminPasswordHash = passwordHash;
-
-                        showToast('✅ Credentials updated successfully!', 'success');
-                        hideCredentialsModal();
-                    } else {
-                        showToast('Failed to update credentials', 'error');
-                    }
-                } catch (parseError) {
-                    console.log('Response:', responseText);
-                    // If we can't parse, assume success if no error
-                    if (!responseText.includes('error')) {
-                        CREDENTIALS.USERNAME = username;
-                        window.adminPasswordHash = passwordHash;
-                        showToast('✅ Credentials updated successfully!', 'success');
-                        hideCredentialsModal();
-                    } else {
-                        showToast('Error updating credentials', 'error');
-                    }
-                }
-            } catch (error) {
-                console.error('Error saving credentials:', error);
-                showToast('Error saving credentials: ' + error.message, 'error');
-            }
-        }
-
-        // ========================================
-        // ROUTING
-        // ========================================
-        function navigateTo(hash) {
-            window.location.hash = hash;
-        }
-
-        async function handleRoute() {
-            const hash = window.location.hash || '#/admin';
-            currentRoute = hash;
-
-            // Hide all panels
-            document.getElementById('adminPanel').classList.add('hidden');
-            document.getElementById('votingPanel').classList.add('hidden');
-            
-            // Stop auto-refresh when navigating away from Admin
-            stopAdminAutoRefresh();
-
-            // Stop auto-refresh when navigating away from voting page
-            if (!hash.startsWith('#/vote/')) {
-                stopVotingPageAutoRefresh();
-            }
-
-            if (hash.startsWith('#/vote/')) {
-                // Public voting page - Hide login, Show voting panel
-                document.getElementById('loginOverlay').classList.add('hidden'); // Ensure hidden
-                let pollId = hash.replace('#/vote/', '');
-                let embeddedPollData = null;
-                
-                // Check if poll data is embedded in URL (for cross-browser sharing)
-                if (pollId.includes('?data=')) {
-                    const parts = pollId.split('?data=');
-                    pollId = parts[0];
-                    try {
-                        const decoded = decodeURIComponent(atob(parts[1]));
-                        embeddedPollData = JSON.parse(decoded);
-                    } catch (e) {
-                        console.error('Failed to decode poll data:', e);
-                    }
-                }
-                
-                // Show loading state immediately
-                document.getElementById('votingPanel').classList.remove('hidden');
-                document.getElementById('votingContent').innerHTML = `
-                    <div style="text-align: center; padding: 3rem;">
-                        <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
-                        <p style="color: var(--text-secondary);">Loading poll...</p>
-                    </div>
-                `;
-                
-                // Try to fetch from Google Sheets if poll not found locally
-                let poll = getPoll(pollId);
-                if (!poll && !embeddedPollData && GOOGLE_SHEETS_CONFIG.ENABLED) {
-                    console.log('Poll not found locally, fetching from server...');
-                    await loadPollsFromGoogleSheets();
-                    poll = getPoll(pollId);
-                }
-                
-                showVotingPage(pollId, false, embeddedPollData);
-            } else {
-                // Admin is now fully managed from /admin panel.
-                const path = String(window.location.pathname || '');
-                const target = `${window.location.origin}${path.replace(/admin-polls\.html$/i, 'admin/index.html')}#polls`;
-                window.location.replace(target);
-            }
-        }
-
-
-        let adminRefreshInterval;
-
-        function startAdminAutoRefresh() {
-            if (adminRefreshInterval) clearInterval(adminRefreshInterval);
-            adminRefreshInterval = setInterval(async () => {
-                // Background refresh
-                if (GOOGLE_SHEETS_CONFIG.ENABLED) {
-                    try {
-                        // Use loadPollsFromGoogleSheets but handle update smartly
-                        const url = `${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getAllPolls&apiKey=${encodeURIComponent(GOOGLE_SHEETS_CONFIG.API_KEY)}`;
-                        const response = await fetch(url);
-                        const data = await response.json();
-                        
-                        if (data && data.success && Array.isArray(data.polls)) {
-                            const newPolls = data.polls;
-                            const currentPollsStr = JSON.stringify(polls);
-                            const newPollsStr = JSON.stringify(newPolls);
-                            
-                            // Only update if data changed
-                            if (currentPollsStr !== newPollsStr) {
-                                polls = newPolls;
-                                localStorage.setItem(STORAGE_KEYS.POLLS, JSON.stringify(polls));
-                                // Don't full re-render if user is interacting, maybe check focus?
-                                // For now, simple re-render
-                                renderPollsList();
-                                updateKPIs();
-                                // console.log('Polls auto-refreshed');
-                            }
-                        }
-                    } catch (e) {
-                       // console.warn('Auto-refresh failed', e);
-                    }
-                }
-            }, 2000); // 2 seconds
-        }
-
-        function stopAdminAutoRefresh() {
-            if (adminRefreshInterval) {
-                clearInterval(adminRefreshInterval);
-                adminRefreshInterval = null;
-            }
-        }
-
-        // ========================================
-        // ADMIN PANEL
-        // ========================================
-        function showAdminPanel() {
-            document.getElementById('adminPanel').classList.remove('hidden');
-            document.getElementById('votingPanel').classList.add('hidden');
-            document.getElementById('headerTitle').textContent = 'Polls Admin';
-            
-            // Load WhatsApp number from localStorage first
-            const savedWA = localStorage.getItem(STORAGE_KEYS.WHATSAPP); 
-            if (savedWA) adminWhatsAppNumber = savedWA;
-            
-            // Fetch latest WhatsApp number from Google Sheets (async)
-            syncWhatsAppNumberFromServer();
-
-            updateKPIs();
-            renderPollsList();
-            startAdminAutoRefresh();
-        }
-
-        function updateKPIs() {
-            const active = polls.filter(p => p.status === 'ACTIVE').length;
-            const closed = polls.filter(p => p.status === 'CLOSED').length;
-            const archived = polls.filter(p => p.status === 'ARCHIVED').length;
-
-            document.getElementById('kpiActive').textContent = active;
-            document.getElementById('kpiClosed').textContent = closed;
-            document.getElementById('kpiArchived').textContent = archived;
-        }
-
-        function createPoll(question, options, status, endsAt) {
-            const poll = {
-                id: generateId(),
-                question: question.trim(),
-                status: status,
-                created_at: new Date().toISOString(),
-                ends_at: endsAt || null,
-                require_name: toggleStates.requireName,
-                show_voters_publicly: toggleStates.showVoters,
-                options: options.map((opt, idx) => ({
-                    id: 'opt_' + idx,
-                    label: opt.trim(),
-                    votes: 0
-                })),
-                voters: []
-            };
-
-            polls.unshift(poll);
-            savePolls();
-            updateKPIs();
-            renderPollsList();
-            showCreateSuccess(poll);
-            showToast('Poll created successfully!', 'success');
-
-            return poll;
-        }
-
-        function showCreateSuccess(poll) {
-            const successDiv = document.getElementById('createSuccess');
-            const linkDiv = document.getElementById('createdVotingLink');
-            const votingUrl = `${window.location.origin}${window.location.pathname}#/vote/${poll.id}`;
-            
-            linkDiv.textContent = votingUrl;
-            successDiv.classList.remove('hidden');
-
-            // Store URL for copy/open buttons
-            successDiv.dataset.url = votingUrl;
-
-            // Hide after 10 seconds
-            setTimeout(() => {
-                successDiv.classList.add('hidden');
-            }, 10000);
-        }
-
-        function autoArchiveEndedPolls() {
-            let shouldSave = false;
-            const now = new Date();
-            
-            polls.forEach(poll => {
-                // Auto-archive active polls that have ended
-                if (poll.status === 'ACTIVE' && poll.ends_at && new Date(poll.ends_at) < now) {
-                    poll.status = 'ARCHIVED';
-                    shouldSave = true;
-                }
-                // Auto-archive closed polls that have ended
-                if (poll.status === 'CLOSED' && poll.ends_at && new Date(poll.ends_at) < now) {
-                    poll.status = 'ARCHIVED';
-                    shouldSave = true;
-                }
-            });
-            
-            if (shouldSave) {
-                savePolls();
-            }
-        }
-
-        function renderPollsList() {
-            // Auto-archive any polls that have ended
-            autoArchiveEndedPolls();
-            
-            const container = document.getElementById('pollsList');
-            const filter = document.getElementById('filterStatus').value;
-
-            let filteredPolls = polls;
-            if (filter !== 'ALL') {
-                filteredPolls = polls.filter(p => p.status === filter);
-            }
-
-            if (filteredPolls.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No polls found</p>';
-                return;
-            }
-
-            container.innerHTML = filteredPolls.map(poll => {
-                // Ensure status is valid
-                const safeStatus = (poll.status || 'CLOSED').toUpperCase();
-                const totalVotes = (poll.options || []).reduce((sum, opt) => sum + (opt.votes || 0), 0);
-                const isActive = safeStatus === 'ACTIVE';
-                const hasEnded = poll.ends_at && new Date(poll.ends_at) < new Date();
-
-                return `
-                    <div class="poll-card" id="poll-card-${poll.id}">
-                        <div class="poll-header">
-                            <div class="poll-question">${escapeHtml(poll.question || 'Untitled Poll')}</div>
-                            <span class="status-pill status-${safeStatus.toLowerCase()}">${safeStatus}</span>
-                        </div>
-                        
-                        <div class="poll-meta">
-                            <span>📅 Created: ${formatDate(poll.created_at)}</span>
-                            ${poll.ends_at ? `<span>⏰ Ends: ${formatDate(poll.ends_at)}</span>` : ''}
-                            <span>🗳️ Total Votes: ${totalVotes}</span>
-                        </div>
-
-                        <div class="poll-meta">
-                            <span>👤 ${poll.require_name ? '✓' : '✗'} Requires Name</span>
-                            <span>👁️ ${poll.show_voters_publicly ? '✓' : '✗'} Shows Voters Publicly</span>
-                        </div>
-
-                        <div class="poll-results">
-                            ${poll.options.map(opt => {
-                                const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
-                                return `
-                                    <div class="result-item">
-                                        <div class="result-label">
-                                            <span>${escapeHtml(opt.label)}</span>
-                                            <span>${opt.votes} (${percentage}%)</span>
-                                        </div>
-                                        <div class="result-bar-container">
-                                            <div class="result-bar" style="width: ${percentage}%"></div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-
-                        <div class="poll-actions">
-                            ${safeStatus !== 'ACTIVE' ? `<button class="btn btn-success btn-small" onclick="updatePollStatus('${poll.id}', 'ACTIVE')">Activate</button>` : ''}
-                            ${safeStatus !== 'CLOSED' ? `<button class="btn btn-warning btn-small" onclick="updatePollStatus('${poll.id}', 'CLOSED')">Close</button>` : ''}
-                            ${safeStatus !== 'ARCHIVED' ? `<button class="btn btn-secondary btn-small" onclick="updatePollStatus('${poll.id}', 'ARCHIVED')">Archive</button>` : ''}
-                            ${isActive && !hasEnded ? `<button class="btn btn-secondary btn-small" onclick="testVote('${poll.id}')">Test Poll</button>` : ''}
-                            <button class="btn btn-secondary btn-small" onclick="copyVotingLink('${poll.id}')">Copy Link</button>
-                            <button class="btn btn-success btn-small" style="background-color: #25D366;" onclick="shareToWhatsApp('${poll.id}')">WhatsApp Report</button>
-                            <button class="btn btn-danger btn-small" onclick="deletePoll('${poll.id}')">Delete</button>
-                        </div>
-
-                        ${renderVotersSection(poll)}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderVotersSection(poll) {
-            if (poll.voters.length === 0) {
-                return `
-                    <div class="voters-section">
-                        <div class="voters-header">
-                            <h4>Poll Responses (0)</h4>
-                        </div>
-                        <p class="no-voters">No responses yet</p>
-                    </div>
-                `;
-            }
-
-            return `
-                <div class="voters-section">
-                    <div class="voters-header">
-                        <h4>Poll Responses (${poll.voters.length})</h4>
-                        <input type="text" 
-                               class="voter-search" 
-                               placeholder="Search responses..." 
-                               onkeyup="filterVoters('${poll.id}', this.value)">
-                    </div>
-                    <table class="voters-table" id="voters-${poll.id}">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Selected</th>
-                                <th>Time</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${poll.voters.map((voter, idx) => `
-                                <tr class="voter-row">
-                                    <td>${escapeHtml(voter.name || 'Anonymous')}</td>
-                                    <td>${escapeHtml(voter.optionLabel)}</td>
-                                    <td>${formatDate(voter.timeISO)}</td>
-                                    <td>
-                                        <button class="btn btn-danger btn-small" style="padding: 2px 8px; font-size: 0.8rem;" onclick="deleteVote('${poll.id}', ${idx})">Remove</button>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                    <button class="btn btn-danger btn-small mt-1" onclick="clearVoters('${poll.id}')">Clear All Responses</button>
-                </div>
-            `;
-        }
-
-        function deleteVote(pollId, voterIndex) {
-            const poll = getPoll(pollId);
-            if (!poll) return;
-
-            const voter = poll.voters[voterIndex];
-            if (!confirm(`Remove response by ${voter.name || 'Anonymous'}?`)) return;
-
-            // Find option and decrement count
-            const option = poll.options.find(opt => opt.id === voter.optionId);
-            if (option && option.votes > 0) {
-                option.votes--;
-            }
-
-            // Remove voter
-            poll.voters.splice(voterIndex, 1);
-            
-            savePolls();
-            renderPollsList();
-            showToast('Response removed', 'success');
-        }
-
-        function filterVoters(pollId, searchTerm) {
-            const table = document.getElementById(`voters-${pollId}`);
-            const rows = table.getElementsByClassName('voter-row');
-            const term = searchTerm.toLowerCase();
-
-            Array.from(rows).forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
-            });
-        }
-
-        function clearVoters(pollId) {
-            const poll = getPoll(pollId);
-            if (!poll) return;
-
-            if (!confirm(`Clear all ${poll.voters.length} responses from this poll?`)) return;
-
-            // Reset votes and voters
-            poll.options.forEach(opt => opt.votes = 0);
-            poll.voters = [];
-            savePolls();
-            renderPollsList();
-            showToast('Responses cleared', 'success');
-        }
-
-        function updatePollStatus(pollId, newStatus) {
-            const poll = getPoll(pollId);
-            if (!poll) return;
-
-            poll.status = newStatus;
-            savePolls();
-            updateKPIs();
-            renderPollsList();
-            showToast(`Poll ${newStatus.toLowerCase()}`, 'success');
-        }
-
-        function deletePoll(pollId) {
-            const poll = getPoll(pollId);
-            if (!poll) return;
-
-            const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
-            const message = totalVotes > 0 
-                ? `Delete this poll? It has ${totalVotes} vote(s).`
-                : 'Delete this poll?';
-
-            if (!confirm(message)) return;
-
-            polls = polls.filter(p => p.id !== pollId);
-            savePolls();
-            updateKPIs();
-            renderPollsList();
-            showToast('Poll deleted', 'success');
-        }
-
-        function testVote(pollId) {
-            const poll = getPoll(pollId);
-            if (!poll) return;
-
-            // Random option
-            const randomOption = poll.options[Math.floor(Math.random() * poll.options.length)];
-            
-            // Manually record vote without triggering navigation
-            randomOption.votes++;
-            
-            poll.voters.push({
-                name: 'Test Response ' + Math.floor(Math.random() * 1000),
-                optionId: randomOption.id,
-                optionLabel: randomOption.label,
-                timeISO: new Date().toISOString()
-            });
-            
-            savePolls();
-            renderPollsList(); // Update UI in place
-            showToast(`Test response added for "${randomOption.label}"`, 'success');
-        }
-
-        function copyVotingLink(pollId) {
-            const url = `${window.location.origin}${window.location.pathname}#/vote/${pollId}`;
-            navigator.clipboard.writeText(url).then(() => {
-                showToast('Voting link copied!', 'success');
-            }).catch(() => {
-                showToast('Failed to copy link', 'error');
-            });
-        }
-
-        function shareToWhatsApp(pollId) {
-            const poll = getPoll(pollId);
-            if (!poll) return;
-
-            const totalVotes = poll.options.reduce((sum, opt) => sum + (opt.votes || 0), 0);
-            
-            let message = `*Poll Report: ${poll.question}*\n\n`;
-            message += `Total Responses: ${totalVotes}\n\n`;
-            message += `*Results:*\n`;
-            
-            poll.options.forEach(opt => {
-                const count = opt.votes || 0;
-                const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
-                message += `- ${opt.label}: ${count} (${percentage}%)\n`;
-            });
-            
-            const votingUrl = `${window.location.origin}${window.location.pathname}#/vote/${pollId}`;
-            message += `\nVote here: ${votingUrl}`;
-            
-            const phone = localStorage.getItem(STORAGE_KEYS.WHATSAPP) || adminWhatsAppNumber;
-            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-            
-            window.open(whatsappUrl, '_blank');
-        }
-
-        function syncWhatsAppNumberFromServer() {
-            // Fetch the latest WhatsApp number from API
-            fetch(`${GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL}?action=getWhatsAppNumber&apiKey=${GOOGLE_SHEETS_CONFIG.API_KEY}`, {
-                method: 'GET',
-                mode: 'cors'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.whatsappNumber) {
-                    adminWhatsAppNumber = data.whatsappNumber;
-                    localStorage.setItem(STORAGE_KEYS.WHATSAPP, data.whatsappNumber);
-                    console.log('✅ Synced WhatsApp number from API: ' + adminWhatsAppNumber);
-                }
-            })
-            .catch(error => {
-                console.log('Could not sync WhatsApp number from API, using cached value');
-            });
-        }
-
-        function saveWhatsAppNumberToServer(number) {
-            // Save the WhatsApp number to MySQL API
-            fetch(GOOGLE_SHEETS_CONFIG.DEPLOYMENT_URL, {
-                method: 'POST',
-                mode: 'cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'setWhatsAppNumber',
-                    apiKey: GOOGLE_SHEETS_CONFIG.API_KEY,
-                    whatsappNumber: number
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('✅ WhatsApp number saved to server');
-                }
-            })
-            .catch(error => {
-                console.log('Could not save WhatsApp number to server: ' + error);
-            });
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // ========================================
-        // PUBLIC VOTING PAGE
-        // ========================================
-        function showVotingPage(pollId, showThankYou = false, embeddedPollData = null) {
-            document.getElementById('votingPanel').classList.remove('hidden');
-            document.getElementById('adminPanel').classList.add('hidden');
-            document.getElementById('mainHeader').classList.remove('hidden');
-            document.getElementById('headerTitle').textContent = 'Vote';
-
-            let poll = getPoll(pollId);
-            const content = document.getElementById('votingContent');
-            
-            // If poll not found in localStorage, use embedded data from URL
-            if (!poll && embeddedPollData) {
-                poll = embeddedPollData;
-                // Temporarily store in memory for this session
-                window.sharedPoll = poll;
-            }
-
-            if (!poll) {
-                content.innerHTML = `
-                    <div style="text-align: center; padding: 2rem;">
-                        <p style="color: var(--accent-red); font-size: 1.2rem; margin-bottom: 1rem;">⚠️ Poll Not Accessible</p>
-                        <p style="color: var(--foreground); opacity: 0.7;">This poll link appears to be invalid or expired.</p>
-                        <p style="color: var(--foreground); opacity: 0.6; font-size: 0.9rem; margin-top: 1rem;">Please contact the poll creator for a new link.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
-            const hasEnded = poll.ends_at && new Date(poll.ends_at) < new Date();
-            const hasVoted = localStorage.getItem(`voted_${pollId}`) === '1';
-            const canVote = poll.status === 'ACTIVE' && !hasEnded && !hasVoted;
-
-            let statusMessage = '';
-            if (poll.status !== 'ACTIVE') {
-                statusMessage = `<p style="color: var(--accent-orange);">This poll is ${poll.status.toLowerCase()}</p>`;
-            } else if (hasEnded) {
-                statusMessage = '<p style="color: var(--accent-orange);">This poll has ended</p>';
-            } else if (hasVoted && !showThankYou) {
-                statusMessage = '<p style="color: var(--accent-green);">✓ You have already voted</p>';
-            }
-
-            content.innerHTML = `
-                ${showThankYou ? `
-                    <div class="thank-you-message">
-                        <h3><span class="thank-you-icon">🎉</span> Thank You for Voting!</h3>
-                        <p>Your vote has been successfully recorded.</p>
-                    </div>
-                ` : ''}
-
-                <h2 class="voting-question">${escapeHtml(poll.question)}</h2>
-                
-                <div class="voting-info">
-                    <div>Status: <strong>${poll.status}</strong></div>
-                    ${poll.ends_at ? `<div>Ends: ${formatDate(poll.ends_at)}</div>` : ''}
-                    <div>Total Votes: <strong>${totalVotes}</strong></div>
-                    ${statusMessage}
-                </div>
-
-                <div class="voting-options" id="votingOptions">
-                    ${poll.options.map(opt => {
-                        const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
-                        
-                        if (canVote) {
-                            return `
-                                <div class="voting-option" data-option-id="${opt.id}" onclick="selectOption('${opt.id}')">
-                                    <div class="option-label">${escapeHtml(opt.label)}</div>
-                                </div>
-                            `;
-                        } else {
-                            return `
-                                <div class="result-item">
-                                    <div class="result-label">
-                                        <span>${escapeHtml(opt.label)}</span>
-                                        <span>${opt.votes} (${percentage}%)</span>
-                                    </div>
-                                    <div class="result-bar-container">
-                                        <div class="result-bar" style="width: ${percentage}%"></div>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    }).join('')}
-                </div>
-
-                ${canVote ? `
-                    <button class="submit-vote-btn" id="submitVoteBtn" disabled onclick="submitVote('${pollId}')">
-                        Select an option to vote
-                    </button>
-                ` : ''}
-
-                ${renderPublicVotersList(poll)}
-            `;
-            
-            // Start auto-refresh of voting results
-            startVotingPageAutoRefresh(pollId);
-        }
-
-        function renderPublicVotersList(poll) {
-            if (!poll.show_voters_publicly || poll.voters.length === 0) {
-                return '';
-            }
-
-            const recentVoters = poll.voters.slice(-10).reverse();
-
-            return `
-                <div class="recent-voters">
-                    <h3>Recent Voters</h3>
-                    ${recentVoters.map(voter => `
-                        <div class="voter-item">
-                            <span class="voter-name">${escapeHtml(voter.name || 'Anonymous')}</span>
-                            <span class="voter-choice">${escapeHtml(voter.optionLabel)}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-        let selectedOptionId = null;
-        let currentVotingPollId = null;
-        let votingPageRefreshInterval = null;
-
-        // Auto-refresh voting results every 2 seconds
-        function startVotingPageAutoRefresh(pollId) {
-            // Clear any existing interval
-            if (votingPageRefreshInterval) {
-                clearInterval(votingPageRefreshInterval);
-            }
-            
-            currentVotingPollId = pollId;
-            votingPageRefreshInterval = setInterval(() => {
-                updateVotingResults(pollId);
-            }, 2000);
-        }
-
-        function stopVotingPageAutoRefresh() {
-            if (votingPageRefreshInterval) {
-                clearInterval(votingPageRefreshInterval);
-                votingPageRefreshInterval = null;
-            }
-            currentVotingPollId = null;
-        }
-
-        function updateVotingResults(pollId) {
-            let poll = getPoll(pollId);
-            
-            // Check if poll data is shared from URL
-            if (!poll && window.sharedPoll && window.sharedPoll.id === pollId) {
-                poll = window.sharedPoll;
-            }
-            
-            if (!poll) return;
-
-            const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
-            const votingOptionsContainer = document.getElementById('votingOptions');
-            
-            if (!votingOptionsContainer) return;
-
-            const hasVoted = localStorage.getItem(`voted_${pollId}`) === '1';
-            const hasEnded = poll.ends_at && new Date(poll.ends_at) < new Date();
-            const canVote = poll.status === 'ACTIVE' && !hasEnded && !hasVoted;
-
-            // Update the options/results display
-            votingOptionsContainer.innerHTML = poll.options.map(opt => {
-                const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
-                
-                if (canVote) {
-                    // User can still vote - show voting options
-                    const isSelected = selectedOptionId === opt.id;
-                    return `
-                        <div class="voting-option ${isSelected ? 'selected' : ''}" data-option-id="${opt.id}" onclick="selectOption('${opt.id}')">
-                            <div class="option-label">${escapeHtml(opt.label)}</div>
-                        </div>
-                    `;
-                } else {
-                    // Show results
-                    return `
-                        <div class="result-item">
-                            <div class="result-label">
-                                <span>${escapeHtml(opt.label)}</span>
-                                <span>${opt.votes} (${percentage}%)</span>
-                            </div>
-                            <div class="result-bar-container">
-                                <div class="result-bar" style="width: ${percentage}%"></div>
-                            </div>
-                        </div>
-                    `;
-                }
-            }).join('');
-
-            // Update total votes count
-            const votingInfo = document.querySelector('.voting-info');
-            if (votingInfo) {
-                votingInfo.innerHTML = votingInfo.innerHTML.replace(
-                    /Total Votes: <strong>\d+<\/strong>/,
-                    `Total Votes: <strong>${totalVotes}</strong>`
-                );
-            }
-
-            // Update recent voters if visible
-            const recentVotersDiv = document.querySelector('.recent-voters');
-            if (recentVotersDiv && poll.show_voters_publicly) {
-                const recentVoters = poll.voters.slice(-10).reverse();
-                recentVotersDiv.innerHTML = `
-                    <h3>Recent Voters</h3>
-                    ${recentVoters.map(voter => `
-                        <div class="voter-item">
-                            <span class="voter-name">${escapeHtml(voter.name || 'Anonymous')}</span>
-                            <span class="voter-choice">${escapeHtml(voter.optionLabel)}</span>
-                        </div>
-                    `).join('')}
-                `;
-            }
-        }
-
-        function selectOption(optionId) {
-            selectedOptionId = optionId;
-            
-            // Update UI with animation
-            document.querySelectorAll('.voting-option').forEach(opt => {
-                opt.classList.remove('selected', 'clicked');
-                if (opt.dataset.optionId === optionId) {
-                    opt.classList.add('clicked');
-                    setTimeout(() => {
-                        opt.classList.add('selected');
-                        opt.classList.remove('clicked');
-                    }, 100);
-                }
-            });
-
-            const btn = document.getElementById('submitVoteBtn');
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = 'Submit Vote';
-            }
-        }
-
-        function submitVote(pollId) {
-            if (!selectedOptionId) return;
-
-            let poll = getPoll(pollId);
-            // Check if this is a shared poll from URL
-            if (!poll && window.sharedPoll && window.sharedPoll.id === pollId) {
-                poll = window.sharedPoll;
-            }
-            if (!poll) return;
-
-            // Check if name is required
-            if (poll.require_name) {
-                // Store pending vote and show modal
-                pendingVote = { pollId, optionId: selectedOptionId };
-                document.getElementById('nameModal').classList.remove('hidden');
-                document.getElementById('voterName').value = '';
-                document.getElementById('voterName').focus();
-            } else {
-                // Vote without name
-                recordVote(pollId, selectedOptionId, 'Anonymous');
-            }
-        }
-
-        function recordVote(pollId, optionId, voterName) {
-            let poll = getPoll(pollId);
-            // Check if this is a shared poll from URL
-            if (!poll && window.sharedPoll && window.sharedPoll.id === pollId) {
-                poll = window.sharedPoll;
-            }
-            if (!poll) return;
-
-            const option = poll.options.find(opt => opt.id === optionId);
-            if (!option) return;
-
-            // Update vote count
-            option.votes++;
-
-            // Add voter record
-            poll.voters.push({
-                name: voterName,
-                optionId: optionId,
-                optionLabel: option.label,
-                timeISO: new Date().toISOString()
-            });
-
-            // Mark as voted
-            localStorage.setItem(`voted_${pollId}`, '1');
-            
-            // If this is a local poll (in localStorage), save it
-            if (getPoll(pollId)) {
-                savePolls();
-            } else if (window.sharedPoll) {
-                // Update shared poll data
-                window.sharedPoll = poll;
-            }
-            
-            showToast('Vote recorded!', 'success');
-            
-            // Refresh the voting page with thank you message
-            showVotingPage(pollId, true, window.sharedPoll);
-        }
-
-        // ========================================
-        // IMPORT/EXPORT
-        // ========================================
-        function exportPolls() {
-            const dataStr = JSON.stringify(polls, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `polls-export-${Date.now()}.json`;
-            a.click();
-            
-            URL.revokeObjectURL(url);
-            showToast('Polls exported', 'success');
-        }
-
-        function importPolls(file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    
-                    if (!Array.isArray(imported)) {
-                        throw new Error('Invalid format');
-                    }
-
-                    // Validate required fields
-                    const valid = imported.every(poll => 
-                        poll.id && poll.question && poll.options && Array.isArray(poll.options)
-                    );
-
-                    if (!valid) {
-                        throw new Error('Missing required fields');
-                    }
-
-                    // Merge with existing polls (avoid duplicates)
-                    const existingIds = new Set(polls.map(p => p.id));
-                    const newPolls = imported.filter(p => !existingIds.has(p.id));
-                    
-                    polls = [...polls, ...newPolls];
-                    savePolls();
-                    updateKPIs();
-                    renderPollsList();
-                    showToast(`Imported ${newPolls.length} poll(s)`, 'success');
-                } catch (err) {
-                    showToast('Import failed: ' + err.message, 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // ========================================
-        // EVENT LISTENERS
-        // ========================================
-        document.addEventListener('DOMContentLoaded', async () => {
-            loadPolls();
-
-            // Keep public voting links synced with latest poll data.
-            if (GOOGLE_SHEETS_CONFIG.ENABLED) {
-                await loadPollsFromGoogleSheets();
-            }
-
-            await handleRoute();
-
-            // Name modal (public voting flow)
-            document.getElementById('submitNameBtn').addEventListener('click', () => {
-                const name = document.getElementById('voterName').value.trim();
-                if (name.length < 2) {
-                    showToast('Name must be at least 2 characters', 'error');
-                    return;
-                }
-
-                if (pendingVote) {
-                    recordVote(pendingVote.pollId, pendingVote.optionId, name);
-                    pendingVote = null;
-                }
-
-                document.getElementById('nameModal').classList.add('hidden');
-            });
-
-            document.getElementById('cancelNameBtn').addEventListener('click', () => {
-                document.getElementById('nameModal').classList.add('hidden');
-                pendingVote = null;
-            });
-
-            window.addEventListener('hashchange', handleRoute);
+      } catch(e) {}
+    }
+
+    async function loadPolls() {
+      var url = API_BASE + '/polls-api?action=getAllPolls&apiKey=' + encodeURIComponent(POLLS_API_KEY);
+      var res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error('Server returned ' + res.status);
+      var data = await res.json();
+      if (!data.success || !Array.isArray(data.polls)) throw new Error('Invalid server response');
+      allPolls = data.polls;
+    }
+
+    async function saveVoteToServer() {
+      try {
+        await fetch(API_BASE + '/polls-api', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ action: 'saveAllPolls', polls: allPolls, apiKey: POLLS_API_KEY })
         });
-    </script>
+      } catch(e) {
+        console.warn('Vote sync failed');
+      }
+    }
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <div class="footer-text">
-                <a href="https://dcoresystems.com" target="_blank" rel="noopener noreferrer">
-                    <img src="https://storage.files-vault.com/uploads/1771740950-r9B7iWXuln.png" 
-                         alt="Dcore Systems LLP" 
-                         class="footer-logo">
-                </a>
-                Created by <a href="https://dcoresystems.com" target="_blank" rel="noopener noreferrer">Dcore Systems LLP</a>
-            </div>
-            <div class="footer-text">© 2026 Copyright Findas Academy. All rights reserved.</div>
-        </div>
-    </footer>
+    function showError(type, title, text) {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('votingPanel').classList.add('hidden');
+      var ep = document.getElementById('errorPanel');
+      ep.classList.remove('hidden');
+      var icons = { notfound: '🔍', closed: '🔒', ended: '⏰', error: '⚠️' };
+      var icon = icons[type] || '⚠️';
+      ep.innerHTML = '<div class="poll-card"><div class="state ' + type + '"><div class="state-icon">' + icon + '</div><div class="state-title">' + esc(title) + '</div><div class="state-text">' + esc(text) + '</div></div></div>';
+    }
+
+    function renderResults(poll, showThankYou) {
+      var options = Array.isArray(poll.options) ? poll.options : [];
+      var totalVotes = options.reduce(function(s,o){ return s + Number(o.votes||0); }, 0);
+      var maxVotes = options.reduce(function(m,o){ return Math.max(m, Number(o.votes||0)); }, 0);
+      var voters = Array.isArray(poll.voters) ? poll.voters : [];
+
+      var thanksHtml = showThankYou ? '<div class="thank-you"><div class="thank-you-icon">🎉</div><h3>Thank You for Voting!</h3><p>Your response has been recorded.</p></div>' : '';
+
+      var resultsHtml = options.map(function(opt) {
+        var votes = Number(opt.votes || 0);
+        var pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+        var isWinner = votes === maxVotes && votes > 0;
+        return '<div class="result-option"><div class="result-label-row"><span>' + esc(opt.label) + '</span><span class="result-pct">' + pct + '% <span style="font-weight:400;color:var(--muted)">(' + votes + ')</span></span></div><div class="result-bar-wrap"><div class="result-bar-fill' + (isWinner ? ' winner' : '') + '" style="width:' + pct + '%"></div></div></div>';
+      }).join('');
+
+      var votersHtml = (poll.show_voters_publicly && voters.length > 0) ? '<div class="voters-section"><h3>Recent Voters</h3>' + voters.slice(-10).reverse().map(function(v){ return '<div class="voter-row"><span class="voter-name">' + esc(v.name||'Anonymous') + '</span><span class="voter-choice">' + esc(v.optionLabel||'-') + '</span></div>'; }).join('') + '</div>' : '';
+
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('errorPanel').classList.add('hidden');
+      var vp = document.getElementById('votingPanel');
+      vp.classList.remove('hidden');
+      var slot = vp.querySelector('[data-slot="body"]');
+      if (slot) slot.innerHTML = thanksHtml + resultsHtml + '<p style="font-size:.85rem;color:var(--muted);margin-top:.75rem">Total Votes: <strong>' + totalVotes + '</strong></p>' + votersHtml;
+    }
+
+    function renderVotingOptions(poll) {
+      var options = Array.isArray(poll.options) ? poll.options : [];
+      var hasVoted = localStorage.getItem('voted_' + poll.id) === '1';
+      if (hasVoted) { renderResults(poll, false); return; }
+
+      var optionsHtml = options.map(function(opt) {
+        return '<div class="vote-option" data-opt="' + esc(opt.id) + '" role="radio" aria-checked="false" tabindex="0"><div class="radio"></div><span class="option-text">' + esc(opt.label) + '</span></div>';
+      }).join('');
+
+      var vp = document.getElementById('votingPanel');
+      var slot = vp.querySelector('[data-slot="body"]');
+      slot.innerHTML = '<div class="options-list" id="optionsList" role="radiogroup">' + optionsHtml + '</div><button class="submit-btn" id="submitVoteBtn" disabled>Select an option to vote</button>';
+
+      slot.querySelectorAll('.vote-option').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          slot.querySelectorAll('.vote-option').forEach(function(b){ b.classList.remove('selected'); b.setAttribute('aria-checked','false'); });
+          btn.classList.add('selected');
+          btn.setAttribute('aria-checked','true');
+          selectedOptionId = btn.dataset.opt;
+          var sb = document.getElementById('submitVoteBtn');
+          sb.disabled = false;
+          sb.textContent = 'Submit Vote';
+        });
+        btn.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' ') btn.click(); });
+      });
+
+      document.getElementById('submitVoteBtn').addEventListener('click', function() {
+        if (!selectedOptionId) return;
+        if (poll.require_name) {
+          pendingVote = { pollId: poll.id, optionId: selectedOptionId };
+          document.getElementById('voterNameInput').value = '';
+          document.getElementById('nameModal').classList.remove('hidden');
+          document.getElementById('voterNameInput').focus();
+        } else {
+          recordVote(poll.id, selectedOptionId, 'Anonymous');
+        }
+      });
+    }
+
+    async function recordVote(pollId, optionId, voterName) {
+      var poll = allPolls.find(function(p){ return p.id === pollId; });
+      if (!poll) return;
+      var option = (poll.options||[]).find(function(o){ return o.id === optionId; });
+      if (!option) return;
+
+      option.votes = Number(option.votes || 0) + 1;
+      poll.voters = Array.isArray(poll.voters) ? poll.voters : [];
+      poll.voters.push({ name: voterName, optionId: optionId, optionLabel: option.label, timeISO: new Date().toISOString() });
+
+      localStorage.setItem('voted_' + pollId, '1');
+      await saveVoteToServer();
+      toast('Vote recorded! Thank you!', 'success');
+      renderResults(poll, true);
+    }
+
+    async function showPoll(pollId) {
+      try { await loadPolls(); }
+      catch(err) {
+        showError('error', 'Could Not Load Poll', 'Failed to connect to the server. Please refresh the page and try again.');
+        return;
+      }
+
+      var poll = allPolls.find(function(p){ return p.id === pollId; });
+      if (!poll) {
+        showError('notfound', 'Poll Not Found', 'This poll link appears to be invalid or has been removed. Please check the link you were given.');
+        return;
+      }
+
+      var now = new Date();
+      var hasEnded = poll.ends_at && new Date(poll.ends_at) < now;
+      var status = String(poll.status || 'CLOSED').toUpperCase().trim();
+
+      if (status !== 'ACTIVE') {
+        showError('closed', 'Poll is ' + status.charAt(0) + status.slice(1).toLowerCase(), 'This poll is currently ' + status.toLowerCase() + '. Voting is not available at this time.');
+        return;
+      }
+      if (hasEnded) {
+        showError('ended', 'Poll Has Ended', 'This poll ended on ' + fmtDate(poll.ends_at) + '. Voting is now closed.');
+        return;
+      }
+
+      var options = Array.isArray(poll.options) ? poll.options : [];
+      var totalVotes = options.reduce(function(s,o){ return s + Number(o.votes||0); }, 0);
+      var hasVoted = localStorage.getItem('voted_' + poll.id) === '1';
+
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('errorPanel').classList.add('hidden');
+      var vp = document.getElementById('votingPanel');
+      vp.classList.remove('hidden');
+      vp.innerHTML = '<div class="poll-card"><div class="poll-card-header"><div class="poll-eyebrow"><span class="status-badge active">Active</span></div><h1 class="poll-question">' + esc(poll.question) + '</h1><div class="poll-meta"><span>🗳️ ' + totalVotes + ' vote' + (totalVotes !== 1 ? 's' : '') + '</span>' + (poll.ends_at ? '<span>⏰ Ends ' + esc(fmtDate(poll.ends_at)) + '</span>' : '') + (poll.require_name ? '<span>👤 Name required</span>' : '') + '</div></div><div class="poll-card-body">' + (hasVoted ? '<div class="already-voted-banner"><span>✓</span> You have already voted on this poll.</div>' : '') + '<div data-slot="body"></div></div></div>';
+
+      if (hasVoted) { renderResults(poll, false); }
+      else { renderVotingOptions(poll); }
+    }
+
+    function showWelcome() {
+      document.getElementById('loadingState').classList.add('hidden');
+      var ep = document.getElementById('errorPanel');
+      ep.classList.remove('hidden');
+      ep.innerHTML = '<div class="poll-card"><div class="state"><div class="state-icon">🗳️</div><div class="state-title">Welcome to Findas Polls</div><div class="state-text">Use the voting link shared with you to participate in a poll.</div></div></div>';
+    }
+
+    document.getElementById('nameSubmitBtn').addEventListener('click', function() {
+      var name = document.getElementById('voterNameInput').value.trim();
+      if (name.length < 2) { toast('Please enter at least 2 characters', 'warning'); return; }
+      if (!pendingVote) return;
+      document.getElementById('nameModal').classList.add('hidden');
+      recordVote(pendingVote.pollId, pendingVote.optionId, name);
+      pendingVote = null;
+    });
+    document.getElementById('nameCancelBtn').addEventListener('click', function() {
+      document.getElementById('nameModal').classList.add('hidden');
+      pendingVote = null;
+    });
+    document.getElementById('voterNameInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('nameSubmitBtn').click();
+    });
+
+    async function handleRoute() {
+      var hash = window.location.hash || '';
+      selectedOptionId = null;
+      pendingVote = null;
+      if (hash.startsWith('#/vote/')) {
+        var pollId = decodeURIComponent(hash.replace('#/vote/', '').split('?')[0].trim());
+        if (pollId) { await showPoll(pollId); }
+        else { showWelcome(); }
+      } else {
+        showWelcome();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadBranding();
+      handleRoute();
+    });
+    window.addEventListener('hashchange', handleRoute);
+  </script>
 </body>
 </html>

@@ -369,9 +369,11 @@ function renderAcademyCommunity(items) {
 
   (items || []).forEach(item => {
     const card = el('article', 'academy-feature-card academy-community-card');
-    card.appendChild(el('span', 'badge bdef', cleanDisplayText(item.post_type || 'Community')));
-    card.appendChild(el('p', 'section-body', cleanDisplayText(item.content || '')));
-    card.appendChild(el('strong', '', cleanDisplayText(item.author || 'Findas Community')));
+    const head = el('div', 'academy-community-head');
+    head.appendChild(el('span', 'badge bdef academy-community-type', cleanDisplayText(item.post_type || 'Community')));
+    card.appendChild(head);
+    card.appendChild(el('p', 'section-body academy-community-content', cleanDisplayText(item.content || '')));
+    card.appendChild(el('strong', 'academy-community-author', cleanDisplayText(item.author || 'Findas Community')));
     D.academyCommunityGrid.appendChild(card);
   });
 }

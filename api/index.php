@@ -664,6 +664,7 @@ function ensure_modal_content_schema() {
         ensure_column_if_missing('webinars', 'is_free', 'TINYINT(1) DEFAULT 0 AFTER `price_inr`');
         ensure_column_if_missing('webinars', 'payment_link', 'VARCHAR(500) NULL AFTER `is_free`');
         ensure_column_if_missing('webinars', 'primary_cta_text', 'VARCHAR(160) NULL AFTER `payment_link`');
+        ensure_column_if_missing('webinars', 'body_video_url', 'VARCHAR(500) NULL AFTER `primary_cta_text`');
 
         ensure_column_if_missing('hero_section', 'button_url_1', 'VARCHAR(500) NULL AFTER `button_text_1`');
         ensure_column_if_missing('hero_section', 'button_url_2', 'VARCHAR(500) NULL AFTER `button_text_2`');
@@ -674,6 +675,8 @@ function ensure_modal_content_schema() {
         ensure_column_if_missing('membership_plans', 'payment_link', 'VARCHAR(500) NULL AFTER `image_url`');
 
         ensure_column_if_missing('contact_section', 'gallery_enabled', 'TINYINT(1) DEFAULT 1 AFTER `address`');
+        ensure_column_if_missing('contact_section', 'faq_heading', 'VARCHAR(255) NULL AFTER `gallery_enabled`');
+        ensure_column_if_missing('contact_section', 'faq_subheading', 'VARCHAR(255) NULL AFTER `faq_heading`');
         ensure_column_if_missing('contact_section', 'footer_brand_name', 'VARCHAR(255) NULL AFTER `gallery_enabled`');
         ensure_column_if_missing('contact_section', 'footer_about_text', 'TEXT NULL AFTER `footer_brand_name`');
         ensure_column_if_missing('contact_section', 'footer_quick_links_title', 'VARCHAR(255) NULL AFTER `footer_about_text`');
@@ -710,8 +713,22 @@ function ensure_modal_content_schema() {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         $db->query("INSERT IGNORE INTO site_assets (id) VALUES (1)");
 
+        $db->query("CREATE TABLE IF NOT EXISTS admin_uploaded_images (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            scope VARCHAR(120) NULL,
+            file_name VARCHAR(255) NULL,
+            mime_type VARCHAR(120) NULL,
+            file_size_bytes INT NULL,
+            url VARCHAR(500) NOT NULL,
+            uploaded_by VARCHAR(120) NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_admin_uploaded_images_scope (scope),
+            INDEX idx_admin_uploaded_images_created_at (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
         $db->query("CREATE TABLE IF NOT EXISTS site_config (
             id INT PRIMARY KEY,
+            booking_page_url VARCHAR(500) NULL,
             footer_brand_name VARCHAR(255) NULL,
             footer_about_text TEXT NULL,
             footer_quick_links_title VARCHAR(255) NULL,
@@ -736,6 +753,8 @@ function ensure_modal_content_schema() {
             footer_social_youtube VARCHAR(500) NULL,
             footer_social_twitter VARCHAR(500) NULL,
             footer_social_whatsapp VARCHAR(500) NULL,
+            faq_heading VARCHAR(255) NULL,
+            faq_subheading VARCHAR(255) NULL,
             footer_copyright TEXT NULL,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -749,6 +768,9 @@ function ensure_modal_content_schema() {
         ensure_column_if_missing('site_config', 'footer_quick_link_url_4', 'VARCHAR(500) NULL AFTER `footer_quick_link_4`');
         ensure_column_if_missing('site_config', 'footer_quick_link_url_5', 'VARCHAR(500) NULL AFTER `footer_quick_link_5`');
         ensure_column_if_missing('site_config', 'footer_quick_link_url_6', 'VARCHAR(500) NULL AFTER `footer_quick_link_6`');
+        ensure_column_if_missing('site_config', 'faq_heading', 'VARCHAR(255) NULL AFTER `footer_social_whatsapp`');
+        ensure_column_if_missing('site_config', 'faq_subheading', 'VARCHAR(255) NULL AFTER `faq_heading`');
+        ensure_column_if_missing('site_config', 'booking_page_url', 'VARCHAR(500) NULL AFTER `faq_subheading`');
 
         $db->query("CREATE TABLE IF NOT EXISTS academy_config (
             id INT PRIMARY KEY,
@@ -837,7 +859,7 @@ function upsert_site_assets($payload) {
         return get_site_assets_row();
 }
 
-function save_logo_asset_file($fileName, $mimeType, $base64Data) {
+function save_admin_asset_file($fileName, $mimeType, $base64Data, $namePrefix = 'asset') {
         $fileName = trim((string)$fileName);
         $mimeType = strtolower(trim((string)$mimeType));
         $base64Data = trim((string)$base64Data);
@@ -850,7 +872,8 @@ function save_logo_asset_file($fileName, $mimeType, $base64Data) {
             'image/jpeg' => 'jpg',
             'image/jpg' => 'jpg',
             'image/webp' => 'webp',
-            'image/svg+xml' => 'svg'
+            'image/svg+xml' => 'svg',
+            'image/gif' => 'gif'
         ];
 
         $ext = '';
@@ -860,7 +883,7 @@ function save_logo_asset_file($fileName, $mimeType, $base64Data) {
 
         if ($ext === '' && preg_match('/\.([a-zA-Z0-9]+)$/', $fileName, $m)) {
             $guessed = strtolower($m[1]);
-            if (in_array($guessed, ['png', 'jpg', 'jpeg', 'webp', 'svg'], true)) {
+            if (in_array($guessed, ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif'], true)) {
                 $ext = ($guessed === 'jpeg') ? 'jpg' : $guessed;
             }
         }
@@ -884,6 +907,9 @@ function save_logo_asset_file($fileName, $mimeType, $base64Data) {
             }
         }
 
+        $safePrefix = preg_replace('/[^a-z0-9\-]/', '', strtolower((string)$namePrefix));
+        if ($safePrefix === '') $safePrefix = 'asset';
+
         $rand = '';
         try {
             $rand = bin2hex(random_bytes(4));
@@ -891,14 +917,42 @@ function save_logo_asset_file($fileName, $mimeType, $base64Data) {
             $rand = substr(md5((string)microtime(true)), 0, 8);
         }
 
-        $targetName = 'site-logo-' . time() . '-' . $rand . '.' . $ext;
+        $targetName = $safePrefix . '-' . time() . '-' . $rand . '.' . $ext;
         $targetPath = $assetsDir . DIRECTORY_SEPARATOR . $targetName;
 
         if (file_put_contents($targetPath, $binary) === false) {
             send_json(500, ['ok' => false, 'error' => 'Failed to save uploaded image']);
         }
 
-        return '/assets/' . $targetName;
+        return [
+            'url' => '/assets/' . $targetName,
+            'bytes' => strlen($binary)
+        ];
+}
+
+function persist_uploaded_image_record($scope, $fileName, $mimeType, $fileSizeBytes, $url, $uploadedBy) {
+        $db = get_db();
+        $scopeVal = trim((string)$scope);
+        $fileNameVal = trim((string)$fileName);
+        $mimeVal = trim((string)$mimeType);
+        $sizeVal = (int)$fileSizeBytes;
+        $urlVal = trim((string)$url);
+        $byVal = trim((string)$uploadedBy);
+
+        $stmt = $db->prepare('INSERT INTO admin_uploaded_images (scope, file_name, mime_type, file_size_bytes, url, uploaded_by) VALUES (?, ?, ?, ?, ?, ?)');
+        if (!$stmt) {
+            send_json(500, ['ok' => false, 'error' => 'Failed to prepare upload metadata save']);
+        }
+        $stmt->bind_param('sssiss', $scopeVal, $fileNameVal, $mimeVal, $sizeVal, $urlVal, $byVal);
+        if (!$stmt->execute()) {
+            send_json(500, ['ok' => false, 'error' => 'Failed to save upload metadata']);
+        }
+        return (int)$db->insert_id;
+}
+
+function save_logo_asset_file($fileName, $mimeType, $base64Data) {
+        $saved = save_admin_asset_file($fileName, $mimeType, $base64Data, 'site-logo');
+        return (string)$saved['url'];
 }
 
 function fetch_rows_by_slug_match($table, $slug, $slugFields, $activeOnly = true) {
@@ -1107,7 +1161,7 @@ $resourceMap = [
     ],
     'webinars' => [
         'table' => 'webinars',
-        'fields' => ['title', 'subtitle', 'slug', 'banner_url', 'host_image_url', 'host_name', 'platform', 'timezone', 'start_datetime_local', 'end_datetime_local', 'price_inr', 'is_free', 'payment_link', 'primary_cta_text', 'is_active', 'order'],
+        'fields' => ['title', 'subtitle', 'slug', 'banner_url', 'host_image_url', 'host_name', 'platform', 'timezone', 'start_datetime_local', 'end_datetime_local', 'price_inr', 'is_free', 'payment_link', 'primary_cta_text', 'body_video_url', 'is_active', 'order'],
         'required' => ['title']
     ],
     'digital-products' => [
@@ -1213,6 +1267,8 @@ $singletonMap = [
             'email',
             'address',
             'gallery_enabled',
+            'faq_heading',
+            'faq_subheading',
             'footer_brand_name',
             'footer_about_text',
             'footer_quick_links_title',
@@ -1243,6 +1299,9 @@ $singletonMap = [
     'site-config' => [
         'table' => 'site_config',
         'fields' => [
+            'booking_page_url',
+            'faq_heading',
+            'faq_subheading',
             'footer_brand_name',
             'footer_about_text',
             'footer_quick_links_title',
@@ -1313,6 +1372,8 @@ function get_default_contact_footer_payload() {
         'email' => 'support@findasacademy.in',
         'address' => 'Pune, Maharashtra, India',
         'gallery_enabled' => 1,
+        'faq_heading' => 'Frequently Asked Questions',
+        'faq_subheading' => 'Common Questions',
         'footer_brand_name' => 'Findas Academy',
         'footer_about_text' => 'Empowering financial freedom through expert-led courses, webinars, and a growth-focused learning community.',
         'footer_quick_links_title' => 'Quick Links',
@@ -1339,6 +1400,15 @@ function get_default_contact_footer_payload() {
         'footer_social_whatsapp' => 'https://wa.me/918766514883',
         'footer_copyright' => '&copy; 2026 Findas Academy. All rights reserved.'
     ];
+}
+
+function get_default_site_config_payload() {
+    return array_merge(
+        get_default_contact_footer_payload(),
+        [
+            'booking_page_url' => 'book-a-call.html'
+        ]
+    );
 }
 
 function get_default_academy_payload() {
@@ -1383,7 +1453,7 @@ function get_default_singleton_row($section, $row) {
 
     $defaults = $section === 'academy'
         ? get_default_academy_payload()
-        : get_default_contact_footer_payload();
+        : ($section === 'site-config' ? get_default_site_config_payload() : get_default_contact_footer_payload());
     if (!is_array($row) || count($row) === 0) {
         return $defaults;
     }
@@ -1487,6 +1557,35 @@ if (($path === '/admin/assets/logo' || $path === '/api/admin/assets/logo') && $m
         'loading_logo_url' => $logoUrl
     ]);
     send_json(200, ['ok' => true, 'data' => $saved]);
+}
+
+if (($path === '/admin/assets/upload' || $path === '/api/admin/assets/upload') && $method === 'POST') {
+    $payload = require_auth();
+    require_role($payload, ['owner', 'editor']);
+    $body = get_json_body();
+
+    $scope = trim((string)($body['scope'] ?? 'general'));
+    $fileName = (string)($body['fileName'] ?? 'image-upload');
+    $mimeType = (string)($body['mimeType'] ?? '');
+    $base64Data = (string)($body['base64Data'] ?? '');
+
+    $savedFile = save_admin_asset_file($fileName, $mimeType, $base64Data, 'admin-image');
+    $uploadedBy = (string)($payload['email'] ?? ($payload['username'] ?? ($payload['sub'] ?? 'admin')));
+    $rowId = persist_uploaded_image_record(
+        $scope,
+        $fileName,
+        $mimeType,
+        (int)($savedFile['bytes'] ?? 0),
+        (string)($savedFile['url'] ?? ''),
+        $uploadedBy
+    );
+
+    send_json(200, ['ok' => true, 'data' => [
+        'id' => $rowId,
+        'url' => (string)($savedFile['url'] ?? ''),
+        'scope' => $scope,
+        'uploaded_by' => $uploadedBy
+    ]]);
 }
 
 if ($path === '/auth/login' || $path === '/api/auth/login') {
@@ -1693,7 +1792,17 @@ if (preg_match('#^/(api/)?digital-product-details/([^/]+)$#', $path, $m) && $met
     }
 
     $sections = fetch_rows_by_slug_match('digital_product_details', $slug, ['product_slug', 'slug'], true);
-    send_json(200, ['ok' => true, 'data' => ['product' => $product, 'sections' => $sections]]);
+    $shortReviews = fetch_rows_by_slug_match('short_reviews', $slug, ['slug'], true);
+    $featuredReviews = fetch_rows_by_slug_match('featured_reviews', $slug, ['slug'], true);
+    send_json(200, [
+        'ok' => true,
+        'data' => [
+            'product' => $product,
+            'sections' => $sections,
+            'shortReviews' => $shortReviews,
+            'featuredReviews' => $featuredReviews
+        ]
+    ]);
 }
 
 if (preg_match('#^/(api/)?webinar-details/([^/]+)$#', $path, $m) && $method === 'GET') {
@@ -1707,6 +1816,7 @@ if (preg_match('#^/(api/)?webinar-details/([^/]+)$#', $path, $m) && $method === 
 
     $blocks = fetch_rows_by_slug_match('webinar_page_blocks', $slug, ['webinar_slug', 'slug'], true);
     $keyPoints = fetch_rows_by_slug_match('webinar_key_points_cards', $slug, ['webinar_slug', 'slug'], true);
+    $shortReviews = fetch_rows_by_slug_match('short_reviews', $slug, ['webinar_slug', 'slug'], true);
     $featuredReviews = fetch_rows_by_slug_match('featured_reviews', $slug, ['webinar_slug', 'slug'], true);
 
     send_json(200, [
@@ -1715,18 +1825,20 @@ if (preg_match('#^/(api/)?webinar-details/([^/]+)$#', $path, $m) && $method === 
             'webinar' => $webinar,
             'blocks' => $blocks,
             'keyPoints' => $keyPoints,
+            'shortReviews' => $shortReviews,
             'featuredReviews' => $featuredReviews
         ]
     ]);
 }
 
-if (preg_match('#^/(api/)?(hero|about|contact|site-config)$#', $path, $m) && $method === 'GET') {
+if (preg_match('#^/(api/)?(hero|about|contact|site-config|academy)$#', $path, $m) && $method === 'GET') {
     $section = sanitize_resource_name($m[2]);
     $meta = $singletonMap[$section] ?? null;
     if (!$meta) {
         send_json(404, ['ok' => false, 'error' => 'Unknown resource']);
     }
     $row = fetch_one("SELECT * FROM `{$meta['table']}` ORDER BY id DESC LIMIT 1");
+    $row = get_default_singleton_row($section, $row);
     send_json(200, ['ok' => true, 'data' => $row]);
 }
 

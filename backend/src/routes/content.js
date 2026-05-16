@@ -87,9 +87,9 @@ router.put('/admin/:resource/:id', requireAuth, async (req, res, next) => {
       return res.status(400).json({ ok: false, error: 'No fields to update' });
     }
     const setParts = cols.map(c => `\`${c}\` = ?`);
+    setParts.push('`updated_at` = NOW()');
     const vals = cols.map(c => body[c]);
     vals.push(id);
-    setParts.push('`updated_at` = NOW()');
     const sql = `UPDATE ${table} SET ${setParts.join(', ')} WHERE id = ?`;
     await query(sql, vals);
     const rows = await query(`SELECT * FROM ${table} WHERE id = ?`, [id]);
